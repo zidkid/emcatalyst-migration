@@ -1,0 +1,3058 @@
+[
+  {
+    "name": "ManageMyAccount",
+    "uid": "11bb6753b94d6c4eac2d120f7ed612f1"
+  },
+  {
+    "name": "ChangeMyPassword",
+    "uid": "bcb1cd3e575c9744bf67a481684dab2b"
+  },
+  {
+    "name": "ShowMyPasswordForm",
+    "uid": "c2dd066c2a856c4186822650f566bc75"
+  },
+  {
+    "name": "SaveNewAccount",
+    "uid": "00f013bd075f8642bee4863b692fa568"
+  },
+  {
+    "name": "ShowPasswordForm",
+    "uid": "09f027c82e39584a9b9334f0e5c1535b"
+  },
+  {
+    "name": "NewWebServiceAccount",
+    "uid": "1ac220e11239434094e64857c4833ebc"
+  },
+  {
+    "name": "NewAccount",
+    "uid": "58ece046e2b74842a6d58b44f6ba1981"
+  },
+  {
+    "name": "RetrieveTimeZones",
+    "uid": "800d62409689e545b21a10415bd2bebb"
+  },
+  {
+    "name": "ChangePassword",
+    "uid": "948bfa2628a0e441bbd58c39e2aee282"
+  },
+  {
+    "name": "DS_GetCurrentIdToken",
+    "uid": "e44da263cb76f948b62ba2f2ab418700"
+  },
+  {
+    "name": "ACT_Next_Step2",
+    "uid": "03e1c29927ba304789d1adbb77b97731"
+  },
+  {
+    "name": "ACT_Next_Step1",
+    "uid": "bafa97f30de3cf4ebdbff821a3f22ce6"
+  },
+  {
+    "name": "ACT_Prev_Step2",
+    "uid": "a5bc3272c58ec94a982212a731e23c6e"
+  },
+  {
+    "name": "ACT_Prev_Step3",
+    "uid": "8ff0eddf07b3da49aed300707ca31d95"
+  },
+  {
+    "name": "ACT_CommitPreEventDocument",
+    "uid": "1abe846f2b20e24f9713db98bd83a3f3"
+  },
+  {
+    "name": "ACT_Next_Step3",
+    "uid": "bf71ac02fc47be429f3c801877671a27"
+  },
+  {
+    "name": "ACT_Prev_Step4",
+    "uid": "996a3eb9e961fe45aeba08ad2954bb35"
+  },
+  {
+    "name": "ACT_AddPreDocument",
+    "uid": "9b8204a921e6254f910ee637ee619f6f"
+  },
+  {
+    "name": "ACT_RetrievePreEventDocumentType",
+    "uid": "f597dc724564eb43a2a8f101998df664"
+  },
+  {
+    "name": "DS_DoctorForEvent",
+    "uid": "5dd938818965a74f9698b1ec4a164422"
+  },
+  {
+    "name": "DS_DeleteDoctorFromEvent",
+    "uid": "4bf90c9426a665498b7b53179ff989a4"
+  },
+  {
+    "name": "ACT_Step1_SaveDoctorsDetails",
+    "uid": "4898bec66e5a5d44b340cec37733ed08"
+  },
+  {
+    "name": "ACT_Step3_SaveDoctorsBankDetails",
+    "uid": "1689b161d93b5044bfd1664095268b96"
+  },
+  {
+    "name": "ACT_Step4_UploadDocuments",
+    "uid": "f20812aae0564a4fbdca8942e87821ed"
+  },
+  {
+    "name": "ACT_UploadDocumentPopUp",
+    "uid": "c7a19c1fc1baec418a47973831cb73ed"
+  },
+  {
+    "name": "ACT_UploadDocument",
+    "uid": "60c3652de2dd79438a57b68aa6174331"
+  },
+  {
+    "name": "ACT_RetriveDocumentData",
+    "uid": "282420544f7e604ba4681423841a831c"
+  },
+  {
+    "name": "ACT_RetriveInstituteData",
+    "uid": "2072a4b637842c4a9d934cb9c10d6841"
+  },
+  {
+    "name": "ACT_AddInstitutionData",
+    "uid": "f2510053ba51c349bd56b9f330782d0c"
+  },
+  {
+    "name": "ACT_InstitutionDataPopUp",
+    "uid": "9982ccc31679db4891aaa54a764e04a6"
+  },
+  {
+    "name": "ACT_Step2_ShowBankDetailsPage",
+    "uid": "adceffbe3e321344b2de0f400539ca85"
+  },
+  {
+    "name": "BCO_ConcatenateName_DoctorMaster",
+    "uid": "d8ff0ac06b7c5a4f92fa2577d18a2d99"
+  },
+  {
+    "name": "Sub_FetchMasterEvent",
+    "uid": "cef3a3185dc1014da8343bd5cf7752b2"
+  },
+  {
+    "name": "ACT_CreateNewEvent",
+    "uid": "7fe651ec8f6b06449f5de3e774986800"
+  },
+  {
+    "name": "DS_RetrieveDoctor",
+    "uid": "3079f96c3f4d8a48aad789ce32836ff2"
+  },
+  {
+    "name": "DS_RetrieveEventInitiation",
+    "uid": "6079c4a274e13e41af9a38a20be83c62"
+  },
+  {
+    "name": "BackupACT_Download_PDF",
+    "uid": "30bc5a07b27ed34990da2dc7fb067812"
+  },
+  {
+    "name": "DS_Retrieve_DoctorFullName",
+    "uid": "254b860acd686e40ae1b5796837f1afc"
+  },
+  {
+    "name": "ACT_CalculateFMV",
+    "uid": "e1ca73fee845db4fa740d5b5ac7bbc61"
+  },
+  {
+    "name": "ACT_DeleteInvalidDataFromHonorarium",
+    "uid": "4bd7c1387f57c942bdbce6cb4eba5b0d"
+  },
+  {
+    "name": "ACT_CreateNewUserAccount",
+    "uid": "14b1f3ce8d96564da60a8dd11b213efc"
+  },
+  {
+    "name": "ACT_UserGroupEdit",
+    "uid": "bf37d934b6e99c48b87f806914421106"
+  },
+  {
+    "name": "DS_FullName_2",
+    "uid": "5dd026271196314586e6e07e53e65454"
+  },
+  {
+    "name": "DS_AssociatedGroups",
+    "uid": "58e0badc207b6a4a970025b37fa1d82c"
+  },
+  {
+    "name": "DS_AssociatedUsers",
+    "uid": "c9e2b35a3932cc45a4e3dc5ffabdc9e2"
+  },
+  {
+    "name": "DS_AgentUserRoleAccountList",
+    "uid": "e4cd0ad4ba99c84f844c01e95bab2d41"
+  },
+  {
+    "name": "DS_AgentUserRole_AssociatedAccountList",
+    "uid": "5c9ba4b1ff7f9145905f8cf95ef15923"
+  },
+  {
+    "name": "ACT_GetFunction",
+    "uid": "8dc0d1082a15f546971ae8b935c26f1f"
+  },
+  {
+    "name": "ACT_UserDesignation_Create",
+    "uid": "f86bf77bed7d9a4d82302c05f0713475"
+  },
+  {
+    "name": "BCO_AutoGenerate_EventCode",
+    "uid": "cb25ed0c6a06b24981586be5cc992a57"
+  },
+  {
+    "name": "ACT_AddPostDocument",
+    "uid": "ba91cb5e388c59429147feda84d5d213"
+  },
+  {
+    "name": "ACT_CommitPostEventDocument",
+    "uid": "b7aa9e16bc35c743a6fa40226c8f1939"
+  },
+  {
+    "name": "ACT_RetrievePostEventDocumentType",
+    "uid": "6494b2b767b5d249bc822e76f814ee6e"
+  },
+  {
+    "name": "DS_RetrieveHonorarium",
+    "uid": "f3351442557cca42972e10ca19e55876"
+  },
+  {
+    "name": "DS_RetrieveHonorariumInWords",
+    "uid": "c17db1c183291a45b999692a74e8d5e0"
+  },
+  {
+    "name": "UpdateUserHelper",
+    "uid": "083263eb8fe9424ebb7958f8479a00a1"
+  },
+  {
+    "name": "AssertTrue",
+    "uid": "b888c3f403b7b745b2e5bcd0d85a3dd7"
+  },
+  {
+    "name": "CreateUserIfNotExists",
+    "uid": "56e0db0eb0ee564fa52a24960b53716f"
+  },
+  {
+    "name": "AssertTrue_2",
+    "uid": "92965115400297489591f71fa70502b4"
+  },
+  {
+    "name": "SUB_SendQueuedEmail",
+    "uid": "103651e604b567439f0ef6f76902f1ee"
+  },
+  {
+    "name": "SE_Cleanup",
+    "uid": "4cabf8109d93fb47aa8ef12edfae6b4b"
+  },
+  {
+    "name": "SE_SendQueuedEmails",
+    "uid": "a433568be637694a880899e6999c6c8f"
+  },
+  {
+    "name": "PRS_AuthCodeCallbackGET",
+    "uid": "3004e6fc593ddb4082bf500a13bcf949"
+  },
+  {
+    "name": "VAL_LDAPConfiguration",
+    "uid": "320006450477e24b885a082b05cb262f"
+  },
+  {
+    "name": "SUB_EmailAccount_Delete",
+    "uid": "ed0817ce31cda7409ce3773a927b942a"
+  },
+  {
+    "name": "VAL_EmailRecipients",
+    "uid": "74caeeec55d944438ba1dce20d7198fc"
+  },
+  {
+    "name": "ACT_EmailMessage_ComposeNewEmail",
+    "uid": "53a5cef75924354f8697fefb7f5733de"
+  },
+  {
+    "name": "ACT_Emailtemplate_CreateToken",
+    "uid": "7822959a9bd69c4daf7513524c837fa4"
+  },
+  {
+    "name": "ACT_EmailMessage_ResetQueuedStatus",
+    "uid": "12471daa81bde14b8c6de394f958a33b"
+  },
+  {
+    "name": "ACT_SelectedConfiguration_FetchEmailServerConfigAndShowConfigPage",
+    "uid": "e32073befda8ff4a8db44993e3b8ae87"
+  },
+  {
+    "name": "ACT_EmailAccount_ClientCredentialsGrant_SaveAutoConfig",
+    "uid": "87bed4e30d44a94d82f40cbea9f2aa24"
+  },
+  {
+    "name": "SUB_GetNewOAuthToken_ClientCredentialsGrantFlow",
+    "uid": "182e6758f87f5c4e9a4bd20a3158b2ab"
+  },
+  {
+    "name": "ACT_EmailTemplate_Export",
+    "uid": "e1570d41174592448023aa24c71fd9d1"
+  },
+  {
+    "name": "ACT_SaveEmailAccountSettingAndClosePage",
+    "uid": "43b6a1ec17bd404089481effa4c2419e"
+  },
+  {
+    "name": "BCO_LDAPConfiguration_EncryptPassword",
+    "uid": "97c07f56e19076468874f38e7690e164"
+  },
+  {
+    "name": "VAL_Pk12Certificate",
+    "uid": "6d5422851f7284438f42bf4b48f504ac"
+  },
+  {
+    "name": "ACT_EmailMessage_SendQueuedEmails",
+    "uid": "4ae0a74a275ddb45a1cd6cce13b8762d"
+  },
+  {
+    "name": "VAL_EmailTemplateRecipients",
+    "uid": "b16c1db1beff52448ba62b1c29a318e4"
+  },
+  {
+    "name": "ACT_EmailAccount_ClientCredentialsGrant_SaveManualConfig",
+    "uid": "bbb6a152ae7d5841ba2beeede21f95f9"
+  },
+  {
+    "name": "OCH_OAuthProvider_GetOrCreateOAuthProvider",
+    "uid": "fbc51cfdc096d94dbad5203f8d7516dd"
+  },
+  {
+    "name": "OEN_SetIncomingServer",
+    "uid": "9be0b6b3fb8d6342bbef51d28895bebc"
+  },
+  {
+    "name": "OCH_Background_EmailReceiveComplete",
+    "uid": "880dc2fb86d35143b75cfd4d5501a707"
+  },
+  {
+    "name": "OEN_SetOutgoingServer",
+    "uid": "e50fffe98d2f3540891968904692af1b"
+  },
+  {
+    "name": "OCH_OAuthProvider_CreateNew",
+    "uid": "8e5e838da61e04489bd571b55e673fa8"
+  },
+  {
+    "name": "SUB_GetNewOAuthToken_AuthCodeGrantFlow",
+    "uid": "7176082c554e6d4197315b556d641387"
+  },
+  {
+    "name": "SUB_EmailAccount_OAuthToken_ReplaceExpired",
+    "uid": "f05b3dbfac2f134888fea9787f6e06df"
+  },
+  {
+    "name": "OCH_OutgoingEmailConfiguration_Select",
+    "uid": "5fb31f7e001dda41ab319f28a274fe1c"
+  },
+  {
+    "name": "ACT_ShowAccountSettingsPage",
+    "uid": "e438bcf85be3924ca4f052e7b287f7c0"
+  },
+  {
+    "name": "VAL_BatchDetails",
+    "uid": "be14d76272f97d42bb0031a495fb009d"
+  },
+  {
+    "name": "SUB_EmailMessage_SetAttachments",
+    "uid": "6daa85048ee5d44894f71dd4e0919d88"
+  },
+  {
+    "name": "OCH_Pk12Certificate_DeleteCertificate",
+    "uid": "ec9db926f5f21145946c2f55398f161b"
+  },
+  {
+    "name": "ACT_EmailMessage_ComposeReply",
+    "uid": "8b95d86b0897c2429d4f443ab96be56d"
+  },
+  {
+    "name": "ACO_ADE_OutgoingAccountMetrics",
+    "uid": "48b8020b0379bb45870d96e09f1c2dc2"
+  },
+  {
+    "name": "OCH_LDAPConfiguration_DeleteConfiguration",
+    "uid": "a4f57ca8b9480a4bb01f5d7ddd423464"
+  },
+  {
+    "name": "OCH_EmailMessage_ToggleRecipients",
+    "uid": "392fca17b86e5e4c97519c7503627654"
+  },
+  {
+    "name": "ACT_OAuthProvider_Create",
+    "uid": "e295fc8970741f46b67ebd4b1f3b5e62"
+  },
+  {
+    "name": "ACT_EmailTemplate_Import",
+    "uid": "8c5676226d603d45830512e64b354e5c"
+  },
+  {
+    "name": "ACT_EmailTemplate_Save",
+    "uid": "b01463f2eb2b8440bae37666d03f8b12"
+  },
+  {
+    "name": "ACT_OAuthProvider_Save",
+    "uid": "6c28d9a2acd56e44af79e9c3d3630b32"
+  },
+  {
+    "name": "DS_GetLDAPConfiguration",
+    "uid": "eb4f0d80487bf14a85e389c911b486c3"
+  },
+  {
+    "name": "BCO_Pk12Certificate_EncryptPassphrase",
+    "uid": "3e8fbd828fe7174188449b6cb2802db3"
+  },
+  {
+    "name": "ACT_EmailMessage_Delete",
+    "uid": "b366f8ac60f6914596f5e8189304340b"
+  },
+  {
+    "name": "ACT_Attachment_CreateNew",
+    "uid": "0572fcc33c475a4187591e0ea739f2eb"
+  },
+  {
+    "name": "DS_FolderList",
+    "uid": "a13c982f4ae4ba49a31f9b51cc4e3e95"
+  },
+  {
+    "name": "ACT_LDAPConfiguration_ChangeBaseName",
+    "uid": "b139fd399bcf8a4d9232fabf478d9017"
+  },
+  {
+    "name": "BCO_OAuthProvider_EncryptPassword",
+    "uid": "b3490a989734914ab9605f994c4492da"
+  },
+  {
+    "name": "ACT_EmailAccount_GetOrRenewTokenJavaAction",
+    "uid": "63b84b053c207a4cae67609586c51f4a"
+  },
+  {
+    "name": "SUB_CreateLogItem",
+    "uid": "0163d7c6f284444899b83d8f512f8f6b"
+  },
+  {
+    "name": "ACT_IncomingEmailConfiguration_FolderSelect",
+    "uid": "0ca06246ae0ec048a97ad6e5e44e36c7"
+  },
+  {
+    "name": "SUB_SendEmailFromJavaAction",
+    "uid": "bdbae7190797484f9171443d359c07e6"
+  },
+  {
+    "name": "ACT_EmailAccount_RetrieveEmails",
+    "uid": "7a4eba3365550b45ab166d51d207d045"
+  },
+  {
+    "name": "SUB_GenerateOAuthNonce",
+    "uid": "de3a4a781f82bd44a7082da0a0259965"
+  },
+  {
+    "name": "ACT_EmailAccount_SaveManualConfig",
+    "uid": "e96079f0ced97a49af0db100d7981333"
+  },
+  {
+    "name": "DS_ModelReflectionChecker",
+    "uid": "901f566d9f0c0e4db971aca68b53c73a"
+  },
+  {
+    "name": "SUB_GetFirstOAuthProvider",
+    "uid": "fc78c4de0f61a84a91acf85a3dc307c0"
+  },
+  {
+    "name": "ACT_OAuthProvider_DeleteProvider",
+    "uid": "ceb8fea87bdf4d4abfc674ad8db463fd"
+  },
+  {
+    "name": "BCO_OAuthToken_EncryptTokens",
+    "uid": "1894da08aa934b43a722ada03628ae2c"
+  },
+  {
+    "name": "OCH_Background_EmailFetchMicroflow",
+    "uid": "843459ad0d503c48a8e0ea5f9bcb83cf"
+  },
+  {
+    "name": "ACT_IncomingEmailConfiguration_ChangeMoveToFolder",
+    "uid": "94f735bbda939a499c220d57120d2b15"
+  },
+  {
+    "name": "OCH_OAuthProvider_SetCallbackURL_AuthCode",
+    "uid": "b923f44804cf7b4b8dc187d8ec5cc742"
+  },
+  {
+    "name": "ACT_OAuthProvider_ShowOAuthProviderPage",
+    "uid": "9f493e114a209042be5cf22b53cb75ab"
+  },
+  {
+    "name": "SUB_DuplicateTokenList",
+    "uid": "9a79a6bc708a6248b5f58f6bf8c57779"
+  },
+  {
+    "name": "SUB_EmailAccount_SubscribeForEmailNotification",
+    "uid": "2c557d167ec92d4c81ffcc06ff48df25"
+  },
+  {
+    "name": "ACT_EmailTemplate_DuplicateAndShowPage",
+    "uid": "a82635a052b63c4098cb6ae9ab1b82da"
+  },
+  {
+    "name": "ACO_ADE_IncomingAccountMetrics",
+    "uid": "85a2a8f9516d164280fe6ed38d889eaf"
+  },
+  {
+    "name": "OCH_OAuthProvider_SetCallbackURL_ClientCred",
+    "uid": "9b9c3bab47779247987b83d310617a61"
+  },
+  {
+    "name": "DS_LDAPBaseDNList",
+    "uid": "7a02181fc03f744f9904d5930b2105e2"
+  },
+  {
+    "name": "ACT_EmailMessage_SendEmailAndClosePage",
+    "uid": "131907c74a3c50488707a5b58917d0b8"
+  },
+  {
+    "name": "ACT_EmailAccount_SaveEmailSecurityConfiguration",
+    "uid": "d993dcdaef81ed49ba739edca065958d"
+  },
+  {
+    "name": "ACT_EmailMessageList_ResetQueuedStatus",
+    "uid": "46f05ad2b504b2449642a2a8368476a5"
+  },
+  {
+    "name": "SUB_GetEmailTemplateAttachments",
+    "uid": "77563dae929f8443b444ac0c2132309d"
+  },
+  {
+    "name": "BCO_EmailAccount_EncryptPassword",
+    "uid": "06bc6a04f0322a4db1ff568ee223c755"
+  },
+  {
+    "name": "ACT_EmailAccount_SaveAutoConfig",
+    "uid": "f308b2a1da1fe445b185552cb95dde84"
+  },
+  {
+    "name": "OCH_Background_SubscriptionStateChanged",
+    "uid": "6144c4c23f0285419669bf4006cca4a7"
+  },
+  {
+    "name": "ACT_ShowAccountLoginPage",
+    "uid": "27a1f742dc75cc4d96bfe53920a9a3ad"
+  },
+  {
+    "name": "SUB_GetOAuthURL",
+    "uid": "1f824bcea451654f87b216ed2c942488"
+  },
+  {
+    "name": "SUB_EmailAccount_Save",
+    "uid": "326c585fc516934689a26bcb97a82321"
+  },
+  {
+    "name": "ACT_EmailTemplate_GenerateAndSetPlainText",
+    "uid": "6b30db7b5db21c40a5a41ae692b6a992"
+  },
+  {
+    "name": "OCH_Background_ReceiveBatchFailed",
+    "uid": "c452d44d97aca641a9e2cdf117da1546"
+  },
+  {
+    "name": "ACT_Attachment_Download",
+    "uid": "5a02a1124685bf4cadfe2995da0dcd73"
+  },
+  {
+    "name": "OCH_EmailTemplate_ToggleRecipients",
+    "uid": "5b26fd4a1c2e6740adee494759c57bcd"
+  },
+  {
+    "name": "OCH_IncomingEmailConfiguration_Select",
+    "uid": "da4d9d1c8e568441a36ef17dad59d039"
+  },
+  {
+    "name": "ACT_EmailTemplate_ShowModelReflectionPage",
+    "uid": "62a4ce4897058848b42dd1ccdf366b27"
+  },
+  {
+    "name": "DS_GetPKCS12Certificate",
+    "uid": "629316498eb9364fbd9c45de95265845"
+  },
+  {
+    "name": "DS_EmailAccount_CreateDummyAccount",
+    "uid": "01a4af68f72cdc42a86f642391d7d715"
+  },
+  {
+    "name": "ACT_EmailMessage_SendComposedEmail",
+    "uid": "27f954d4de9c7748bfb562ac66856e6b"
+  },
+  {
+    "name": "SUB_Decrypt",
+    "uid": "797f7743d0646b48bb0ef7c08bbfb8be"
+  },
+  {
+    "name": "Sample_ASU_SubscribeForEmailNotification",
+    "uid": "6ee7808cad620c4c9784d8afbb06eab1"
+  },
+  {
+    "name": "Sample_ACT_SendEmailWithTemplate",
+    "uid": "d6233707487b6e468ce563e85b7f65b0"
+  },
+  {
+    "name": "Sample_ACT_CreateEmailFromTemplateAndThenSend",
+    "uid": "9ec213ae5f7c9e42a9c280f2b7e0ca63"
+  },
+  {
+    "name": "SUB_EmailAccount_CheckServerConnection",
+    "uid": "b1bf38656e86864c8b121119ca6e16e2"
+  },
+  {
+    "name": "ACT_EmailAccount_LaunchEmailConnectorOverview",
+    "uid": "9e9a325eee175042bdbb9851eabc8fd9"
+  },
+  {
+    "name": "SUB_RetrieveEmails",
+    "uid": "a1032736558ff349a138d66ecb14a99d"
+  },
+  {
+    "name": "SUB_SendEmail",
+    "uid": "2a35440f6bd47e4f940cdd0432c710a6"
+  },
+  {
+    "name": "MB_GenerateKeyShowPage",
+    "uid": "e58456e7bf8ade47bdbe8ee208e422a7"
+  },
+  {
+    "name": "MB_GenerateCertificate",
+    "uid": "351e28f1a73ae64ba0ce7e5be172077e"
+  },
+  {
+    "name": "MB_NewPubKey",
+    "uid": "57eac7caa5930b43846840b818a24c47"
+  },
+  {
+    "name": "MB_NewPrivateKey",
+    "uid": "155e8e41e5d4434d84a8790ba2263f68"
+  },
+  {
+    "name": "MB_SaveCertificate",
+    "uid": "f913d71d733c734c83ce543f345683cc"
+  },
+  {
+    "name": "DS_GetAssociatedPubKey",
+    "uid": "2fe6c8adfc1ee7459b2cf1104b467a18"
+  },
+  {
+    "name": "Encrypt",
+    "uid": "5a437ccf47e87a4bb5ea3914643b5858"
+  },
+  {
+    "name": "Decrypt",
+    "uid": "918afe280e43b745b5207a0f5b2880f0"
+  },
+  {
+    "name": "ForceEncrypt",
+    "uid": "cc5b3d389a55444bacefc946e4bc7043"
+  },
+  {
+    "name": "MB_ChangePasswordSave",
+    "uid": "5bafc0860f74644e8444304e81ce97b7"
+  },
+  {
+    "name": "MB_ShowChangePassword",
+    "uid": "a063f878eac5e44bb17d5fb6ee8ef3dc"
+  },
+  {
+    "name": "MB_SavePassword",
+    "uid": "5a37fa35b132cb4d8e75fecf9c97ddb6"
+  },
+  {
+    "name": "MB_OpenCertificateDetails",
+    "uid": "906d6c0ddb92f14ca698e4e921bcd0b4"
+  },
+  {
+    "name": "Encrypt_Document",
+    "uid": "b1cc5348ca456a48ad3a012609e6949f"
+  },
+  {
+    "name": "Decrypt_Document",
+    "uid": "95d703c7292d3e45ac9b2d0b6971bc5b"
+  },
+  {
+    "name": "DecryptCommunityCommonsString",
+    "uid": "b30e4abea705564a8baf1e57fbc71aa5"
+  },
+  {
+    "name": "ACT_Attachment_SaveWithEmail",
+    "uid": "4418011718980040943bd7b0cc157a18"
+  },
+  {
+    "name": "SUB_CreateEmailFromTemplateAndThenSend",
+    "uid": "ecf38712c715084789d60dc9e456335b"
+  },
+  {
+    "name": "FetchUserFromTerritory",
+    "uid": "0107e2830fe5db4289badb30fefb9eb2"
+  },
+  {
+    "name": "ACr_SaveEvent",
+    "uid": "b2979db1bb7d604783df3be7d416c5ed"
+  },
+  {
+    "name": "ACT_AssignTaskToUser",
+    "uid": "a6b2bee4aea41b42b31c02148fe21a46"
+  },
+  {
+    "name": "ACT_ReferBack",
+    "uid": "33dfefbc65240c48a6ec74f54e8dc350"
+  },
+  {
+    "name": "ACT_Reject",
+    "uid": "548213d8334b0647a5c5b06b11a8aea1"
+  },
+  {
+    "name": "ACr_CoverNote",
+    "uid": "a555f6af3b2c4845b1c535c472b92052"
+  },
+  {
+    "name": "ACT_Quotation_TotalEventCost",
+    "uid": "f4bd8b725b06a34cbdf39727ff36b52e"
+  },
+  {
+    "name": "ACT_CalculateFMV",
+    "uid": "87a39d0be4976941976bfd6ada1ee4ef"
+  },
+  {
+    "name": "ACT_Upload_CoverNote",
+    "uid": "f0c2cd593739ec49a2c873e88e0fb355"
+  },
+  {
+    "name": "ACT_CountAssignedTask",
+    "uid": "aa9246a484ba0244914cfb10e23ac7a1"
+  },
+  {
+    "name": "ACT_Download_PreDoc",
+    "uid": "7e9e4345afe079498e862fb5d2802515"
+  },
+  {
+    "name": "ACT_Download_DoctorDocuments",
+    "uid": "b4ebabc30d62e842815ce8d90a2aa3de"
+  },
+  {
+    "name": "ACT_Download_PostDoc",
+    "uid": "cad20e4ef447b9488163fc1ccdb918ae"
+  },
+  {
+    "name": "VAL_Step1",
+    "uid": "92d57f0cc8951040bb7ae21d37a9b297"
+  },
+  {
+    "name": "VAL_Step2",
+    "uid": "387a26132bc6b34eb663226d467767e2"
+  },
+  {
+    "name": "VAL_Step3",
+    "uid": "6360e637eb85f446b37419ca5f6dd1f4"
+  },
+  {
+    "name": "VAL_Doc",
+    "uid": "19cf25b89b8b3441ba2ef85097bb0977"
+  },
+  {
+    "name": "ACT_AddEmcureAttendees",
+    "uid": "96d5a3430825df458bd6281992018ded"
+  },
+  {
+    "name": "DS_DeleteAttendee",
+    "uid": "7d81b76543dffe44a54b8728fceed207"
+  },
+  {
+    "name": "DS_RetrieveDivision",
+    "uid": "f2fac2f42b95704dbcc88f901ceb7e07"
+  },
+  {
+    "name": "DS_DateOfSubmission_MasterDoctors",
+    "uid": "690f4aac25f97a4ebf8d9caa126d8699"
+  },
+  {
+    "name": "ACT_Download_CoverNote",
+    "uid": "67dd7ccedf941a46b0715dfb79a080ba"
+  },
+  {
+    "name": "ACT_RetrieveDoctorCity",
+    "uid": "6006dc7dd0c2644d98cc3803ad90429a"
+  },
+  {
+    "name": "ACT_Retrieve_EventInitiationForm_ForEventDate",
+    "uid": "154f3016a556d142ba2405d98c9998b5"
+  },
+  {
+    "name": "ACT_FetchDashboardEntity",
+    "uid": "a10f5e2597037b4baaf60a2ec2f92342"
+  },
+  {
+    "name": "DS_Delete_Form",
+    "uid": "eaf5341361ed1d46be693b1b35b8acb0"
+  },
+  {
+    "name": "SUB_CreateEmialFromTemplate_SendToApprover",
+    "uid": "267a4033f4ac7c4397f0b4a7b37cc4f6"
+  },
+  {
+    "name": "SUB_CreateEmialFromTemplate_SendToInitiator",
+    "uid": "7dae41647bb84d4f909f8d31ebdfd88d"
+  },
+  {
+    "name": "ACT_AssignTaskToUser_CorporateSponsorship",
+    "uid": "431154601b258a4086e45c517099fab9"
+  },
+  {
+    "name": "ACT_ShowPageCalculateFMV",
+    "uid": "ed3f3712fb36004ab2c31b283c5d76f8"
+  },
+  {
+    "name": "FetchUserData",
+    "uid": "a964c7cff1888f4ab00da87f97d05e1f"
+  },
+  {
+    "name": "ACT_SendEmail",
+    "uid": "5d563b4cb5776e49acd96112ba92ba30"
+  },
+  {
+    "name": "NavigateToHome",
+    "uid": "48387c396e5d3144a5b8956ade63c3b3"
+  },
+  {
+    "name": "ACr_SubmitEvent",
+    "uid": "06871293812ec640a13902ffb008ef21"
+  },
+  {
+    "name": "ACT_ShowPage_PreApproverPage",
+    "uid": "335695a62b8a934e8b6e546b3fe6d8ba"
+  },
+  {
+    "name": "ACT_ShowPage_PostApproverPage",
+    "uid": "39ea22cd9c870345a5722df241622b4e"
+  },
+  {
+    "name": "ACT_SkipLevel",
+    "uid": "0823db89fd314948a9107114c6b13163"
+  },
+  {
+    "name": "ACT_ShowPageForSkip",
+    "uid": "ea2d4e2110bb934f8dd2cc4a83c42f45"
+  },
+  {
+    "name": "ACT_FetchEvents",
+    "uid": "586c675a28b42148bce2118373f24698"
+  },
+  {
+    "name": "ACT_CreateVariableFilter",
+    "uid": "b51e95a7a844c04f97dc5837d78e7252"
+  },
+  {
+    "name": "ACT_ChangeFilterObject",
+    "uid": "26ac922f9ffe674995d6dcfea93fa0f2"
+  },
+  {
+    "name": "SUB_FilterEvent",
+    "uid": "e23168e8a09e924d8c1c4fe7f57ba39a"
+  },
+  {
+    "name": "ACT_FetchUsersFromTerritory",
+    "uid": "ad51a49ebefff249ae5a31c87dfc93c4"
+  },
+  {
+    "name": "SUB_ReferBackFlow",
+    "uid": "d8d9ab886e36ca4fafd7e108f4b40b97"
+  },
+  {
+    "name": "SUB_SaveAsDraftFlow",
+    "uid": "cd6c4888622fc940959b37af4aa7cfc4"
+  },
+  {
+    "name": "SUB_Level2Flow",
+    "uid": "99d785659389964081fb9bd64247a25b"
+  },
+  {
+    "name": "SUB_OpexFlow",
+    "uid": "1dfb9db80352df4495629eaeb6dcffd7"
+  },
+  {
+    "name": "SUB_OpexApprovedFlow",
+    "uid": "3950dd6828709444a48f066c3dc28888"
+  },
+  {
+    "name": "SUB_ComplianceFlow",
+    "uid": "dfe7d1975cc71449b1442c91f88a32e2"
+  },
+  {
+    "name": "SUB_NormalFlow",
+    "uid": "0f324a5c7540f147aa6bb111d9b4387f"
+  },
+  {
+    "name": "ACT_ConveretPDFToBase64",
+    "uid": "551d060ae2bb8b49b7386461602aea8d"
+  },
+  {
+    "name": "SUB_RestAPI_SendDocumentToSignature",
+    "uid": "609bef0fad3e5144a06385b4411d5609"
+  },
+  {
+    "name": "ACT_Download_PDF",
+    "uid": "32150be56697b842a01e8a31b0de499f"
+  },
+  {
+    "name": "ACT_DownloadAgreement",
+    "uid": "ef4b269df7f8a74492257e98655a2eb5"
+  },
+  {
+    "name": "ACT_VerifyStatus",
+    "uid": "8c876d9b86aa694087de6bf7f151f811"
+  },
+  {
+    "name": "ACT_ImportDarwinUsers",
+    "uid": "a43db1a5619c2b4c8761c67097eb2c0f"
+  },
+  {
+    "name": "Startup_ReplaceLoginAction",
+    "uid": "d6ac7307bb5c5642af92ffd3dfc98532"
+  },
+  {
+    "name": "LoginAllowed",
+    "uid": "ea4b4d1b20036f44bdd3701885eb3b3e"
+  },
+  {
+    "name": "Microflow",
+    "uid": "fee6927ef6017745ab4753392764a44a"
+  },
+  {
+    "name": "SUB_Level2Flow_CorporateSponsorshipEvent",
+    "uid": "d623369c76b6e247baeb6db5d2e1edf9"
+  },
+  {
+    "name": "ACT_FetchTerritoryFromEntity",
+    "uid": "7fbb14ef069c4d489a9a2a0760786ff2"
+  },
+  {
+    "name": "ACT_SaveEntityChanges",
+    "uid": "942c4567285a9c4ab7d8c0c8c65f232b"
+  },
+  {
+    "name": "ACT_ViewEvent",
+    "uid": "40c0b7dee85d294db75ffabdb1e673d3"
+  },
+  {
+    "name": "ACT_CreateHCPObj",
+    "uid": "31ce5d5dfa15a64bba3721e0ca9992cc"
+  },
+  {
+    "name": "ACT_ImportSelectedEmployees",
+    "uid": "75c98cb7cb17b04fa00827034b3c290f"
+  },
+  {
+    "name": "ACT_RetriveNonHCPDoctor",
+    "uid": "2c0920055769c94e840f3bfd01b0741e"
+  },
+  {
+    "name": "ACT_AddNonHCPDoctorToEvent",
+    "uid": "2e034c359791d0418828296093af1f47"
+  },
+  {
+    "name": "ACT_RetriveNonHCPDoctorForGrid",
+    "uid": "89b31aa100c4954fbb69799f5e00bed1"
+  },
+  {
+    "name": "ACT_RetriveHCPDoctorForGrid",
+    "uid": "9be12be0562f1047aa89c16f7e9284a0"
+  },
+  {
+    "name": "ACT_AddNonHCPDoctorToEventPostApproval",
+    "uid": "2abeffe1d52a3e43b3ff7ca1e925b169"
+  },
+  {
+    "name": "ACT_RetrievePreEventDocumentType_2",
+    "uid": "b3fd193de43c984db1d9d2f9fd1fcbc4"
+  },
+  {
+    "name": "VAL_PostEventDocs",
+    "uid": "bd81fbda3d5ea74681da5f0df37d4685"
+  },
+  {
+    "name": "ACT_UpdateEventAction",
+    "uid": "cc226277704f9847b6c992bb881ef8de"
+  },
+  {
+    "name": "ACT_Test",
+    "uid": "51ea39b55b85394cb515696d03c80b00"
+  },
+  {
+    "name": "ACT_SaveOtherDivision",
+    "uid": "ea2012a877899d4f81492ffe480b10b2"
+  },
+  {
+    "name": "ACT_RefreshOtherDivision",
+    "uid": "3313f57fedfaf74a8149b90d33bee67a"
+  },
+  {
+    "name": "ACT_NotifyOtherDivisions",
+    "uid": "ff3e5a42b8afbe4f8cf3f1ecb896d348"
+  },
+  {
+    "name": "SUB_CreateEmialFromTemplate_SendToOtherDivision",
+    "uid": "98818e078a77744fa0d3621893cf5e5e"
+  },
+  {
+    "name": "ACT_FetchDashboardEntity_2",
+    "uid": "8f9d39ee70b5544a88e5ba00725319ac"
+  },
+  {
+    "name": "ACT_CreateOtherDivObj",
+    "uid": "be9bd286e53834449eb03626a6e3b2a3"
+  },
+  {
+    "name": "SUB_IterateAuditTrail",
+    "uid": "774c069eb1277b45992d62a0eaab6b26"
+  },
+  {
+    "name": "ACT_DeleteOtherDivision",
+    "uid": "4a8bbe4ac29e6d4ab8d0c09d6332637e"
+  },
+  {
+    "name": "ACT_CreateNonHCLObj",
+    "uid": "234c7ea596d5e247812f38efe4030a10"
+  },
+  {
+    "name": "ACT_SaveNonHCPDoctor",
+    "uid": "9b5e5fdf3be3da42a7d26f161ae6ea3e"
+  },
+  {
+    "name": "ACT_DeleteNonMCLHCP",
+    "uid": "9f1ec60b1502c14fafb4295b44cc625e"
+  },
+  {
+    "name": "ACT_RetriveUsersFromCurrentDivision",
+    "uid": "cd1921e80fd8464b89b3a9601bae7884"
+  },
+  {
+    "name": "CreateTestObjects",
+    "uid": "af07476598d96e49aa22906a2b6a5206"
+  },
+  {
+    "name": "ACT_ExportExampleListToExcel",
+    "uid": "189c943bca098944883f6627cf095747"
+  },
+  {
+    "name": "ACT_ExportAttendeesToExcel",
+    "uid": "5cd09bb62186f54d8074baa2c3ef3f2d"
+  },
+  {
+    "name": "ACT_CreateBDCReportObj",
+    "uid": "754f70fb4f84134eb115edb5cac7eec3"
+  },
+  {
+    "name": "ACT_AddBDCReportToEvent",
+    "uid": "3f4cedd90eb10a458738fb9569d3432c"
+  },
+  {
+    "name": "ExportBDCToExcel",
+    "uid": "2e6f1008b7c4ba47a61365dd6fd25233"
+  },
+  {
+    "name": "ACT_SubmittedKPIHyperlink",
+    "uid": "9f94854c0954d04a969e087bdd9625f5"
+  },
+  {
+    "name": "ACT_ApprovedKPIHyperlink",
+    "uid": "c1518e1c846dd84e9d9de6bf8a23987a"
+  },
+  {
+    "name": "ACT_RejectedKPIHyperlink",
+    "uid": "72bf381b77a59a469b0eaacc15c2a803"
+  },
+  {
+    "name": "ACT_ReferredKPIHyperlink",
+    "uid": "763e50ca972d8d4085b82797a049c5a7"
+  },
+  {
+    "name": "ACT_CalculateTotalCost",
+    "uid": "6c4ead40457be141b69737ff323260e1"
+  },
+  {
+    "name": "ACT_CalculateTotalMealsAndBeverage",
+    "uid": "6fe4ee982494f3488030c7d5a7b310f0"
+  },
+  {
+    "name": "IVK_ImportTemplateDocument",
+    "uid": "f924446b2d36aa4e8e2004267dbe52c0"
+  },
+  {
+    "name": "FormatInteger",
+    "uid": "3c12401d61b90b459c2a1a210834aafa"
+  },
+  {
+    "name": "Example_SetupImportTemplate",
+    "uid": "e5e349cd0357ea40a7c685e606083324"
+  },
+  {
+    "name": "SetupTemplate",
+    "uid": "f81a0755994ca947988db38b74f282c8"
+  },
+  {
+    "name": "SetupColumn",
+    "uid": "14b653646a3c2f45a8af54166a238a14"
+  },
+  {
+    "name": "ASu_CheckModelAndTemplates",
+    "uid": "61d8dd00b507784191b5b083d2a84b68"
+  },
+  {
+    "name": "SetColumnStatus",
+    "uid": "44c1928bcbce39498bd3e9bd720ac39a"
+  },
+  {
+    "name": "Ch_FindObjectType_Reference",
+    "uid": "e1aa5f07366d0e42ad00176c008665b5"
+  },
+  {
+    "name": "Ch_SetMicroflow",
+    "uid": "e2d992c2fc5be943ab95728ce3b448f0"
+  },
+  {
+    "name": "Ch_FindMicroflow",
+    "uid": "5f962b8c5ca41747a937e51d70b2f622"
+  },
+  {
+    "name": "Ch_SetAttribute",
+    "uid": "de72723753fdd54e8352a52e153c9eee"
+  },
+  {
+    "name": "Ch_SetObjectType_Reference",
+    "uid": "ddd8e3b930b49445af634c122f07830e"
+  },
+  {
+    "name": "Ch_FindReference",
+    "uid": "e5722d6818e33448afcdd3b069a38a0a"
+  },
+  {
+    "name": "Ch_SetReference",
+    "uid": "de2d48f4ce77eb45be13652f56fef7df"
+  },
+  {
+    "name": "Ch_SetAttribute_Reference",
+    "uid": "bcd29379ec64f341b643b2e5c72e28fc"
+  },
+  {
+    "name": "Ch_FindAttribute",
+    "uid": "0d241a2e26cb7541b42b6c06eb03b0b9"
+  },
+  {
+    "name": "Ch_FindAttribute_Reference",
+    "uid": "c190fe5305ea4d499963cb7705c8f704"
+  },
+  {
+    "name": "prepareReferenceHandling",
+    "uid": "b7741e2aed295348a9f820c8174e9b5f"
+  },
+  {
+    "name": "IVK_Column_Save",
+    "uid": "c6c2fedd46c4c647bc5e3b5ae9a1da3d"
+  },
+  {
+    "name": "IVK_ColumnEdit",
+    "uid": "f41246beee90c74facebf01d2bf4a9ff"
+  },
+  {
+    "name": "Column_SetDetails",
+    "uid": "8a5b1b0797a4ab499d643e57c2c79cb2"
+  },
+  {
+    "name": "IVK_ColumnNew",
+    "uid": "661a0402208dd146b7b17411df92a4a5"
+  },
+  {
+    "name": "Column_SetCorrectRefObjectType",
+    "uid": "6f3a25fef4dbf446be2f4dd55c2d4622"
+  },
+  {
+    "name": "BDe_Column",
+    "uid": "d65a60e429957048b74db7e286ed3785"
+  },
+  {
+    "name": "Ch_Column_SetDefaultObject",
+    "uid": "dbbcdc900c5da44ab29374a6b350f52f"
+  },
+  {
+    "name": "BCo_Column",
+    "uid": "2dabd08075e89b44b9406a19805c42d5"
+  },
+  {
+    "name": "IVK_DuplicateTemplate",
+    "uid": "2cad391d1631ce41af1c4569858a3701"
+  },
+  {
+    "name": "Ch_Template_CheckNrs",
+    "uid": "0c5635859baf2546bfe0a4f2a383f19f"
+  },
+  {
+    "name": "SF_Template_CheckNrs",
+    "uid": "8783f59d6d20ef42bb3d6cfed70cb27b"
+  },
+  {
+    "name": "ValidateTemplate",
+    "uid": "6e31ecc965677d4c9293edf52536e20f"
+  },
+  {
+    "name": "CleanupOldRefHandling",
+    "uid": "0b09f271f21d5140b45b1b520e229a08"
+  },
+  {
+    "name": "GetCorrectString",
+    "uid": "6ca7f7a911e1e140b1c3bf85a950f4c4"
+  },
+  {
+    "name": "Validate_TemplateDocument",
+    "uid": "f2cb4738e38adb4ea8d28b6ec1229b30"
+  },
+  {
+    "name": "IVK_TemplateDoc_Cancel",
+    "uid": "e83776c48318964da4811288da7ac9af"
+  },
+  {
+    "name": "IVK_Template_NewFromFile",
+    "uid": "2f7f197a4711c94791494729cd042998"
+  },
+  {
+    "name": "IVK_SaveContinue_CreateTemplateFromDoc",
+    "uid": "a6321862ba568640b70a45147ad3a3aa"
+  },
+  {
+    "name": "IVK_Template_ConnectMatchingAttributes",
+    "uid": "2cdee23b68124e4782ede75f87d2098e"
+  },
+  {
+    "name": "IVK_SaveNewTemplate_CreateColumns",
+    "uid": "3484e8020856fd4f9ad3591d068904ab"
+  },
+  {
+    "name": "IVK_SaveNewTemplate",
+    "uid": "a100fe80c758c144815cc76b8b0c0e5c"
+  },
+  {
+    "name": "GetAddProperties",
+    "uid": "a035f54c6eb2dd42af183ff6a1bc0265"
+  },
+  {
+    "name": "IVK_CancelTemplate",
+    "uid": "4b171b1c9371d146b93a70b3178e1bc9"
+  },
+  {
+    "name": "Ch_Template_ChangeObjectType",
+    "uid": "5091aa33cbf903438030a92f96e27468"
+  },
+  {
+    "name": "ACr_Template",
+    "uid": "a872e6f686071447aefbe2e1952003fb"
+  },
+  {
+    "name": "Sub_CreateColumnsFromTemplate",
+    "uid": "312e73a3623a984ca307dce6a27c216b"
+  },
+  {
+    "name": "IVK_SaveTemplate",
+    "uid": "cb5f7fb9fd16f94ba5c85601c532cefe"
+  },
+  {
+    "name": "StringToTemplateStatusEnum",
+    "uid": "9f24c40791f2cb40a5ce9e8fa726cf4d"
+  },
+  {
+    "name": "StringToTemplateImportActions",
+    "uid": "05e37ff15771c3479e62072bb6608c0b"
+  },
+  {
+    "name": "ParseStringToEnum_StatisticsLevel",
+    "uid": "9f4194ad950357409bd05c9f2d8ea471"
+  },
+  {
+    "name": "StringToMxObjectAttributeTypesEnum",
+    "uid": "92ef579fbd187e4aaf13b5f81999d4ee"
+  },
+  {
+    "name": "StringToMxObjectReferenceReferenceType",
+    "uid": "2ee1f48d0ae0a64e9ddbeb8eb9650d45"
+  },
+  {
+    "name": "StringToColumnReferenceKeyType",
+    "uid": "f39ea06ed21e684580c8cc04f99178d8"
+  },
+  {
+    "name": "StringToColumnMappingType",
+    "uid": "f147b2b2d9901b4b93b421dc9cdce04d"
+  },
+  {
+    "name": "StringToReferenceHandlingEnum",
+    "uid": "aa262425061e2645bde6ac06b86afc0f"
+  },
+  {
+    "name": "StringToMxObjectReferenceAssociationOwner",
+    "uid": "35e0415f8b00564d8b67121fef3f5213"
+  },
+  {
+    "name": null,
+    "uid": "397e3d67efe1c64ca989f1343cd99f56"
+  },
+  {
+    "name": "StringToColumnYesNo",
+    "uid": "cdc5673ada828d4e9c759550d377effe"
+  },
+  {
+    "name": "StringToReferenceDataHandling",
+    "uid": "d973491df36fa84abc8a445c84717c58"
+  },
+  {
+    "name": "StringToDataSource",
+    "uid": "926771c74b3a63498ce237dd9d734299"
+  },
+  {
+    "name": "IVK_ImportXML_Upload",
+    "uid": "5f41a510dab0884390b314fc023bbd0c"
+  },
+  {
+    "name": "ExcelTemplate_ImportFromXml",
+    "uid": "1f75e99f0545764aa2173920a02286d0"
+  },
+  {
+    "name": "StringToTemplateRemoveIndicator",
+    "uid": "3da64d4bcd4d7b45a3ccc47890237638"
+  },
+  {
+    "name": "ExcelImporterTemplateXSD",
+    "uid": "c4996a84fc38404bac4f3663da0da8cc"
+  },
+  {
+    "name": null,
+    "uid": "ffac893623e2c540ac41c185567773f7"
+  },
+  {
+    "name": "MxObjectAttributeTypesEnumToString",
+    "uid": "1de7979292dfa349853de76d6d3acc81"
+  },
+  {
+    "name": "MxObjectReferenceAssociationOwnerToString",
+    "uid": "eccc832b6c61654298eaa2b757633fbb"
+  },
+  {
+    "name": "ColumnYesNoToString",
+    "uid": "c393d2f545377a4bbe1360871d286231"
+  },
+  {
+    "name": null,
+    "uid": "3352da52d4d4ca4aa692f2b5d4842add"
+  },
+  {
+    "name": "TemplateReferenceHandlingEnumToString",
+    "uid": "5744efa409739445b2aa83fcb34ad119"
+  },
+  {
+    "name": "ReferenceHandlingEnumToString",
+    "uid": "e8da02b0a0a21a4da42fc59707ba329c"
+  },
+  {
+    "name": "TemplateRemoveIndicatorToString",
+    "uid": "34f6fb15d709e84c92d37564c8a904e9"
+  },
+  {
+    "name": "ColumnMappingTypeToString",
+    "uid": "0ef318b4de4bfb47b5b477f9f9b974fd"
+  },
+  {
+    "name": "ColumnReferenceKeyTypeToString",
+    "uid": "a0ae274629879d4286d10d62ad267a4a"
+  },
+  {
+    "name": "TemplateImportActionsToString",
+    "uid": "a9a82daca7367a4b8e62273de698c028"
+  },
+  {
+    "name": "TemplateReferenceDataHandlingEnumToString",
+    "uid": "5d14e5002fca6a4a83a8f51c01e4368f"
+  },
+  {
+    "name": "ColumnDataSourceToString",
+    "uid": "95faea8ea0511743ac6cede7efbf4d70"
+  },
+  {
+    "name": "TemplateStatusEnumToString",
+    "uid": "c8df7b39fddc554da5c955adfaa8ff63"
+  },
+  {
+    "name": "MxObjectReferenceReferenceTypeToString",
+    "uid": "960a5e508d850a438c1223b86b8521ba"
+  },
+  {
+    "name": "ExcelTemplate_ExportToXML",
+    "uid": "291f8bc7108f8a4a8c838c35450cdb4f"
+  },
+  {
+    "name": "ParseEnumToString_StatisticLevel",
+    "uid": "2aef2ccb0909be4ba7dd1b11cd732ce4"
+  },
+  {
+    "name": "ACT_ImportExcel_Master_Type",
+    "uid": "2773926c01e16f428610b44aee159f0d"
+  },
+  {
+    "name": "ParseDoctorClass",
+    "uid": "d46aa211bda8684ba751c9762e466c39"
+  },
+  {
+    "name": "ParseDoctorStation",
+    "uid": "cb69637b2bd51e4c92bdacee55cc50b8"
+  },
+  {
+    "name": "ParseDoctorServicePreference",
+    "uid": "67dbdf7b5b8a324298383230f9fc2863"
+  },
+  {
+    "name": "ParseDoctorHML",
+    "uid": "1745cce8282cd240af767e64dd2f140f"
+  },
+  {
+    "name": "ParseDoctorType",
+    "uid": "316f7e79c520cf46b59f2fcf5ca85c2c"
+  },
+  {
+    "name": "ACT_AssignReportingManager",
+    "uid": "c422c1d1bbf5a74eb563f38638324c49"
+  },
+  {
+    "name": "VAL_Honorarium",
+    "uid": "5111873a21de9543a1e160b4428e67c7"
+  },
+  {
+    "name": "ACT_UpdateEmcureAttendeesCount",
+    "uid": "c826eb54bae64e4d89ab94be18df9303"
+  },
+  {
+    "name": "Microflow",
+    "uid": "1a12f7c525894b4691cc44fa45e81348"
+  },
+  {
+    "name": "ACT_CreateObjPreDoc",
+    "uid": "7c0dce5ffc6b0b4e8b5417d819560ddd"
+  },
+  {
+    "name": "ACT_CreateObjPostDoc",
+    "uid": "4a8a73ef75100345b753d28812d4f26b"
+  },
+  {
+    "name": "ACT_CalculateFMV_NONMCL",
+    "uid": "f17aa891cbd2bd4c8bdfc07ed556fc6e"
+  },
+  {
+    "name": "ACT_CreateObjFMVCalculator",
+    "uid": "9d7fb72f0f2f7840bb0160c68ee45b12"
+  },
+  {
+    "name": "DS_NonMCLHCP",
+    "uid": "7ddcb8ca6fec1c41b0e68297b72cf2f7"
+  },
+  {
+    "name": "DS_RetriveMCLHCPs",
+    "uid": "f8106988847c794b9f6a8b58f25d9b53"
+  },
+  {
+    "name": "VAL_NonMCLHCP",
+    "uid": "b258b7d7e19e284ea34c8e9f96715aa4"
+  },
+  {
+    "name": "DS_RetrivePreDocs",
+    "uid": "ab79f4ba8042dc43ac78df32e4d466bc"
+  },
+  {
+    "name": "DS_RetrivePostDocs",
+    "uid": "9f3640bda179fe40805ec996307fd663"
+  },
+  {
+    "name": "ACT_SaveMeal",
+    "uid": "9d1aa58de0f4ef44927565baff193156"
+  },
+  {
+    "name": "DS_RetriveMasterMeal",
+    "uid": "090605fb994d0441b4a69b7122effe9d"
+  },
+  {
+    "name": "ACT_GetAgreementLogs",
+    "uid": "89265ff792d1ca4bad43eab01695df46"
+  },
+  {
+    "name": "ACT_GetAttachments",
+    "uid": "d6184026272dd540b9882e137fecd198"
+  },
+  {
+    "name": "ACT_RetriveAgeements",
+    "uid": "724064514e67d447983f5398130d6886"
+  },
+  {
+    "name": "ACT_SendEmailNotification",
+    "uid": "b5c141303eea56408ceea6633aea9395"
+  },
+  {
+    "name": "ACT_CreateUser",
+    "uid": "fd2541ef2457c34195f32e40935fc49b"
+  },
+  {
+    "name": "ACT_CommitPreEventDocumentEditPage",
+    "uid": "f654b221f1af1943b9225dc6500b6de4"
+  },
+  {
+    "name": "ACT_RetrivePostEvent",
+    "uid": "245005f43c96c4418882a469a4225b7e"
+  },
+  {
+    "name": "ACT_RetrivePreEvent",
+    "uid": "325fd56be968db49ab406732232a40f4"
+  },
+  {
+    "name": "ACT_MapUserData",
+    "uid": "056ab06460cd894489bf9363ee69d943"
+  },
+  {
+    "name": "SE_ImportDarwinUsers",
+    "uid": "2b74bcfb572550468605b012dd01151a"
+  },
+  {
+    "name": "SUB_GetEmployeeIds",
+    "uid": "1aac2f745c83764ebee0d4d437b0a8fd"
+  },
+  {
+    "name": "ACT_ResendEmail",
+    "uid": "b0d4e3503ffe2b478af1998002d7a771"
+  },
+  {
+    "name": "DS_GetPDFObject",
+    "uid": "48987eb003e10a4f888a7904a65608e3"
+  },
+  {
+    "name": "ACT_DownloadPDF",
+    "uid": "2c1691e2d9545b46a276f78ab8f7268f"
+  },
+  {
+    "name": "BCo_AudittrailSuperClass",
+    "uid": "76e75573121ebf4fa3e651563eb0e835"
+  },
+  {
+    "name": "BDe_AudittrailSuperClass",
+    "uid": "385fbe3102c11f488240ceaece3ac331"
+  },
+  {
+    "name": "OCl_ToggleUI",
+    "uid": "01c37f56b6e1a34dbbe734f30ba69205"
+  },
+  {
+    "name": "Calc_LogDescription",
+    "uid": "e62b2cb4db3fdd4993c903409463b28f"
+  },
+  {
+    "name": "DSO_ToggleUI",
+    "uid": "802a8dcd59ebcc46b380084365de4e1e"
+  },
+  {
+    "name": "CA_Diff",
+    "uid": "e6316640b08b3c46899b30ed9bf0299b"
+  },
+  {
+    "name": "CA_CalculatedNewValue",
+    "uid": "1155c3d7f6af6e40a2638d967e1f1706"
+  },
+  {
+    "name": "CA_CalculatedOldValue",
+    "uid": "e0088d1632dd67409552df59ba0eb599"
+  },
+  {
+    "name": "ACT_FetchDeviationReport",
+    "uid": "e6ba3446d427e048bc8115eab2b0af02"
+  },
+  {
+    "name": "ACT_FetchEvents",
+    "uid": "166b65152dfbfd4295724e6ab9f3ef20"
+  },
+  {
+    "name": "ExportEventsReport",
+    "uid": "abe881d267dc114699f1184600de670f"
+  },
+  {
+    "name": "ACT_FetchAssociatedInfo",
+    "uid": "b5d16a8fec5ebb4bb2e7b32685f26e3e"
+  },
+  {
+    "name": "BCo_AudittrailSuperClass_INForm_Create",
+    "uid": "31b5feb1d13a2647a0ed36d5d0b1ba57"
+  },
+  {
+    "name": "BDe_AudittrailSuperClass_INForm_Del",
+    "uid": "909c9d6d436b80488a6cd55a88fefa2a"
+  },
+  {
+    "name": "DS_RetriveAuditTrail",
+    "uid": "8c7339d1a1b7f048863738e1c689778b"
+  },
+  {
+    "name": "ACT_EventAgreements",
+    "uid": "3383023600400b45a4864cd2401fe140"
+  },
+  {
+    "name": "DS_DivisionWiseBrand",
+    "uid": "2ddaf83c134ac645a964474abfcdc5d8"
+  },
+  {
+    "name": "DS_CalculateTotalEventCost",
+    "uid": "52e90406a3f8854d82dda00bedaac13c"
+  },
+  {
+    "name": "ACT_ImportBrandMapDivision",
+    "uid": "53e2a1cc49c0d346b8f2a0bcf2cebcd9"
+  },
+  {
+    "name": "SUB_ImportBrandMapDivision",
+    "uid": "84d3561fca8bc24884768fa35c65411b"
+  },
+  {
+    "name": "ACT_ImportDivisionTerritory",
+    "uid": "1c7cfd606083b142b683d1ebd5f0d54b"
+  },
+  {
+    "name": "SUB_EmcureEntity",
+    "uid": "20f81a9ca3148a43a4c093b6f42bf633"
+  },
+  {
+    "name": "SUB_Division",
+    "uid": "5c162734dd2e204e84b5d9f1d621388f"
+  },
+  {
+    "name": "ACT_RetriveDivision",
+    "uid": "bc0285bed298c840bda567cde6a28faf"
+  },
+  {
+    "name": "ACT_DeleteDocumentPostEvent",
+    "uid": "e45a219303f9d644ad909913b6ca40f5"
+  },
+  {
+    "name": "ACT_SetEventDate",
+    "uid": "c14057669b55d24f8cbe12959c27b31b"
+  },
+  {
+    "name": "ACT_After20Days",
+    "uid": "45ae040858c0754cba3950c21544a44f"
+  },
+  {
+    "name": "NavigateToUserManagement",
+    "uid": "b90905a28f2d1f488be0deefca753492"
+  },
+  {
+    "name": "ACT_retriveFileUpload",
+    "uid": "6ae46f8157198746af9f879dc7111c00"
+  },
+  {
+    "name": "ACT_CommitFile",
+    "uid": "caca6b634910d14ab9e39ad42aeeb2f7"
+  },
+  {
+    "name": "ACT_DownloadFile",
+    "uid": "63d387afd2d2754f989320512c67e61f"
+  },
+  {
+    "name": "OCH_Agreement",
+    "uid": "73389caaefa034408136d0168c45cf7a"
+  },
+  {
+    "name": "SUB_ImportVendor",
+    "uid": "44636c38060d374483cf6255c53032f6"
+  },
+  {
+    "name": "ACT_ShowPageCalculateFMV_2",
+    "uid": "07d160663ac5e44cbf24131848b0feaa"
+  },
+  {
+    "name": "Microflow",
+    "uid": "f9567b54dbebf34581f52c102246fb54"
+  },
+  {
+    "name": "ACT_DeviationReferBack",
+    "uid": "630782cf7bdada47bc42bb79fe60914d"
+  },
+  {
+    "name": "ACT_DeviationReferBackFlow",
+    "uid": "8483d296693b6147ad8e6a01b41a985a"
+  },
+  {
+    "name": "ACT_ImportVendor",
+    "uid": "1e5b437b3aa3ef46abb2bcbf154e5813"
+  },
+  {
+    "name": "ACT_FetchVendor",
+    "uid": "ba9194bfb5f5df4ba47ce2df7577eb13"
+  },
+  {
+    "name": "ACT_RefreshBDC",
+    "uid": "de5d07618e368742a9e7aa1f1b9e5051"
+  },
+  {
+    "name": "ACT_DeleteAllVendor",
+    "uid": "e7746e25dfdde24f96e466c8a6bce391"
+  },
+  {
+    "name": "ACT_DownloadBDCFile",
+    "uid": "fc60a867fbe6c44ebcbce3335dfc8145"
+  },
+  {
+    "name": "DS_excel",
+    "uid": "3d4d223afb59954fb3437064d2173b13"
+  },
+  {
+    "name": "ACT_ExcelVendorImport",
+    "uid": "172c50480d7ca54784af9f72cef9c90d"
+  },
+  {
+    "name": "ACT_MapVendorToObject",
+    "uid": "664a1fe06c2cc941806c20c693d2ecbb"
+  },
+  {
+    "name": "ACT_ChangeIsBookTrue",
+    "uid": "034a92e2e57f8a4f988d5dd37b2a8e84"
+  },
+  {
+    "name": "ACT_FetchCurrentUser",
+    "uid": "2a4b5d5cc225d44e9ebff0c4750606f7"
+  },
+  {
+    "name": "ACT_FetchCurrentUserEmployeeId",
+    "uid": "92328edef12caf4a90e7b95a9e97cf4c"
+  },
+  {
+    "name": "ACT_CountAssignedTask_2",
+    "uid": "57fe3c7ac6759f4e8c1d037d859f9a4e"
+  },
+  {
+    "name": "ACT_RetrivePostEvent_2",
+    "uid": "2d5c78575ef97e4594826d54d025eb01"
+  },
+  {
+    "name": "ACT_RetrivePreEvent_2",
+    "uid": "5a13d0bd52688a4c901e6a52fe2e7e2d"
+  },
+  {
+    "name": "ACT_CancelledEvent",
+    "uid": "7902c2a5f6dc0a459b7e9bb70efddd4b"
+  },
+  {
+    "name": "ACT_FetchCancelledEvent",
+    "uid": "d9a66f2027c8a9419981945c3590c579"
+  },
+  {
+    "name": "ACT_ShowPreApproval",
+    "uid": "94bd50a86b82b546849bde1949d48979"
+  },
+  {
+    "name": "evaluateMultipleUserMatches",
+    "uid": "dc1efc88a986e04c80f2bd5e3a74c992"
+  },
+  {
+    "name": "BCo_UpdateFriendlyNameWhenEmpty",
+    "uid": "9803d02dea718a46a1aadca863184fb8"
+  },
+  {
+    "name": "CreateClaim",
+    "uid": "ea8349a6428d9345b47b39fabdd1c0d1"
+  },
+  {
+    "name": "ACT_Claim_Create",
+    "uid": "fa075b7c2debe3448f4ae8bf17e47836"
+  },
+  {
+    "name": "CreateClaimwithFriendlyName",
+    "uid": "2cd089fce6310f4bb1deb63da5916091"
+  },
+  {
+    "name": "DS_AvailableClaimsForUserProvisioningConfig",
+    "uid": "d916f76933430b42a7b252fb0ba7f3d0"
+  },
+  {
+    "name": "ACT_Delete_ClaimEntityAttributeList",
+    "uid": "6d10fecfcab2c94fb9bed5cbfb5834a1"
+  },
+  {
+    "name": "ACT_Save_ClaimEntityAttribute",
+    "uid": "ba27c8ed78c6a943aeba720d3d2397b5"
+  },
+  {
+    "name": "ACT_SelectClaim_ClaimEntityAttribute",
+    "uid": "bb53a67f9507cf4abbafdf298005b04c"
+  },
+  {
+    "name": "Sub_Val_ClaimEntityAttributeConfiguration",
+    "uid": "401250322cead34cb2afc201a164ea8d"
+  },
+  {
+    "name": "CreateOrUpdateUser",
+    "uid": "886271a01de96b47b1109443bc2a7cea"
+  },
+  {
+    "name": "InactiveUser",
+    "uid": "dcc731c4df72044b922e9fd03e2db96f"
+  },
+  {
+    "name": "CreateOrUpdate_UserProvisioning",
+    "uid": "474c8df3fedeab418fb11f6c7869b982"
+  },
+  {
+    "name": "Create_ClaimEntityAttributeMap",
+    "uid": "5f66deafa1ca734dae5641d1b0465946"
+  },
+  {
+    "name": "Sub_UpdateClaimEntityAttributeMap",
+    "uid": "8ebd7be317ec694da99e072a27ff9224"
+  },
+  {
+    "name": "Sub_Val_ProvisioningConfiguration",
+    "uid": "51f42c45025398458ec953d766427cb5"
+  },
+  {
+    "name": "Sub_GetEntityAttribute",
+    "uid": "0fab35f6afd9e54a92087dcdcb846697"
+  },
+  {
+    "name": "Sub_GetUserType",
+    "uid": "a24426d63da41f47b22b6e747a6dcd00"
+  },
+  {
+    "name": "Sub_handleUserProvisioning",
+    "uid": "85865a5f90589f43be22fa8c87e6369c"
+  },
+  {
+    "name": "Sub_GetCustomUserProvisioning",
+    "uid": "9342ba77e6d2b04fa159ab63672494fb"
+  },
+  {
+    "name": "User_Correct_UserType",
+    "uid": "9b4b1b006865194daa927d21fdeac113"
+  },
+  {
+    "name": "User_RetrieveOrCreateUserReportInfo",
+    "uid": "fb723ea6e05bbf438208b9a08f4c5ca6"
+  },
+  {
+    "name": "Sub_Val_PrincipalAttributeClaimConfiguration",
+    "uid": "552086c8cc00b04cb777fdc898fc8a19"
+  },
+  {
+    "name": "OCH_UserProvisioningConfigEntity",
+    "uid": "211afa5fa149c4478560ac008e4cb506"
+  },
+  {
+    "name": "Sub_Val_UserProvisioningConfiguration",
+    "uid": "84abae25178cae4b89a12b6adb422a37"
+  },
+  {
+    "name": "GetCustomUserProvisioning",
+    "uid": "6d5431eb44aa01478b91519d54a6fdb2"
+  },
+  {
+    "name": "ACT_Save_Configuration",
+    "uid": "7c954a2ee865ae4382c2c077e55c00b8"
+  },
+  {
+    "name": "ACT_ShowCusomExceptionMessage",
+    "uid": "cec6b8e986e4d24e8060f308f8f17a88"
+  },
+  {
+    "name": "ACT_Token_CustomATPRetrieveRoles",
+    "uid": "5cb8bad678aa7740b4a9ece6c8fdddb7"
+  },
+  {
+    "name": "Default_SAM_TokenProcessing_CustomATP",
+    "uid": "570eb3b66a2260439e8859207cfa2737"
+  },
+  {
+    "name": "SUB_Update_OIDCUserRole",
+    "uid": "5f873d47a97a8c4fbd02169ab353bfd1"
+  },
+  {
+    "name": "ACT_Microflows_GETCustomMicroflowsList",
+    "uid": "2965f6f82a727342aee819dfc2db1ebf"
+  },
+  {
+    "name": "Custom_CreateIDPConfiguration",
+    "uid": "264d1d60dd818d48a8078cc306877f79"
+  },
+  {
+    "name": "Default_CreateIDPConfiguration",
+    "uid": "2e00f57e69fdc94898aae0d628d98b83"
+  },
+  {
+    "name": "SUB_ValidateAccessToken",
+    "uid": "2d9e4f9edde2534abf93836caa68ec93"
+  },
+  {
+    "name": "SUB_ChangeRoleToUserRole",
+    "uid": "13bb2cee9951d94a9d63103adc9bb3a5"
+  },
+  {
+    "name": "GetAccessToken",
+    "uid": "25838684e0ff1648bae390575f2be39f"
+  },
+  {
+    "name": "APIAuthentication",
+    "uid": "b628fd844d9f1a4eb6d9c9fb6610f41a"
+  },
+  {
+    "name": "SUB_GetClientConfiguration",
+    "uid": "b36b2729ec14bb4fb34ca679bc3cfe05"
+  },
+  {
+    "name": "SUB_CheckAccountAndProcessUserRoles",
+    "uid": "5ba640cba0e430429b0108b43aa57172"
+  },
+  {
+    "name": "Default_Azure_TokenProcessing_CustomATP",
+    "uid": "f07714c51c5dca4094b831f9162ca174"
+  },
+  {
+    "name": "SUB_GetLogoutURL",
+    "uid": "0d381dea377d4645a3eb45fafbbba0af"
+  },
+  {
+    "name": "GetNewAccessTokenUsingRefreshToken",
+    "uid": "128a9bc9de6b9541b6d915ce9e9462ed"
+  },
+  {
+    "name": "MergeTokenData",
+    "uid": "3f9330f923bd6a4099114d53f14c6881"
+  },
+  {
+    "name": "GetCurrentToken",
+    "uid": "23b8d1249ef0724a8513b4f07850d5a0"
+  },
+  {
+    "name": "CleanupOldAuthAttempts",
+    "uid": "c7324ce7f8fcdc4e8f9b873d076eb9b0"
+  },
+  {
+    "name": "DecodeAndVerifyJWT",
+    "uid": "ff2f7c327826f14f9ad050b60da6a369"
+  },
+  {
+    "name": "webCallback_POST",
+    "uid": "b6c1c37f103d59409fa0cfe9c45b2d4d"
+  },
+  {
+    "name": "webCallback",
+    "uid": "5e9bff2da094984a82073daea124052b"
+  },
+  {
+    "name": "CheckNonceValue",
+    "uid": "ee5dd82e5909294590dfd3a46c0c81e7"
+  },
+  {
+    "name": "handleAuthorizationCode",
+    "uid": "9c5a75e0753d764aa7f3e1cb6d62a047"
+  },
+  {
+    "name": "GetDefaultAuthorizationURL",
+    "uid": "8686be4e8b539146afa5acbc11d89fb3"
+  },
+  {
+    "name": "GetDefaultClientConfiguration",
+    "uid": "bc0be633a7152b478fb1afacb211160f"
+  },
+  {
+    "name": "SUB_GetCallbackURL",
+    "uid": "84f6b02f2f1e2e468b5a2347345bd025"
+  },
+  {
+    "name": "GetAuthorizationURL",
+    "uid": "8911d284a368624b9539161567be5e0c"
+  },
+  {
+    "name": "SUB_BuildClaimString",
+    "uid": "0f799d73ac932742825aae22c6327dbf"
+  },
+  {
+    "name": "SUB_BuildScopeString",
+    "uid": "420e20a54c82fb46adeead5376f5c151"
+  },
+  {
+    "name": "loginEndpoint",
+    "uid": "444b88d394eb6e42b2708911f72af08b"
+  },
+  {
+    "name": "ACT_ImportConfiguration",
+    "uid": "ed5081d453121e42b5e11cff3c54b009"
+  },
+  {
+    "name": "ACT_ImportClientGrantConfiguration",
+    "uid": "19a4742a5e6a254d908c50622951fdf4"
+  },
+  {
+    "name": "SUB_DeleteAssociatedConfigurations",
+    "uid": "2cfc10f79dadbc45b888d7a9ff78b512"
+  },
+  {
+    "name": "ACT_Acr_New",
+    "uid": "64e6fb301ed895458139471d1b835c62"
+  },
+  {
+    "name": "ACT_ToggleActive",
+    "uid": "5da3b8ebe2a283409ed6ee93375bd4e0"
+  },
+  {
+    "name": "DS_ClientConfigHelper_Edit",
+    "uid": "a4106ce380861643be71372a7d5fab4f"
+  },
+  {
+    "name": "ACT_SetDefault",
+    "uid": "42f513a210b74142a9b0ead79811b9b5"
+  },
+  {
+    "name": "ACT_SelectClaims",
+    "uid": "086eaedb5e31c54f82f4678e5327235b"
+  },
+  {
+    "name": "ACT_DecodeIDToken",
+    "uid": "4cbb3c5f2c4d7a41a1582c8c4c8ab991"
+  },
+  {
+    "name": "SUB_DefaultUserProvisioning",
+    "uid": "716597b4c3af18428f98bfe0c9a4763e"
+  },
+  {
+    "name": "DS_ClientConfigHelper_View",
+    "uid": "913e48eae8964142abcfcfe83467b870"
+  },
+  {
+    "name": "ACT_SelectScopes",
+    "uid": "383412ab8cf0ca4f80696c6e54a1ddbf"
+  },
+  {
+    "name": "ACT_NewClaim",
+    "uid": "44f94f66ffefeb42beaeeb71d2b6a327"
+  },
+  {
+    "name": "SUB_GetAvailableScopes",
+    "uid": "ce16fef5543b4743aedfd9af1ffe99c1"
+  },
+  {
+    "name": "DS_ClientGrantConfigHelper_View",
+    "uid": "accd3ff028ddee43aca5fb9c27ece97f"
+  },
+  {
+    "name": "ACT_SaveConfiguration",
+    "uid": "4be1dfff45273f4991c364869752fc4f"
+  },
+  {
+    "name": "ACT_NewScope",
+    "uid": "31eb32206ccd15428f253bfe23e26b3c"
+  },
+  {
+    "name": "DS_ClientConfig_Delete",
+    "uid": "12aa134a800b8148ba21d48672f91110"
+  },
+  {
+    "name": "DS_Retrieve_AcrValues",
+    "uid": "2021f98595b9e8479c94343a77e83d75"
+  },
+  {
+    "name": "ACT_RefreshToken",
+    "uid": "22b8a24fe7bc8a4ebe6059d7416d5ee9"
+  },
+  {
+    "name": "SUB_GetAvailableClaims",
+    "uid": "11d636e87f9abc4983b1ba785f3584ad"
+  },
+  {
+    "name": "ACT_SaveClientGrantConfiguration",
+    "uid": "fc7749b7ee3c404596c33cf3385dc972"
+  },
+  {
+    "name": "DS_ClientConfigHelper_New",
+    "uid": "50a37ad0ad006e469e4ef29c0fc842a8"
+  },
+  {
+    "name": "DS_ClientGrantConfigHelper_New",
+    "uid": "4190c3e207a07c4db0defef24e592c8d"
+  },
+  {
+    "name": "DS_ClientGrantConfigHelper_Edit",
+    "uid": "f305f0dc99a6a347a702f13672cbc3d9"
+  },
+  {
+    "name": "OCH_ClientConfiguration_ChangeMicroflow",
+    "uid": "f32e4c372ccb1a48b1d5e825a722c21d"
+  },
+  {
+    "name": "DELETEME_ResetScopes",
+    "uid": "139490c8830f1c4c8ffee33af1bc57a6"
+  },
+  {
+    "name": "Default_OIDCProvider_TokenProcessing_CustomATP",
+    "uid": "6ec8c318034d5f44a10e165b7ed240d5"
+  },
+  {
+    "name": "SUB_TokenProcessing",
+    "uid": "4ce7e768ecfd664cbd9aeb65700010b9"
+  },
+  {
+    "name": "SUB_GetUserRoleGUID",
+    "uid": "834d5d7c51a3d846aa6091c035d99d8d"
+  },
+  {
+    "name": "GET",
+    "uid": "20d6d9f530d2c24c9f2478e1095dcac2"
+  },
+  {
+    "name": "DELETE",
+    "uid": "4ff5e7b4a15aa843b2066b837f5fb2fb"
+  },
+  {
+    "name": "PATCH",
+    "uid": "fd50006edaa4d446b4d73963c3971060"
+  },
+  {
+    "name": "PUT",
+    "uid": "4895079d3df808469554ab6f47ce7b95"
+  },
+  {
+    "name": "POST",
+    "uid": "a0cb06d2c32b45498ca7927b4d1c428c"
+  },
+  {
+    "name": "ACT_Account_RetrieveAccount",
+    "uid": "4d9e5205debc1b448081f980dbe01f52"
+  },
+  {
+    "name": "GetCustomParsingMicroflow",
+    "uid": "cc2dd0e5f639b942bd2ed6280f0a87a7"
+  },
+  {
+    "name": "SUB_HandlingClaims",
+    "uid": "4c885df94e2bde4990142412750351f1"
+  },
+  {
+    "name": "SUB_CreateUserClaim",
+    "uid": "02c719c207626a4ca534780c90059d69"
+  },
+  {
+    "name": "OIDC_CustomUserParsing_Standard",
+    "uid": "617064d386950146aaeadc084430709b"
+  },
+  {
+    "name": "OIDC_CustomUserParsing_Salesforce",
+    "uid": "563a982b5ca9a34293cddbaa09306d49"
+  },
+  {
+    "name": "OIDC_CustomUserParsing_UserInfo",
+    "uid": "f0431402a2cdb5468ccb9804f495571c"
+  },
+  {
+    "name": "CUSTOM_UserProvisioning",
+    "uid": "e86627516d1bdb4cb4cd876090971860"
+  },
+  {
+    "name": "UserProvisioning_Sample",
+    "uid": "5faf284e5ca04e47b580b41663b87b9a"
+  },
+  {
+    "name": "DS_GetClientConfigurationList",
+    "uid": "9d6953994027df43a2d591da6d3a291c"
+  },
+  {
+    "name": "SUB_GET_ClientConfigExt",
+    "uid": "c32134e0dffc79428c166467cd797974"
+  },
+  {
+    "name": "SUB_CreateOrUpdate_UserProvisioning",
+    "uid": "a3022a58b974234484722077bec927b9"
+  },
+  {
+    "name": "SUB_ValidateOrCreateClaim",
+    "uid": "2f293c53b0ab2a468fb9bb05c77fd475"
+  },
+  {
+    "name": "SUB_HandleClientConfiguration",
+    "uid": "6ea955edc9684b45983ddbed3ee34fb8"
+  },
+  {
+    "name": "SUB_HandleUserProvisioning",
+    "uid": "9d54e61db439c04fbab448b6df5ea34a"
+  },
+  {
+    "name": "SUB_Create_UserProvisioning",
+    "uid": "f2d353330200e847bf60ad695c1379e8"
+  },
+  {
+    "name": "SUB_Create_ClientConfigClaims",
+    "uid": "f244cad6723ba24c84a0bb768605f8e0"
+  },
+  {
+    "name": "SUB_Get_UserParsing",
+    "uid": "e2ac783bf67b8d469b4fdac7fef43887"
+  },
+  {
+    "name": "SUB_ClientGrantCreation",
+    "uid": "d5ef4803398888439940119436c2e8ea"
+  },
+  {
+    "name": "SUB_UpdateClientConfiguration",
+    "uid": "89960482cd1b714da3245717fd32e8da"
+  },
+  {
+    "name": "SUB_Get_ClientAuthenticationMethod",
+    "uid": "3e5e88614dd33f4686473b461e417452"
+  },
+  {
+    "name": "RefreshModelReflection",
+    "uid": "399bc1d12137df48acfc599ccbf52ed5"
+  },
+  {
+    "name": "SUB_Add_ACRValues",
+    "uid": "ee9ae36b2870e6409b67bbb96c34aebd"
+  },
+  {
+    "name": "SUB_AutomaticClientCreation",
+    "uid": "de8394cb80111443b8d41b3a67096009"
+  },
+  {
+    "name": "SUB_Get_ResponseMode",
+    "uid": "cac230256b39a742970d4be8dac99e66"
+  },
+  {
+    "name": "SUB_Create_AddScope",
+    "uid": "d3ff706f10185a4bbe1feb86824c2db0"
+  },
+  {
+    "name": "SUB_UpdateClientGrantConfiguration",
+    "uid": "5fd46a09789915499c6ac9373dcda890"
+  },
+  {
+    "name": "SUB_Create_AutomaticClient",
+    "uid": "7123855ffaa681489a4c2023bad528a5"
+  },
+  {
+    "name": "SUB_ClientCreation",
+    "uid": "3a9735e816dc864b8d94396725679abe"
+  },
+  {
+    "name": "SUB_Get_CustomTokenParsing",
+    "uid": "f267d60fff0b7646b6703acf4f551a6a"
+  },
+  {
+    "name": "SUB_Add_SelectedClaim",
+    "uid": "232e33ce843b674c96dc27682b3da4ef"
+  },
+  {
+    "name": "SUB_Create_AddClaim",
+    "uid": "4309a92d390d984780dbc07af74a5561"
+  },
+  {
+    "name": "SUB_Add_SelectedScope",
+    "uid": "dae25958fe8d9f4b9b7cea5b6a78d2b3"
+  },
+  {
+    "name": "ASU_OIDC_Startup",
+    "uid": "9f7711f103000f4da338a26e40494a71"
+  },
+  {
+    "name": "UserProvisioning_Sample",
+    "uid": "160f222793202346958787181a87b7e3"
+  },
+  {
+    "name": "SUB_GetCallbackURL",
+    "uid": "2ea74e3932026d468b054fd02ff97f0f"
+  },
+  {
+    "name": "ACT_ShowCusomExceptionMessage",
+    "uid": "874c6893a2f9e94495c2210e714b9ca4"
+  },
+  {
+    "name": "webCallback",
+    "uid": "8676a2d4143e2840825a861e0a7f2d95"
+  },
+  {
+    "name": "DecodeAndVerifyJWT",
+    "uid": "27343208636c86478dc80d23b0636765"
+  },
+  {
+    "name": "handleAuthorizationCode",
+    "uid": "b9213a3ad87a994e95ca2a482f122998"
+  },
+  {
+    "name": "DS_FetchUserHierarchy",
+    "uid": "a4031c4c7e6fd640b908b05b3c7da329"
+  },
+  {
+    "name": "SUB_SendEmailNotification",
+    "uid": "874ae1c618b7fd4e9f3db87b7e50cbd6"
+  },
+  {
+    "name": "SUB_NEW_ComplianceFlow",
+    "uid": "f0c6edf57050054ca5f71dd3ddc091c8"
+  },
+  {
+    "name": "SUB_ComplianceApprovedFlow",
+    "uid": "326f1013029e774196d0ddf48b5def85"
+  },
+  {
+    "name": "SUB_GSTFlow",
+    "uid": "06266f464d52be469fee9fdb41e7e884"
+  },
+  {
+    "name": "SUB_DivisionCoOrdinatorFlow",
+    "uid": "504d0b6d273cbe4f8c7c6f1190833b7b"
+  },
+  {
+    "name": "SUB_FinanceFlow",
+    "uid": "2aa9250bf32e8041ac86e037d7efe153"
+  },
+  {
+    "name": "BCo_AudittrailSuperClass_INForm_Create_MonthlyBudget",
+    "uid": "8394a5322c43bc418a28d9e89c58df21"
+  },
+  {
+    "name": "BDe_AudittrailSuperClass_INForm_Del_MonthlyBudget",
+    "uid": "010654f3a90a5b4a8f4fff4075264501"
+  },
+  {
+    "name": "DS_RetriveAuditTrail_MonthlyBusiness",
+    "uid": "2ec43a73e7525643b2591dfc8dce725d"
+  },
+  {
+    "name": "ACT_SaveMonthlyBusiness",
+    "uid": "91b2e139b4bf1d4e9196d8c7250510f9"
+  },
+  {
+    "name": "ACT_ValidateBudgetForEvent",
+    "uid": "838e8d65ae17f74ca175e0cdca699bd3"
+  },
+  {
+    "name": "ACT_ValidateBudgetForEventCost",
+    "uid": "a05673640a444a46a9a7cd47677b6a15"
+  },
+  {
+    "name": "ACT_UpdatePreEventStatusAfterPhaseIIChanges",
+    "uid": "804b5bde6070214b8c49991bd7d5c519"
+  },
+  {
+    "name": "DS_CreateEventApprovalObj",
+    "uid": "517758643325c04192ada5630d6750a9"
+  },
+  {
+    "name": "ACT_UpdateApproverAndStatus",
+    "uid": "fc54f79a77a5734d83094d0e3ef52093"
+  },
+  {
+    "name": "DS_RetriveUserBasedOnStatus",
+    "uid": "2ef4cc3944d2ab429123de76d94917b3"
+  },
+  {
+    "name": "ACT_UpdatePostEventStatusAfterPhaseIIChanges",
+    "uid": "a98c02ff987e6a46ab045e6e8b9dcd0f"
+  },
+  {
+    "name": "ACT_ImportEditApproverThroughExcel",
+    "uid": "8e839fc491c4a841aa711c9c04b182a2"
+  },
+  {
+    "name": "DS_GetCMEReport",
+    "uid": "5fe8289cc3700f4784e7ccf1c1fd5da4"
+  },
+  {
+    "name": "ACT_UndoCancelledEvent",
+    "uid": "2eb461bcb15d73418e48b725afd49012"
+  },
+  {
+    "name": "SUB_SubstractOtherDivisionBudget",
+    "uid": "ed92d62e31864d45a760c8647b92a97d"
+  },
+  {
+    "name": "SUB_SubstractBudget",
+    "uid": "2f230722362b6249beb8a1fd315fe44d"
+  },
+  {
+    "name": "ACT_ValidateBudgetForOtherDivisions",
+    "uid": "37316279958ad147b0c5912f80a1449c"
+  },
+  {
+    "name": "SUB_AddBudget",
+    "uid": "d2ec955807fa7f49a4fb4d921ada646a"
+  },
+  {
+    "name": "SUB_AddOtherDivisionBudget",
+    "uid": "5b9ee8e5c0dc62438408fb5bd568a8fa"
+  },
+  {
+    "name": "DS_RetriveCurrentDivisionDoctors",
+    "uid": "bd836ad88238f848b5c32d23b4e8bfee"
+  },
+  {
+    "name": "ACT_UpdateDoctorsDivisionThroughExcel",
+    "uid": "ac4669bc3eb4d8428e16ab209d4eed4b"
+  },
+  {
+    "name": "DSL_Modules",
+    "uid": "de46d1049612fc4c8a0380ea5c2b0333"
+  },
+  {
+    "name": "EnumValueLanguages",
+    "uid": "6f6cb88522f1434ba82fbe1f943629bb"
+  },
+  {
+    "name": "IVK_MxObjectTypeCommit",
+    "uid": "e1cae156de4c8d4d981ac387695b84f5"
+  },
+  {
+    "name": "ReferenceObjects",
+    "uid": "1cefa710ec194642851e97938a6b5316"
+  },
+  {
+    "name": "DSO_InheritsFromContainer",
+    "uid": "10c02bb8374bca43abafd306a69d2e95"
+  },
+  {
+    "name": "ACT_ShowMemberPage",
+    "uid": "cd6d189bd8f97b4aa415bf0ed7c87fb7"
+  },
+  {
+    "name": "IVK_deleteAll",
+    "uid": "9eb0041322fd6840b092f04e697fcbeb"
+  },
+  {
+    "name": "IVK_ToggleModule",
+    "uid": "a4411481d9cb0b4c819b7e9e579573c0"
+  },
+  {
+    "name": "EnumValueCaptions",
+    "uid": "14f8d3a60ef5f043acaf41ec0b6c8058"
+  },
+  {
+    "name": "IVK_SyncObjects",
+    "uid": "37f5ac3cefda084eb1eccd10b57b3380"
+  },
+  {
+    "name": "FindObjectType",
+    "uid": "2703693fb4e3014d8832d4ced78fcbb2"
+  },
+  {
+    "name": "FindMember",
+    "uid": "99ed4b24d24d634ab688298e29a23b0e"
+  },
+  {
+    "name": "FindMicroflow",
+    "uid": "0d08c2e610e09549b47c079b76b7c13a"
+  },
+  {
+    "name": "FindReference",
+    "uid": "dfa7ca1602972a448845dc37fb5013b2"
+  },
+  {
+    "name": "BCo_MxObjectMember_CreateCompleteMemberName",
+    "uid": "ce0216cbf5f126448b77c336e667d725"
+  },
+  {
+    "name": "ASu_CheckMetamodel",
+    "uid": "3b2a7bce75776a4b92b31889d340c882"
+  },
+  {
+    "name": "BDe_MxObjectType",
+    "uid": "7ff8d5f0b309b045942eb33873f42547"
+  },
+  {
+    "name": "BCo_MxObjectReference",
+    "uid": "bf217e137238854587af863427886971"
+  },
+  {
+    "name": "BCo_MxObjectType",
+    "uid": "06e31eab36008a4cbc8868a80deb2399"
+  },
+  {
+    "name": "OC_FindObjectType",
+    "uid": "409b485893b75945b59d1da49a2e7cad"
+  },
+  {
+    "name": "IVK_RecalculateSize",
+    "uid": "5b43a788cf9eca40b51e677c9446c06a"
+  },
+  {
+    "name": "Log",
+    "uid": "e7e29a771a7c3c41bf38537c45d6102d"
+  },
+  {
+    "name": "DeleteDbSizeEstimate",
+    "uid": "448637269d26184ba2ac8385a353d912"
+  },
+  {
+    "name": "Ch_Member",
+    "uid": "ac58f3347abd664985672921cefb1209"
+  },
+  {
+    "name": "Ch_ObjecttypeReference",
+    "uid": "3991f39fbe0f1844b56bb7a2b8467109"
+  },
+  {
+    "name": "Ch_Reference",
+    "uid": "3f1e094ee2620d40bc417a9f2f4c0338"
+  },
+  {
+    "name": "BCo_Token",
+    "uid": "7e845cf782bafd42a28145570b1013c8"
+  },
+  {
+    "name": "DeleteToken",
+    "uid": "ef1d2dd791f98b438e7abaa66913d619"
+  },
+  {
+    "name": "Ch_ObjectTypeStart",
+    "uid": "c3d5f0f9b71182489979e2f299df7870"
+  },
+  {
+    "name": "MB_TestThePattern",
+    "uid": "5e74c937abfcc741a314ec65765c382d"
+  },
+  {
+    "name": "MB_TestTokenPattern",
+    "uid": "24bda78aca9e764989e389566f331b01"
+  },
+  {
+    "name": "IVK_OpenReferencedMendixObject",
+    "uid": "44b76c5a0ac121409dd470c99f2f22c5"
+  },
+  {
+    "name": "DS_CMEEventData",
+    "uid": "fa68e590bf6b9c47aba26bab86edaca2"
+  },
+  {
+    "name": "ACT_FetchEvents_2",
+    "uid": "d47107bbb9dcec4ca71ea64e4419114f"
+  },
+  {
+    "name": "Sub_FetchMasterEvent_2",
+    "uid": "9ea1a8211a42554e8a8b2c651a68d514"
+  },
+  {
+    "name": "ACT_ShowEditDatePageForUser",
+    "uid": "009be57c7639204e92e41a9f417ff8db"
+  },
+  {
+    "name": "ACT_ShowEditDatePageForAdmin",
+    "uid": "11ff0e1810154442900cd34738e6845d"
+  },
+  {
+    "name": "ACT_ViewEvent_2",
+    "uid": "351f645242f4dd4db09e62bcee920b10"
+  },
+  {
+    "name": "ACT_UndoCancelledEvent_2",
+    "uid": "a9ed7a9dcf330b4b86bd785b8759c36e"
+  },
+  {
+    "name": "ACT_CancelledEvent_2",
+    "uid": "cf0683d3f14f2e4f8b15473df79f71b7"
+  },
+  {
+    "name": "ACT_DeleteEventMF",
+    "uid": "e4aeb8a66e24904f8160f5fd6a88da18"
+  },
+  {
+    "name": "ACT_ViewAgreement",
+    "uid": "670ab8dfc800e54eb7f810a8104cf413"
+  },
+  {
+    "name": "ACT_FetchEvents_2",
+    "uid": "62fa51e838301b4cb1960685450bc872"
+  },
+  {
+    "name": "ACT_FetchAssociatedInfo_2",
+    "uid": "bb7465164bef434c97765f91b2167e83"
+  },
+  {
+    "name": "ACT_ViewHCPs",
+    "uid": "4686ac05ac54104f8e3f56ad76a79f09"
+  },
+  {
+    "name": "ACT_MapVendorToObject_2",
+    "uid": "3f74504793267943b627b64a755e1381"
+  },
+  {
+    "name": "ACT_CountAssignedTask_3",
+    "uid": "b8ff412e08757b4986e6d027d1b0ccbe"
+  },
+  {
+    "name": "ACT_DeleteVendorList",
+    "uid": "0e619574f631074796d0568d689b2f64"
+  },
+  {
+    "name": "ACT_ImportAttendeesOData",
+    "uid": "e61a7885d5eebc4fabbe298ae674c18f"
+  },
+  {
+    "name": "SUB_ImportAttendeesThroughOData",
+    "uid": "3e68d73c00f13f4fba776076b09026ec"
+  },
+  {
+    "name": "ACT_AutoCancelSavedAsDraftEvents",
+    "uid": "91ccf364c1df9b4fa8f709deb696eea9"
+  },
+  {
+    "name": "ACT_MergeDocuments",
+    "uid": "21a3ca2dd41ced4ba591af1351543432"
+  },
+  {
+    "name": "ACT_BulkAgreementGeneration",
+    "uid": "6736141905dd7f4981766ce6e04cf3df"
+  },
+  {
+    "name": "ACT_CancelAgreement",
+    "uid": "15ec8eb8a7420d4f92fc9085142055b9"
+  },
+  {
+    "name": "ACT_DownloadedAttachment",
+    "uid": "264c3661fbf68c4ba32807e33c7952ab"
+  },
+  {
+    "name": "ACT_SaveAgreementFile",
+    "uid": "b5982ab1ec6ecd4c9546bd6814800e1e"
+  },
+  {
+    "name": "ACT_CreateFileObjToAgreement",
+    "uid": "50170d02bb7bb94a97b20b2630587953"
+  },
+  {
+    "name": "ACT_UploadManualAttachment",
+    "uid": "ec6162ce75426d47a08657900520a5a8"
+  },
+  {
+    "name": "DS_RetriveMasterMeal_2",
+    "uid": "b5b72dbd9239954abac0f9c7bdc644ef"
+  },
+  {
+    "name": "ACT_GoTo_SttledVendor",
+    "uid": "71bcfddda8b8554187db67f7829c18b1"
+  },
+  {
+    "name": "SUB_ComplianceTeam_Validation",
+    "uid": "0d7605a2d9e6f44298633767e296a0a8"
+  },
+  {
+    "name": "ACT_DownlodNonSignedPDF",
+    "uid": "209cf8ee5b61dc4b897f757abcf560f9"
+  },
+  {
+    "name": "DS_FetchUserForCurrentDivision",
+    "uid": "e0fc733fd3e35f458114b073f29e84c9"
+  },
+  {
+    "name": "ACT_ChangeInitiator",
+    "uid": "e6424c7f1ce0b048b75a211955aa5a4b"
+  },
+  {
+    "name": "ACT_UpdateInitiator",
+    "uid": "ddc0298bc47e5540bd3e30336f99b8fc"
+  },
+  {
+    "name": "ACT_CreateNewEvent",
+    "uid": "6466d1a803d44840acc78f7aa56a134c"
+  },
+  {
+    "name": "ACT_CommitFile",
+    "uid": "95fd4bd29542a74da77f089652693411"
+  },
+  {
+    "name": "OCH_RefreshData",
+    "uid": "0d70fd6b2bba4441a872b1468584139a"
+  },
+  {
+    "name": "BCO_AutoGenerate_EventCode",
+    "uid": "2c08f8ee6ec2184ca5b23254325c639f"
+  },
+  {
+    "name": "ACT_SubmitEvent",
+    "uid": "ce14b3182c23d643aaeaeb6770592daa"
+  },
+  {
+    "name": "ACT_RetrievePEDocumentType",
+    "uid": "cbe73e7fc7052a4ebf8910cd09782a42"
+  },
+  {
+    "name": "ACT_CreateObjPEDoc",
+    "uid": "e63e4c07165a3b42a99dce64c931c1d5"
+  },
+  {
+    "name": "DS_RetrivePEDocs",
+    "uid": "b17e2b802a2e464e9360f4ea592dd97a"
+  },
+  {
+    "name": "ACT_CommitPEDocument",
+    "uid": "1540a1f08bc52f42bf47e70159013432"
+  },
+  {
+    "name": "ACT_DeleteDocumentPostEvent",
+    "uid": "dbe38330cea878408f736d95d0a2e049"
+  },
+  {
+    "name": "ACT_SaveBudgetAllocation",
+    "uid": "4bbf474e67a5ae4085ca7339385971f1"
+  },
+  {
+    "name": "VAL_BudgetAllocation_Edit",
+    "uid": "c1e6d9c5952cb24ab70fc28f087aabc2"
+  },
+  {
+    "name": "DS_RetriveAuditTrail_BudgetAllocation",
+    "uid": "9fa2b02f80c28d409983d6419ac70fbb"
+  },
+  {
+    "name": "BCo_AudittrailSuperClass_INForm_Create_MonthlyBudget",
+    "uid": "2f06ad91ca7b0b4faa1ae84a2333abd6"
+  },
+  {
+    "name": "BDe_AudittrailSuperClass_INForm_Del_MonthlyBudget",
+    "uid": "fc286f176416034f98358e7e9622e913"
+  },
+  {
+    "name": "ACT_ShowBudgetAllocationPage",
+    "uid": "3b8f969495d7b743835694029c1d9224"
+  },
+  {
+    "name": "PromotionalEvent_View",
+    "uid": "709924959a8b3b459e6b1349d7594e7d"
+  },
+  {
+    "name": "ACT_FetchTasksPE",
+    "uid": "fb990e56255a4245925ad64eaf7ff688"
+  },
+  {
+    "name": "ACT_Download_PEDoc",
+    "uid": "6628e89efd7def4abe7de1314d0bab6b"
+  },
+  {
+    "name": "ACT_AssignTaskToUser",
+    "uid": "55e1b7c20ceb61458f57432f4dcc3073"
+  },
+  {
+    "name": "ACT_ApprovePEvent",
+    "uid": "ecedd7bfb0b27f45a5cf670cbea5d613"
+  },
+  {
+    "name": "ACT_L1ApproverFlow",
+    "uid": "a7909c7e16a5a74f9443727b7cb2ea59"
+  },
+  {
+    "name": "VAL_PromotionalEvent",
+    "uid": "637ebccc0d06614791817b333a999acb"
+  },
+  {
+    "name": "ACT_ReferBackPEvent",
+    "uid": "36d90a972b7c25428cdcf6de665796d4"
+  },
+  {
+    "name": "ACT_CountTask",
+    "uid": "3c448a6abbc07946869fa290d53de56f"
+  },
+  {
+    "name": "ACT_RejectPEvent",
+    "uid": "bc2765513d941d4b81b848f86f2dd081"
+  },
+  {
+    "name": "DS_BudgetValidation",
+    "uid": "4a3c394c5f543849a0acb1cee7055f17"
+  },
+  {
+    "name": "ACT_PurchaseApproval",
+    "uid": "b921ca3ae4a9d748aaee7a2d2846c4d7"
+  },
+  {
+    "name": "DS_ValidateDocs",
+    "uid": "aca8684ac666f047a2a98666daac97fe"
+  },
+  {
+    "name": "ACT_RetrievePEDocumentType_2",
+    "uid": "539d7a9d29a39e47a0ad41414c893554"
+  },
+  {
+    "name": "DS_RetrivePEDocs_2",
+    "uid": "9b9f8a16d12ae44c88746a9737b02051"
+  },
+  {
+    "name": "ACT_CommitPEDocument_2",
+    "uid": "e95189b1373b1a449417e64ca2dc6845"
+  },
+  {
+    "name": "NavigateTO_PE",
+    "uid": "0601e88265283d4d9ee8e10a23579bd9"
+  },
+  {
+    "name": "ACT_CreateVariableFilter",
+    "uid": "5f531863d8724c4d9bc5fa0fc4e92bf0"
+  },
+  {
+    "name": "ACT_ChangeFilterObject",
+    "uid": "f9a3bd948282cc48846033f1f8873021"
+  },
+  {
+    "name": "ACT_FetchKPICount_DashboardEntity",
+    "uid": "fc54e34f0efc7f44ae08edf7ccecc833"
+  },
+  {
+    "name": "ACT_FetchPromotionalEvents",
+    "uid": "24634c2530d3d24ca67c17f1da4a2f20"
+  },
+  {
+    "name": "IVK_Import_Budget",
+    "uid": "1a198b7bfe32484dbb076649d3a82a82"
+  },
+  {
+    "name": "ACT_RetrieveBrands",
+    "uid": "0e4e42966545534a980792ec3d1aa80d"
+  },
+  {
+    "name": "VAL_Subtype_NewEdit",
+    "uid": "69cd34a6832844418c68cd438a56eab4"
+  },
+  {
+    "name": "ACT_Subtype_NewEdit",
+    "uid": "ec049a8b680cb240a031a4f09ae48ddf"
+  },
+  {
+    "name": "ACT_UploadFile",
+    "uid": "e1116884cb8e9245a9adf30afc3f44b6"
+  },
+  {
+    "name": "ACT_Document_2",
+    "uid": "62751d552a55174c946def15ce159453"
+  },
+  {
+    "name": "ACT_FetchPEventData_Dashboard",
+    "uid": "90cc71289e41dd4fa2b858ee46f354c4"
+  },
+  {
+    "name": "SUB_SendMailInitiatorApprover",
+    "uid": "8dde9c4121b4a945b32a260e25158426"
+  },
+  {
+    "name": "SUB_ApproveSendMail",
+    "uid": "6a9acb6ffc3e874497b2add0b051b4bc"
+  },
+  {
+    "name": "DS_RetriveCurrentDivisionDoctors_2",
+    "uid": "e7e459922b9d684d8502dd3dfdfcdaef"
+  },
+  {
+    "name": "ACT_NextPageDoctorData",
+    "uid": "f80ee5e04a718048912a887ae161ae06"
+  },
+  {
+    "name": "ACT_PrevPageDoctorData",
+    "uid": "f92a21e1fe18094d96441f37bdd2de72"
+  },
+  {
+    "name": "ACT_RefreshPaginationHelperObj",
+    "uid": "39014a3713667e40b75de2052a5bfef3"
+  },
+  {
+    "name": "ACT_LastPageDoctorData",
+    "uid": "6098ad9479d46441903f3281c9029f1a"
+  },
+  {
+    "name": "ACT_FirstPageDoctorData",
+    "uid": "08b5272e496bdf45874ef8ced19cd3d7"
+  },
+  {
+    "name": "ACT_PostBDCToSAP",
+    "uid": "d01f6222385e9a40b1d251dd5eeb3115"
+  },
+  {
+    "name": "ACT_RefreshTrasactionObj",
+    "uid": "a6d78506bb160540923713e88578ab54"
+  },
+  {
+    "name": "ACT_FetchOrderNumber",
+    "uid": "4dd8f850230bdf4297a4f4e873063417"
+  },
+  {
+    "name": "ACT_CreateTransactionItem",
+    "uid": "5a36807e1f65ae459d02588ab27b55ce"
+  },
+  {
+    "name": "ACT_SaveChanges",
+    "uid": "645a1b9d1dcdc44bad23167041ce28a2"
+  },
+  {
+    "name": "ACT_ShowPageVendorSettlement",
+    "uid": "7e52ff88b8008a42bf233768fb905704"
+  },
+  {
+    "name": "ACT_ShowEditSettlmentPage",
+    "uid": "e4de316d40dbb149843bfb1203276b9a"
+  },
+  {
+    "name": "SUB_GenerateSUBApplicaionNumber",
+    "uid": "de2dd1c66949464a9ffc6c052129022f"
+  },
+  {
+    "name": "ACT_FetchSubApplicationData",
+    "uid": "be59546e8c5c7c428841770e7c426111"
+  },
+  {
+    "name": "ExportSubApplications",
+    "uid": "f9198def6192cb4d90fa0c67068698e8"
+  },
+  {
+    "name": "ACT_ParseGenderENUM",
+    "uid": "2511997d08d1b846b062ba2e0d457a47"
+  },
+  {
+    "name": "SUB_GetOtherDivisionList",
+    "uid": "9416d3e6097d9741a33be80411ad8f9c"
+  },
+  {
+    "name": "DS_GetDivisionOfCurrentUser",
+    "uid": "1a1b6dc4a9f9df4095ac5d6831560cae"
+  },
+  {
+    "name": "ACT_RefreshEventObj",
+    "uid": "1258a21109fb2d49bbd89023e9fa2b4c"
+  },
+  {
+    "name": "BCo_AudittrailSuperClass_INForm_Create_BDCDetails",
+    "uid": "6355c7721c584a42966924b8e2ab4cd9"
+  },
+  {
+    "name": "BDe_AudittrailSuperClass_INForm_Del_BDCDetails",
+    "uid": "84e67f80794e0245aa1a9a9d84e5e821"
+  },
+  {
+    "name": "BCo_AudittrailSuperClass_INForm_Create_BDCTransaction",
+    "uid": "093c6bb02155a2479359c3014cb7da92"
+  },
+  {
+    "name": "BDe_AudittrailSuperClass_INForm_Del_BDCTransaction",
+    "uid": "06b7513d48b68f4385c8f40cd279942d"
+  },
+  {
+    "name": "DS_RetriveAuditTrail_BDCDetail",
+    "uid": "a39230754c304a4da8d057ba360f6def"
+  },
+  {
+    "name": "DS_RetriveAuditTrail_BDCTransaction",
+    "uid": "7a5942214dbc2541a224bb815bcc024b"
+  },
+  {
+    "name": "VAL_BDCDetails",
+    "uid": "57dd004e276e3144b77e3be9a34e3a54"
+  },
+  {
+    "name": "SUB_ValidateBDCTransaction",
+    "uid": "a67b205d345be145ad2bf727fa5f851e"
+  },
+  {
+    "name": "ACT_RejectVendorSettlment",
+    "uid": "75b1d6b93553f147893ce2680ba398c4"
+  },
+  {
+    "name": "DS_GetFinanceAllocationReport",
+    "uid": "0f96df4aa43be64e8bf60a42b272d0eb"
+  },
+  {
+    "name": "ACT_GetAdvanceDetails",
+    "uid": "0a502ca8537bf74da2acac5ee730e933"
+  },
+  {
+    "name": "ACT_SaveAndPostToSAP",
+    "uid": "a9a2ca99b853f94a8b016840481ffb6d"
+  },
+  {
+    "name": "ACT_FetchUTRNumber",
+    "uid": "3d5a9cd1ae403a41acd448e989d7a82a"
+  },
+  {
+    "name": "SUB_FetchUTRNumber",
+    "uid": "74a41e94550bb14f85fb63c9cc4a4026"
+  },
+  {
+    "name": "ACT_GetOpenStatement",
+    "uid": "3de26c1f1bf1e743aff45b0fd27ceb89"
+  },
+  {
+    "name": "OCH_CalculateTotalAmount",
+    "uid": "bd03faa82aaf3a40aed21f45a7913591"
+  },
+  {
+    "name": "DS_SimulateBDC",
+    "uid": "32fefdfdec04fc4a942135d3f270d4ad"
+  },
+  {
+    "name": "ACT_SynchronizeVendorBankWithHoldingTax",
+    "uid": "3ddb4bdf8f3e704fb40fa47519a0b1d1"
+  },
+  {
+    "name": "ACT_AuthenticateODataUser",
+    "uid": "2e6a2d9fe33099499e6aabfc26adc93e"
+  },
+  {
+    "name": "SUB_SynchronizeVendorBankWithHoldingTax",
+    "uid": "1307e19004ae1947b265924e54739b98"
+  },
+  {
+    "name": "ACT_FetchWithHoldingTax",
+    "uid": "8160e555ac49384cbd8a393f64b2df55"
+  },
+  {
+    "name": "ACT_SyncVendorWithHolding",
+    "uid": "4ca5620e7679da44acd1a29c16044e48"
+  },
+  {
+    "name": "ACT_UpdateTotalAmount",
+    "uid": "119b760ab8ada34fb387c88a24434512"
+  },
+  {
+    "name": "ACT_BulkImportVendorSettlement",
+    "uid": "0825527b68d6f048acdd536eee57b9d8"
+  },
+  {
+    "name": "ACT_PostP2PRequest",
+    "uid": "cc51c9e4be50fb4496c5e355b74c9454"
+  },
+  {
+    "name": "ACT_ExecuteQuery",
+    "uid": "8fe38b595412464686dd5961367a53c2"
+  },
+  {
+    "name": "ACT_Download_SettlmentFile",
+    "uid": "cbc97b60f5f4fa4cab54a5f4c16258ce"
+  },
+  {
+    "name": "DS_GetDivisionOfCurrentUser",
+    "uid": "009fd79042535f49b54b484bbc9dac03"
+  },
+  {
+    "name": "ACT_RefreshEventObj",
+    "uid": "85abf57cb6053147bcf1d738364800d9"
+  },
+  {
+    "name": "ACT_FetchBankDetails",
+    "uid": "224c939ee4f9aa418751016bfb51708d"
+  },
+  {
+    "name": "ACT_ViewVendorSettlementThroughReport",
+    "uid": "cc23414cbedf074b90adba8160b19a72"
+  },
+  {
+    "name": "DS_OtherDivisionBudgetReportReport",
+    "uid": "f2bd2eb79c933d4da4155e245884b378"
+  },
+  {
+    "name": "VAL_DuplicateCheckInvoice",
+    "uid": "6922084f5ae26e4c894cffa6b39555e5"
+  },
+  {
+    "name": "ACT_SelectedVendors",
+    "uid": "c72b686b21eb8e468411f512726829fe"
+  }
+]

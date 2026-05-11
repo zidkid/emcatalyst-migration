@@ -1,0 +1,1036 @@
+{
+  "Master": {
+    "Value": [],
+    "LFB1s": [],
+    "LIFNR": [
+      {
+        "name": "LIFNR",
+        "type": "String"
+      },
+      {
+        "name": "LAND1",
+        "type": "String"
+      },
+      {
+        "name": "NAME1",
+        "type": "String"
+      },
+      {
+        "name": "NAME2",
+        "type": "String"
+      },
+      {
+        "name": "ORT01",
+        "type": "String"
+      },
+      {
+        "name": "PSTLZ",
+        "type": "String"
+      },
+      {
+        "name": "STRAS",
+        "type": "String"
+      },
+      {
+        "name": "ADRNR",
+        "type": "String"
+      },
+      {
+        "name": "KTOKK",
+        "type": "String"
+      },
+      {
+        "name": "J_1IPANNO",
+        "type": "String"
+      },
+      {
+        "name": "STCD3",
+        "type": "String"
+      },
+      {
+        "name": "BANKL",
+        "type": "String"
+      },
+      {
+        "name": "BANKN",
+        "type": "String"
+      },
+      {
+        "name": "PAY_METH",
+        "type": "String"
+      },
+      {
+        "name": "PAY_BLOCK",
+        "type": "String"
+      }
+    ]
+  },
+  "EventInitiation": {},
+  "Agreement": {},
+  "AccessManagement": {},
+  "Reports": {},
+  "EventApproval": {
+    "IGST_FLAG": [
+      {
+        "name": "IGST_FLAG",
+        "type": "String"
+      },
+      {
+        "name": "IV_BUKRS",
+        "type": "String"
+      },
+      {
+        "name": "IV_INVOICE_DATA",
+        "type": "String"
+      }
+    ],
+    "IT_VENDOR_INVOICE": [],
+    "SERIAL_NO": [
+      {
+        "name": "SERIAL_NO",
+        "type": "String"
+      },
+      {
+        "name": "VENDOR",
+        "type": "String"
+      },
+      {
+        "name": "REFERENCE",
+        "type": "String"
+      },
+      {
+        "name": "DOCUMENT_DATE",
+        "type": "DateTime"
+      },
+      {
+        "name": "POSTING_DATE",
+        "type": "DateTime"
+      },
+      {
+        "name": "DOCUMENT_TYPE",
+        "type": "String"
+      },
+      {
+        "name": "VENDOR_AMOUNT",
+        "type": "Decimal"
+      },
+      {
+        "name": "EXCH_RATE",
+        "type": "String"
+      },
+      {
+        "name": "CURRENCY",
+        "type": "String"
+      },
+      {
+        "name": "CALCULATE_TAX",
+        "type": "String"
+      },
+      {
+        "name": "VENDOR_TAX_CODE",
+        "type": "String"
+      },
+      {
+        "name": "GST_PARTNER",
+        "type": "String"
+      },
+      {
+        "name": "BUSINESS_PLACE",
+        "type": "String"
+      },
+      {
+        "name": "SECTION_CODE",
+        "type": "String"
+      },
+      {
+        "name": "VENDOR_TEXT",
+        "type": "String"
+      },
+      {
+        "name": "VENDOR_ASSIGNMENT",
+        "type": "String"
+      },
+      {
+        "name": "HEADER_TEXT",
+        "type": "String"
+      },
+      {
+        "name": "BUSINESS_AREA",
+        "type": "String"
+      },
+      {
+        "name": "REFERENCE_KEY_PROFIT_CENTER",
+        "type": "String"
+      },
+      {
+        "name": "BASE_LINE_DATE",
+        "type": "String"
+      },
+      {
+        "name": "PAYMENT_TERMS",
+        "type": "String"
+      },
+      {
+        "name": "PAYMENT_METHOD",
+        "type": "String"
+      },
+      {
+        "name": "WITHHOLDING_TAX_CODE1",
+        "type": "String"
+      },
+      {
+        "name": "WITHHOLDING_TAX_BASE_AMOUNT",
+        "type": "Decimal"
+      },
+      {
+        "name": "WITHHOLDING_TAX_CODE1_",
+        "type": "String"
+      },
+      {
+        "name": "WITHHOLDING_TAX_BASE_AMOUNT_",
+        "type": "Decimal"
+      },
+      {
+        "name": "GL_ACCOUNT",
+        "type": "String"
+      },
+      {
+        "name": "AMOUNT",
+        "type": "Decimal"
+      },
+      {
+        "name": "TAX_CODE",
+        "type": "String"
+      },
+      {
+        "name": "ASSIGNMENT",
+        "type": "String"
+      },
+      {
+        "name": "TEXT",
+        "type": "String"
+      },
+      {
+        "name": "BUSINESS_AREA_2",
+        "type": "String"
+      },
+      {
+        "name": "COSTCENTER",
+        "type": "String"
+      },
+      {
+        "name": "ORDERS",
+        "type": "String"
+      },
+      {
+        "name": "PLANT",
+        "type": "String"
+      },
+      {
+        "name": "PROFIT_CENTER",
+        "type": "String"
+      },
+      {
+        "name": "HSN_CODE",
+        "type": "String"
+      },
+      {
+        "name": "REFERENCE_1",
+        "type": "String"
+      },
+      {
+        "name": "REFERENCE_2",
+        "type": "String"
+      },
+      {
+        "name": "REFERENCE_3",
+        "type": "String"
+      },
+      {
+        "name": "PAY_BLOCK",
+        "type": "String"
+      }
+    ],
+    "EX_MESSSAGE": [
+      {
+        "name": "EX_MESSSAGE",
+        "type": "String"
+      },
+      {
+        "name": "EX_DOC_NO",
+        "type": "String"
+      }
+    ],
+    "IT_LINEITEMS": [],
+    "Item": [],
+    "COMP_CODE": [
+      {
+        "name": "COMP_CODE",
+        "type": "String"
+      },
+      {
+        "name": "VENDOR",
+        "type": "String"
+      },
+      {
+        "name": "SP_GL_IND",
+        "type": "String"
+      },
+      {
+        "name": "CLEAR_DATE",
+        "type": "String"
+      },
+      {
+        "name": "CLR_DOC_NO",
+        "type": "String"
+      },
+      {
+        "name": "ALLOC_NMBR",
+        "type": "String"
+      },
+      {
+        "name": "FISC_YEAR",
+        "type": "String"
+      },
+      {
+        "name": "DOC_NO",
+        "type": "String"
+      },
+      {
+        "name": "ITEM_NUM",
+        "type": "String"
+      },
+      {
+        "name": "PSTNG_DATE",
+        "type": "String"
+      },
+      {
+        "name": "DOC_DATE",
+        "type": "String"
+      },
+      {
+        "name": "ENTRY_DATE",
+        "type": "String"
+      },
+      {
+        "name": "CURRENCY",
+        "type": "String"
+      },
+      {
+        "name": "LOC_CURRCY",
+        "type": "String"
+      },
+      {
+        "name": "REF_DOC_NO",
+        "type": "String"
+      },
+      {
+        "name": "DOC_TYPE",
+        "type": "String"
+      },
+      {
+        "name": "FIS_PERIOD",
+        "type": "String"
+      },
+      {
+        "name": "POST_KEY",
+        "type": "String"
+      },
+      {
+        "name": "DB_CR_IND",
+        "type": "String"
+      },
+      {
+        "name": "BUS_AREA",
+        "type": "String"
+      },
+      {
+        "name": "TAX_CODE",
+        "type": "String"
+      },
+      {
+        "name": "LC_AMOUNT",
+        "type": "String"
+      },
+      {
+        "name": "AMT_DOCCUR",
+        "type": "String"
+      },
+      {
+        "name": "LC_TAX",
+        "type": "String"
+      },
+      {
+        "name": "TX_DOC_CUR",
+        "type": "String"
+      },
+      {
+        "name": "ITEM_TEXT",
+        "type": "String"
+      },
+      {
+        "name": "BRANCH",
+        "type": "String"
+      },
+      {
+        "name": "BLINE_DATE",
+        "type": "String"
+      },
+      {
+        "name": "PMNTTRMS",
+        "type": "String"
+      },
+      {
+        "name": "DSCT_DAYS1",
+        "type": "String"
+      },
+      {
+        "name": "DSCT_DAYS2",
+        "type": "String"
+      },
+      {
+        "name": "NETTERMS",
+        "type": "String"
+      },
+      {
+        "name": "DSCT_PCT1",
+        "type": "String"
+      },
+      {
+        "name": "DSCT_PCT2",
+        "type": "String"
+      },
+      {
+        "name": "DISC_BASE",
+        "type": "String"
+      },
+      {
+        "name": "DSC_AMT_LC",
+        "type": "String"
+      },
+      {
+        "name": "DSC_AMT_DC",
+        "type": "String"
+      },
+      {
+        "name": "PYMT_METH",
+        "type": "String"
+      },
+      {
+        "name": "PMNT_BLOCK",
+        "type": "String"
+      },
+      {
+        "name": "FIXEDTERMS",
+        "type": "String"
+      },
+      {
+        "name": "INV_REF",
+        "type": "String"
+      },
+      {
+        "name": "INV_YEAR",
+        "type": "String"
+      },
+      {
+        "name": "INV_ITEM",
+        "type": "String"
+      },
+      {
+        "name": "DUNN_BLOCK",
+        "type": "String"
+      },
+      {
+        "name": "DUNN_KEY",
+        "type": "String"
+      },
+      {
+        "name": "LAST_DUNN",
+        "type": "String"
+      },
+      {
+        "name": "DUNN_LEVEL",
+        "type": "String"
+      },
+      {
+        "name": "DUNN_AREA",
+        "type": "String"
+      },
+      {
+        "name": "W_TAX_CODE",
+        "type": "String"
+      },
+      {
+        "name": "W_TAX_BASE",
+        "type": "String"
+      },
+      {
+        "name": "WI_TAX_AMT",
+        "type": "String"
+      },
+      {
+        "name": "DOC_STATUS",
+        "type": "String"
+      },
+      {
+        "name": "NXT_DOCTYP",
+        "type": "String"
+      },
+      {
+        "name": "VAT_REG_NO",
+        "type": "String"
+      },
+      {
+        "name": "EXEMPT_NO",
+        "type": "String"
+      },
+      {
+        "name": "W_TAX_EXPT",
+        "type": "String"
+      },
+      {
+        "name": "REASON_CDE",
+        "type": "String"
+      },
+      {
+        "name": "PMTMTHSUPL",
+        "type": "String"
+      },
+      {
+        "name": "REF_KEY_1",
+        "type": "String"
+      },
+      {
+        "name": "REF_KEY_2",
+        "type": "String"
+      },
+      {
+        "name": "T_CURRENCY",
+        "type": "String"
+      },
+      {
+        "name": "AMOUNT",
+        "type": "String"
+      },
+      {
+        "name": "NET_AMOUNT",
+        "type": "String"
+      },
+      {
+        "name": "NAME",
+        "type": "String"
+      },
+      {
+        "name": "NAME_2",
+        "type": "String"
+      },
+      {
+        "name": "NAME_3",
+        "type": "String"
+      },
+      {
+        "name": "NAME_4",
+        "type": "String"
+      },
+      {
+        "name": "POSTL_CODE",
+        "type": "String"
+      },
+      {
+        "name": "CITY",
+        "type": "String"
+      },
+      {
+        "name": "COUNTRY",
+        "type": "String"
+      },
+      {
+        "name": "STREET",
+        "type": "String"
+      },
+      {
+        "name": "PO_BOX",
+        "type": "String"
+      },
+      {
+        "name": "POBX_PCD",
+        "type": "String"
+      },
+      {
+        "name": "POBK_CURAC",
+        "type": "String"
+      },
+      {
+        "name": "BANK_ACCT",
+        "type": "String"
+      },
+      {
+        "name": "BANK_KEY",
+        "type": "String"
+      },
+      {
+        "name": "BANK_CTRY",
+        "type": "String"
+      },
+      {
+        "name": "TAX_NO_1",
+        "type": "String"
+      },
+      {
+        "name": "TAX_NO_2",
+        "type": "String"
+      },
+      {
+        "name": "TAX",
+        "type": "String"
+      },
+      {
+        "name": "EQUAL_TAX",
+        "type": "String"
+      },
+      {
+        "name": "REGION",
+        "type": "String"
+      },
+      {
+        "name": "CTRL_KEY",
+        "type": "String"
+      },
+      {
+        "name": "INSTR_KEY",
+        "type": "String"
+      },
+      {
+        "name": "PAYEE_CODE",
+        "type": "String"
+      },
+      {
+        "name": "LANGU",
+        "type": "String"
+      },
+      {
+        "name": "BILL_LIFE",
+        "type": "String"
+      },
+      {
+        "name": "BE_TAXCODE",
+        "type": "String"
+      },
+      {
+        "name": "BILLTAX_LC",
+        "type": "String"
+      },
+      {
+        "name": "BILLTAX_FC",
+        "type": "String"
+      },
+      {
+        "name": "LC_COL_CHG",
+        "type": "String"
+      },
+      {
+        "name": "COLL_CHARG",
+        "type": "String"
+      },
+      {
+        "name": "CHGS_TX_CD",
+        "type": "String"
+      },
+      {
+        "name": "ISSUE_DATE",
+        "type": "String"
+      },
+      {
+        "name": "USAGEDATE",
+        "type": "String"
+      },
+      {
+        "name": "BILL_USAGE",
+        "type": "String"
+      },
+      {
+        "name": "DOMICILE",
+        "type": "String"
+      },
+      {
+        "name": "DRAWER",
+        "type": "String"
+      },
+      {
+        "name": "CTRBNK_LOC",
+        "type": "String"
+      },
+      {
+        "name": "DRAW_CITY1",
+        "type": "String"
+      },
+      {
+        "name": "DRAWEE",
+        "type": "String"
+      },
+      {
+        "name": "DRAW_CITY2",
+        "type": "String"
+      },
+      {
+        "name": "DISCT_DAYS",
+        "type": "String"
+      },
+      {
+        "name": "DISCT_RATE",
+        "type": "String"
+      },
+      {
+        "name": "ACCEPTED",
+        "type": "String"
+      },
+      {
+        "name": "BILLSTATUS",
+        "type": "String"
+      },
+      {
+        "name": "PRTEST_IND",
+        "type": "String"
+      },
+      {
+        "name": "BE_DEMAND",
+        "type": "String"
+      },
+      {
+        "name": "OBJ_TYPE",
+        "type": "String"
+      },
+      {
+        "name": "REF_DOC",
+        "type": "String"
+      },
+      {
+        "name": "REF_ORG_UN",
+        "type": "String"
+      },
+      {
+        "name": "REVERSAL_DOC",
+        "type": "String"
+      },
+      {
+        "name": "SP_GL_TYPE",
+        "type": "String"
+      },
+      {
+        "name": "NEG_POSTNG",
+        "type": "String"
+      },
+      {
+        "name": "REF_DOC_NO_LONG",
+        "type": "String"
+      },
+      {
+        "name": "LC_AMOUNT_LONG",
+        "type": "String"
+      },
+      {
+        "name": "AMT_DOCCUR_LONG",
+        "type": "String"
+      },
+      {
+        "name": "LC_TAX_LONG",
+        "type": "String"
+      },
+      {
+        "name": "TX_DOC_CUR_LONG",
+        "type": "String"
+      },
+      {
+        "name": "DISC_BASE_LONG",
+        "type": "String"
+      },
+      {
+        "name": "DSC_AMT_LC_LONG",
+        "type": "String"
+      },
+      {
+        "name": "DSC_AMT_DC_LONG",
+        "type": "String"
+      },
+      {
+        "name": "W_TAX_BASE_LONG",
+        "type": "String"
+      },
+      {
+        "name": "WI_TAX_AMT_LONG",
+        "type": "String"
+      },
+      {
+        "name": "W_TAX_EXPT_LONG",
+        "type": "String"
+      },
+      {
+        "name": "AMOUNT_LONG",
+        "type": "String"
+      },
+      {
+        "name": "NET_AMOUNT_LONG",
+        "type": "String"
+      },
+      {
+        "name": "BILLTAX_LC_LONG",
+        "type": "String"
+      },
+      {
+        "name": "BILLTAX_FC_LONG",
+        "type": "String"
+      },
+      {
+        "name": "LC_COL_CHG_LONG",
+        "type": "String"
+      },
+      {
+        "name": "COLL_CHARG_LONG",
+        "type": "String"
+      }
+    ],
+    "WithHoldingRoot": [],
+    "SUPPLIERDETAILSSET": [],
+    "WITHT": [
+      {
+        "name": "WITHT",
+        "type": "String"
+      },
+      {
+        "name": "QSREC",
+        "type": "String"
+      },
+      {
+        "name": "WTWTSTCD",
+        "type": "String"
+      },
+      {
+        "name": "WTEXNR",
+        "type": "String"
+      },
+      {
+        "name": "WTEXRT",
+        "type": "String"
+      },
+      {
+        "name": "WTEXDF",
+        "type": "String"
+      },
+      {
+        "name": "COMPANYCODE",
+        "type": "String"
+      },
+      {
+        "name": "WTEXDT",
+        "type": "String"
+      },
+      {
+        "name": "WTWITHCD",
+        "type": "String"
+      },
+      {
+        "name": "WTSUBJCT",
+        "type": "String"
+      },
+      {
+        "name": "WTWTEXRS",
+        "type": "String"
+      },
+      {
+        "name": "SUPPLIER",
+        "type": "String"
+      }
+    ],
+    "BankDetailRoot": [],
+    "ET_VENDOR": [],
+    "LIFNR": [
+      {
+        "name": "LIFNR",
+        "type": "String"
+      },
+      {
+        "name": "NAME1",
+        "type": "String"
+      },
+      {
+        "name": "NAME2",
+        "type": "String"
+      },
+      {
+        "name": "PAN_NO",
+        "type": "String"
+      },
+      {
+        "name": "TAX_NO",
+        "type": "String"
+      },
+      {
+        "name": "BANKL",
+        "type": "String"
+      },
+      {
+        "name": "BANKN",
+        "type": "String"
+      }
+    ]
+  },
+  "LogInModule": {
+    "ODataValue": [],
+    "First_name": [
+      {
+        "name": "First_name",
+        "type": "String"
+      },
+      {
+        "name": "Middle_name",
+        "type": "String"
+      },
+      {
+        "name": "Last_name",
+        "type": "String"
+      },
+      {
+        "name": "Employee_id",
+        "type": "String"
+      },
+      {
+        "name": "Current_address",
+        "type": "String"
+      },
+      {
+        "name": "Division",
+        "type": "String"
+      },
+      {
+        "name": "Designation_title",
+        "type": "String"
+      },
+      {
+        "name": "Office_mobile_no",
+        "type": "String"
+      },
+      {
+        "name": "Cost_center_id",
+        "type": "String"
+      },
+      {
+        "name": "Cost_center",
+        "type": "String"
+      },
+      {
+        "name": "Current_country",
+        "type": "String"
+      },
+      {
+        "name": "Business_unit",
+        "type": "String"
+      },
+      {
+        "name": "Department",
+        "type": "String"
+      },
+      {
+        "name": "Group_company",
+        "type": "String"
+      },
+      {
+        "name": "Personal_mobile_no",
+        "type": "String"
+      },
+      {
+        "name": "Employee_status",
+        "type": "String"
+      },
+      {
+        "name": "Job_level",
+        "type": "String"
+      },
+      {
+        "name": "Direct_manager_employee_id",
+        "type": "String"
+      },
+      {
+        "name": "Direct_manager_name",
+        "type": "String"
+      },
+      {
+        "name": "Direct_manager_email",
+        "type": "String"
+      },
+      {
+        "name": "Company_email_id",
+        "type": "String"
+      },
+      {
+        "name": "Office_location",
+        "type": "String"
+      },
+      {
+        "name": "Current_location",
+        "type": "String"
+      },
+      {
+        "name": "Custom_location",
+        "type": "String"
+      },
+      {
+        "name": "Date_of_birth",
+        "type": "String"
+      },
+      {
+        "name": "Role",
+        "type": "String"
+      },
+      {
+        "name": "Territory_code_sales_hq_code",
+        "type": "String"
+      },
+      {
+        "name": "Territory_name",
+        "type": "String"
+      },
+      {
+        "name": "Split_territory",
+        "type": "String"
+      },
+      {
+        "name": "Split_department",
+        "type": "String"
+      },
+      {
+        "name": "Split_role",
+        "type": "String"
+      },
+      {
+        "name": "Office_state",
+        "type": "String"
+      },
+      {
+        "name": "Office_city",
+        "type": "String"
+      },
+      {
+        "name": "Gender",
+        "type": "String"
+      },
+      {
+        "name": "Catalyst_additional_department",
+        "type": "String"
+      }
+    ]
+  },
+  "PromotionalModule": {
+    "MonthAndYear": [
+      {
+        "name": "MonthAndYear",
+        "type": "DateTime"
+      }
+    ],
+    "isValid": [
+      {
+        "name": "isValid",
+        "type": "Boolean"
+      }
+    ]
+  }
+}

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import {
   Plus, Trash2, GripVertical, Edit3, Save, X, ChevronDown,
-  ChevronUp, Video, List, CheckSquare, AlignLeft, ToggleLeft, ArrowLeft
+  ChevronUp, Video, List, CheckSquare, AlignLeft, ToggleLeft, ArrowLeft, FileText
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { brsApi } from '../../api/endpoints'

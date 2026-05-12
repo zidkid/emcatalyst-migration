@@ -48,8 +48,8 @@ frontend/.vite/
 .DS_Store
 Thumbs.db
 
-# Migration SQL dump (too large for git)
-*.sql
+# Exclude old structure-only dump
+emcatalyst_production_dump.sql
 
 # Python virtual env
 backend/.venv/

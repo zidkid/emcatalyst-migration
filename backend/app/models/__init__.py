@@ -3,7 +3,7 @@ from app.models.vendor import Vendor, VendorBankDetail, VendorWithholding
 from app.models.event import (
     Event, EventDoctor, EventCost, EventDocument,
     EventHonorarium, EventInstitution, EventDocumentType,
-    EventAgreement, EventStatus
+    EventAgreement, EventStatus, EventMeal, EventAuditTrail
 )
 from app.models.agreement import Agreement, AgreementDocument
 from app.models.approval import (
@@ -20,11 +20,11 @@ from app.models.promotional import (
 from app.models.master import (
     CompanyCode, MasterDivision,
     Designation, EventType, DocumentType, Enumeration,
-    HcpDoctor, FmvCriteria, MasterSpeciality, MasterHcpRole,
+    HcpDoctor, FmvCriteria, FmvParameter, MasterSpeciality, MasterHcpRole,
     MasterTherapeutic, MasterState,
     MasterBrand, MasterMeal, MasterCity, MasterSponsorshipType
 )
 from app.models.brs import (
     BrsApplication, BrsSurvey, BrsSurveyQuestion,
-    BrsAuditTrail, BrsOtp, BrsStatus, BrsQuestionType
+    BrsAuditTrail, BrsDoctor, BrsStatus, BrsQuestionType
 )

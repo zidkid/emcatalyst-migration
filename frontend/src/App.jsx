@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard'
 import EventList from './pages/events/EventList'
 import EventForm from './pages/events/EventForm'
 import EventDetail from './pages/events/EventDetail'
+import PostEventDocuments from './pages/events/PostEventDocuments'
 import InvoiceList from './pages/approvals/InvoiceList'
 import InvoiceForm from './pages/approvals/InvoiceForm'
 import InvoiceDetail from './pages/approvals/InvoiceDetail'
@@ -28,6 +29,7 @@ import BrsForm from './pages/brs/BrsForm'
 import BrsDetail from './pages/brs/BrsDetail'
 import SurveyBuilder from './pages/brs/SurveyBuilder'
 import SurveyPortal from './pages/brs/SurveyPortal'
+import DoctorLogin from './pages/brs/DoctorLogin'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -50,7 +52,9 @@ export default function App() {
               <Route index element={<Dashboard />} />
               <Route path="events" element={<EventList />} />
               <Route path="events/new" element={<EventForm />} />
+              <Route path="events/:id/edit" element={<EventForm />} />
               <Route path="events/:id" element={<EventDetail />} />
+              <Route path="events/:id/post-documents" element={<PostEventDocuments />} />
               <Route path="approvals" element={<InvoiceList />} />
               <Route path="approvals/new" element={<InvoiceForm />} />
               <Route path="approvals/:id" element={<InvoiceDetail />} />
@@ -67,11 +71,13 @@ export default function App() {
               <Route path="masters" element={<Masters />} />
               <Route path="brs" element={<BrsList />} />
               <Route path="brs/new" element={<BrsForm />} />
+              <Route path="brs/:id/edit" element={<BrsForm />} />
               <Route path="brs/survey-builder" element={<SurveyBuilder />} />
               <Route path="brs/:id" element={<BrsDetail />} />
             </Route>
             {/* Public doctor portal — no auth required */}
             <Route path="/brs/survey/:token" element={<SurveyPortal />} />
+            <Route path="/brs/doctor-login" element={<DoctorLogin />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </ErrorBoundary>

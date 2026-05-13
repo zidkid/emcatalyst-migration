@@ -49,6 +49,8 @@ class DocumentType(Base):
     id = Column(Integer, primary_key=True)
     code = Column(String(20), unique=True)
     name = Column(String(200), nullable=False)
+    event_type_code = Column(String(100), nullable=True)  # links to EventType.code, NULL = all types
+    stage = Column(String(10), default="pre")  # "pre" or "post"
     is_mandatory = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
 
@@ -119,6 +121,19 @@ class FmvCriteria(Base):
     is_active = Column(Boolean, default=True)
 
 
+class FmvParameter(Base):
+    """FMV Parameter master - stores each parameter with its options and points"""
+    __tablename__ = "fmv_parameters"
+
+    id = Column(Integer, primary_key=True, index=True)
+    parameter_name = Column(String(100), nullable=False)  # e.g. "Clinical Practice Experience"
+    option_label = Column(String(200), nullable=False)  # e.g. "More than 15 Years post graduation"
+    option_code = Column(String(5))  # A, B, C, D
+    points = Column(Integer, nullable=False)  # 1-4
+    sort_order = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+
+
 class MasterSpeciality(Base):
     __tablename__ = "master_specialities"
 
@@ -171,6 +186,7 @@ class MasterMeal(Base):
     id = Column(Integer, primary_key=True, index=True)
     mendix_id = Column(String(30), unique=True)
     name = Column(String(200), nullable=False)
+    max_cost = Column(Numeric(12, 2), nullable=True)  # Max capping per attendee
     is_active = Column(Boolean, default=True)
 
 

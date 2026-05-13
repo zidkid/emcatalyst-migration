@@ -13,7 +13,7 @@ build/
 .eggs/
 *.egg
 
-# Environment
+# Environment variables
 .env
 .env.*
 !.env.example
@@ -21,12 +21,13 @@ build/
 # Database
 *.db
 *.sqlite3
+emcatalyst.db
 
 # Logs
 *.log
 logs/
 
-# Uploads
+# Uploads (user-generated content)
 uploads/
 
 # Node
@@ -35,22 +36,53 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.pnpm-store/
 
 # Frontend build
 frontend/dist/
 frontend/.vite/
 
-# IDE
+# IDE / Editor
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sln
+*.suo
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Migration SQL dump (too large for git)
-*.sql
+# OS files
+*.tmp
+*.bak
+*.orig
 
 # Python virtual env
 backend/.venv/
 backend/venv/
+
+# Migration SQL dumps
+*.sql
+!backend/migrations/**/*.sql
+
+# Byte-compiled / optimized
+*.pyc
+*.pyo
+
+# Coverage / Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Kiro
+.kiro/
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+*.gz
+*.tar
+*.zip

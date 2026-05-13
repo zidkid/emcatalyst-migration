@@ -1,226 +1,321 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { eventsApi, accessApi, masterApi } from '../../api/endpoints'
 import PageHeader from '../../components/ui/PageHeader'
-import { ChevronRight, ChevronLeft, Plus, Trash2 } from 'lucide-react'
+import useAuthStore from '../../store/authStore'
+import EventFormStep1 from './components/EventFormStep1'
+import EventFormStep2 from './components/EventFormStep2'
+import EventFormStep3 from './components/EventFormStep3'
+import EventFormStep4 from './components/EventFormStep4'
 
-const STEPS = ['Basic Info', 'Doctors / HCPs', 'Event Costs', 'Documents', 'Review & Submit']
+const STEPS = ['Basic Details', 'Event Info', 'Costs & HCPs', 'Documents']
 
 export default function EventForm() {
   const navigate = useNavigate()
+  const { id: editId } = useParams()
+  const isEditMode = !!editId
   const qc = useQueryClient()
+  const { user } = useAuthStore()
   const [step, setStep] = useState(0)
-  const [eventId, setEventId] = useState(null)
+  const [eventId, setEventId] = useState(editId ? parseInt(editId) : null)
   const [doctors, setDoctors] = useState([])
-  const [costs, setCosts] = useState([])
-  const { register, handleSubmit, getValues, formState: { errors } } = useForm()
+  const [eventMeals, setEventMeals] = useState([])
+  const [doctorSearchOpen, setDoctorSearchOpen] = useState(false)
+  const [preDocUploads, setPreDocUploads] = useState({})
+  const [saving, setSaving] = useState(false)
 
-  const { data: divisions = [] } = useQuery({ queryKey: ['divisions'], queryFn: () => accessApi.listDivisions().then(r => r.data) })
-  const { data: eventTypes = [] } = useQuery({ queryKey: ['eventTypes'], queryFn: () => masterApi.eventTypes().then(r => r.data) })
-
-  const createEvent = useMutation({
-    mutationFn: (data) => eventsApi.create(data),
-    onSuccess: (res) => {
-      setEventId(res.data.id)
-      setStep(1)
-      toast.success('Event created. Now add doctors.')
-    },
-    onError: (e) => toast.error(e.response?.data?.detail || 'Error creating event'),
+  const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } = useForm({
+    defaultValues: { event_type: '', platform: '', budget_type: '', btc_facility: '', promotional_material_approved: '', advance_payment: '', is_division_involved: '' }
   })
+  const eventType = watch('event_type')
+  const isCME = eventType === 'CME / RTM'
+  const isAdvisory = eventType === 'Advisory Board'
+  const isSponsorship = eventType === 'Corporate Sponsorship'
+
+  // Queries
+  const { data: divisions = [] } = useQuery({ queryKey: ['divisions'], queryFn: () => accessApi.listDivisions().then(r => r.data) })
+  const { data: therapeutics = [] } = useQuery({ queryKey: ['therapeutics'], queryFn: () => masterApi.therapeutics().then(r => r.data) })
+  const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: () => masterApi.brands().then(r => r.data) })
+  const { data: fmvParams = {} } = useQuery({ queryKey: ['fmv-parameters'], queryFn: () => masterApi.fmvParameters().then(r => r.data) })
+  const { data: preEventDocs = [] } = useQuery({
+    queryKey: ['pre-docs', eventType],
+    queryFn: () => masterApi.documentTypesForEvent(eventType, 'pre').then(r => r.data),
+    enabled: !!eventType,
+  })
+
+  // Load existing event in edit mode
+  const { data: existingEvent } = useQuery({
+    queryKey: ['event', editId],
+    queryFn: () => eventsApi.get(editId).then(r => r.data),
+    enabled: isEditMode,
+  })
+
+  useEffect(() => {
+    if (existingEvent && isEditMode) {
+      const fields = ['event_type','event_title','division_id','therapeutic_area','brand','budget_type','on_field_execution_by','platform','topic','city','venue','state','rationale','promotional_material_approved','agenda','proposed_emcure_attendees','num_hcps_professional_services','proposed_num_hcps','conference_type','solicited_unsolicited','sponsorship_type','sponsorship_amount','advance_payment_reason','advance_payment_amount','cost_center','meal_type','meal_cost_per_attendee','minimum_guarantee_pax','venue_charges','av_platform_cost','other_amount','other_amount_description','btc_facility']
+      fields.forEach(f => { if (existingEvent[f] != null) setValue(f, String(existingEvent[f])) })
+      if (existingEvent.event_date) setValue('event_date', existingEvent.event_date.slice(0, 16))
+      if (existingEvent.event_end_date) setValue('event_end_date', existingEvent.event_end_date.slice(0, 16))
+      if (existingEvent.advance_payment) setValue('advance_payment', 'Yes')
+      if (existingEvent.is_division_involved) setValue('is_division_involved', 'Yes')
+      // Load doctors with FMV point fields mapped
+      if (existingEvent.doctors?.length) {
+        setDoctors(existingEvent.doctors.map(d => ({
+          ...d,
+          fmv_expertise_pts: d.fmv_expertise ? parseInt(d.fmv_expertise) || 0 : 0,
+          fmv_clinical_pts: d.fmv_clinical_experience ? parseInt(d.fmv_clinical_experience) || 0 : 0,
+          fmv_publications_pts: d.fmv_publications ? parseInt(d.fmv_publications) || 0 : 0,
+          fmv_congress_pts: d.fmv_congress_experience ? parseInt(d.fmv_congress_experience) || 0 : 0,
+          fmv_position_pts: d.fmv_professional_position ? parseInt(d.fmv_professional_position) || 0 : 0,
+          fmv_investigator_pts: d.fmv_investigator_experience ? parseInt(d.fmv_investigator_experience) || 0 : 0,
+        })))
+      }
+      // Load meals
+      if (existingEvent.meals?.length) {
+        setEventMeals(existingEvent.meals)
+      }
+    }
+  }, [existingEvent, isEditMode, setValue])
+
+  // Save event (create or update)
+  const saveEvent = async (data, andContinue = false) => {
+    const payload = {}
+    for (const [key, value] of Object.entries(data)) {
+      if (value === '' || value === undefined || value === null) continue
+      payload[key] = value
+    }
+    if (payload.division_id) payload.division_id = parseInt(payload.division_id)
+    if (payload.proposed_emcure_attendees) payload.proposed_emcure_attendees = parseInt(payload.proposed_emcure_attendees)
+    if (payload.num_hcps_professional_services) payload.num_hcps_professional_services = parseInt(payload.num_hcps_professional_services)
+    if (payload.proposed_num_hcps) payload.proposed_num_hcps = parseInt(payload.proposed_num_hcps)
+    if (payload.sponsorship_amount) payload.sponsorship_amount = parseFloat(payload.sponsorship_amount)
+    if (payload.advance_payment_amount) payload.advance_payment_amount = parseFloat(payload.advance_payment_amount)
+    if (payload.meal_cost_per_attendee) payload.meal_cost_per_attendee = parseFloat(payload.meal_cost_per_attendee)
+    if (payload.minimum_guarantee_pax) payload.minimum_guarantee_pax = parseInt(payload.minimum_guarantee_pax)
+    if (payload.venue_charges) payload.venue_charges = parseFloat(payload.venue_charges)
+    if (payload.av_platform_cost) payload.av_platform_cost = parseFloat(payload.av_platform_cost)
+    if (payload.other_amount) payload.other_amount = parseFloat(payload.other_amount)
+    if (payload.advance_payment) payload.advance_payment = payload.advance_payment === 'Yes'
+    else delete payload.advance_payment
+    if (payload.is_division_involved) payload.is_division_involved = payload.is_division_involved === 'Yes'
+    else delete payload.is_division_involved
+
+    setSaving(true)
+    try {
+      if (eventId) {
+        await eventsApi.update(eventId, payload)
+      } else {
+        const res = await eventsApi.create(payload)
+        setEventId(res.data.id)
+      }
+
+      // Save event meals
+      const eid = eventId
+      if (eid && eventMeals.length > 0) {
+        for (const meal of eventMeals) {
+          if (!meal.id) {
+            // New meal - save it
+            try {
+              const res = await eventsApi.addMeal(eid, { meal_name: meal.meal_name, max_cost: meal.max_cost, cost_per_attendee: meal.cost_per_attendee })
+              meal.id = res.data.id
+            } catch (err) {
+              console.error('Error saving meal', err)
+            }
+          }
+        }
+      }
+
+      // Save doctor-level data (FMV params, costs, honorarium)
+      if (eid && doctors.length > 0) {
+        for (const doc of doctors) {
+          if (!doc.id) continue
+
+          // Calculate FMV
+          const pts = (parseInt(doc.fmv_expertise_pts) || 0) + (parseInt(doc.fmv_clinical_pts) || 0) +
+            (parseInt(doc.fmv_publications_pts) || 0) + (parseInt(doc.fmv_congress_pts) || 0) +
+            (parseInt(doc.fmv_position_pts) || 0) + (parseInt(doc.fmv_investigator_pts) || 0)
+          let fmvCat = 'Cat C', fmvRate = 5000, fmvCap = 30000
+          if (pts >= 19) { fmvCat = 'Cat A'; fmvRate = 15000; fmvCap = 75000 }
+          else if (pts >= 10) { fmvCat = 'Cat B'; fmvRate = 10000; fmvCap = 50000 }
+
+          const docPayload = {
+            doctor_name: doc.doctor_name,
+            name_as_per_pan: doc.name_as_per_pan || null,
+            pan_number: doc.pan_number || null,
+            email: doc.email || null,
+            role: doc.role || null,
+            is_mcl: doc.is_mcl !== false,
+            fmv_expertise: String(doc.fmv_expertise_pts || 0),
+            fmv_clinical_experience: String(doc.fmv_clinical_pts || 0),
+            fmv_publications: String(doc.fmv_publications_pts || 0),
+            fmv_congress_experience: String(doc.fmv_congress_pts || 0),
+            fmv_professional_position: String(doc.fmv_position_pts || 0),
+            fmv_investigator_experience: String(doc.fmv_investigator_pts || 0),
+            fmv_total_points: pts,
+            fmv_category: fmvCat,
+            fmv_hourly_rate: fmvRate,
+            fmv_max_capping: fmvCap,
+            derived_honorarium: fmvCap,
+            honorarium: doc.honorarium ? parseFloat(doc.honorarium) : null,
+            cab_cost: doc.cab_cost ? parseFloat(doc.cab_cost) : null,
+            accommodation_cost: doc.accommodation_cost ? parseFloat(doc.accommodation_cost) : null,
+            flight_cost: doc.flight_cost ? parseFloat(doc.flight_cost) : null,
+            remark: doc.remark || null,
+          }
+
+          try {
+            await eventsApi.updateDoctor(eid, doc.id, docPayload)
+          } catch (err) {
+            console.error('Error updating doctor', doc.id, err)
+          }
+        }
+      }
+
+      toast.success('Event saved')
+      if (andContinue) setStep(s => s + 1)
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error saving')
+    }
+    setSaving(false)
+  }
 
   const addDoctor = useMutation({
     mutationFn: (data) => eventsApi.addDoctor(eventId, data),
-    onSuccess: (res) => {
-      setDoctors(prev => [...prev, res.data])
-      toast.success('Doctor added')
-    },
+    onSuccess: (res) => { setDoctors(prev => [...prev, res.data]); toast.success('HCP added') },
   })
 
-  const addCost = useMutation({
-    mutationFn: (data) => eventsApi.addCost(eventId, data),
-    onSuccess: (res) => {
-      setCosts(prev => [...prev, res.data])
-      toast.success('Cost added')
-    },
-  })
+  // Upload documents and optionally submit
+  const uploadDocs = async () => {
+    for (const [docTypeId, file] of Object.entries(preDocUploads)) {
+      const docType = preEventDocs.find(d => d.id === parseInt(docTypeId))
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('document_type', docType?.name || 'Other')
+      await eventsApi.uploadDocument(eventId, formData)
+    }
+  }
 
-  const submitEvent = useMutation({
-    mutationFn: () => eventsApi.submit(eventId),
-    onSuccess: () => {
+  const handleSaveDraft = async () => {
+    setSaving(true)
+    try {
+      await uploadDocs()
+      toast.success('Documents saved as draft')
+    } catch (e) {
+      toast.error('Error saving documents')
+    }
+    setSaving(false)
+  }
+
+  const handleSubmitEvent = async () => {
+    // Check mandatory docs
+    const mandatoryDocs = preEventDocs.filter(d => d.is_mandatory)
+    const missing = mandatoryDocs.filter(d => !preDocUploads[d.id])
+    if (missing.length > 0) {
+      toast.error(`Missing mandatory: ${missing.map(d => d.name).join(', ')}`)
+      return
+    }
+    setSaving(true)
+    try {
+      await uploadDocs()
+      await eventsApi.submit(eventId)
       qc.invalidateQueries(['events'])
       toast.success('Event submitted for approval!')
       navigate('/events')
-    },
-  })
-
-  const [doctorForm, setDoctorForm] = useState({ doctor_name: '', specialization: '', mobile_no: '', pan_number: '', fmv_amount: '' })
-  const [costForm, setCostForm] = useState({ cost_head: '', estimated_amount: '', vendor_name: '' })
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error submitting')
+    }
+    setSaving(false)
+  }
 
   return (
-    <div className="p-8 max-w-4xl">
-      <PageHeader title="New Event" subtitle="Create a new medical event or CME" />
+    <div className="p-8 max-w-5xl">
+      <PageHeader title={isEditMode ? 'Edit Event' : 'New Event Requisition'} subtitle={isEditMode ? `Editing ${existingEvent?.event_code || ''}` : 'Create a new event request'} />
 
       {/* Stepper */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center mb-8">
         {STEPS.map((label, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-              i < step ? 'bg-emerald-500 text-white' : i === step ? 'bg-emcure-blue text-white' : 'bg-gray-200 text-gray-500'
-            }`}>{i + 1}</div>
-            <span className={`text-sm ${i === step ? 'font-semibold text-gray-900' : 'text-gray-400'}`}>{label}</span>
-            {i < STEPS.length - 1 && <div className="w-6 h-px bg-gray-200" />}
+          <div key={i} className="flex items-center flex-1">
+            <div className="flex items-center gap-2">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
+                i < step ? 'bg-emerald-500 border-emerald-500 text-white' : i === step ? 'border-red-500 text-red-500' : 'border-gray-300 text-gray-400'
+              }`}>{i < step ? '✓' : `0${i + 1}`}</div>
+              <span className={`text-sm ${i === step ? 'font-semibold text-gray-900' : 'text-gray-400'}`}>Step {i + 1}</span>
+            </div>
+            {i < STEPS.length - 1 && <div className={`flex-1 h-1 mx-3 rounded ${i < step ? 'bg-red-500' : 'bg-gray-200'}`} />}
           </div>
         ))}
       </div>
 
-      {/* Step 0: Basic Info */}
+      {/* STEP 1: Basic Details */}
       {step === 0 && (
-        <form onSubmit={handleSubmit(d => createEvent.mutate(d))} className="card space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="label">Event Title *</label>
-              <input className="input" {...register('event_title', { required: true })} placeholder="E.g., Cardiology CME - Mumbai" />
-            </div>
-            <div>
-              <label className="label">Event Type *</label>
-              <select className="input" {...register('event_type', { required: true })}>
-                <option value="">Select type</option>
-                {eventTypes.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Division</label>
-              <select className="input" {...register('division_id')}>
-                <option value="">Select division</option>
-                {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Event Date</label>
-              <input type="datetime-local" className="input" {...register('event_date')} />
-            </div>
-            <div>
-              <label className="label">End Date</label>
-              <input type="datetime-local" className="input" {...register('event_end_date')} />
-            </div>
-            <div className="col-span-2">
-              <label className="label">Venue</label>
-              <input className="input" {...register('venue')} placeholder="Hotel / Hospital / Online" />
-            </div>
-            <div>
-              <label className="label">City</label>
-              <input className="input" {...register('city')} />
-            </div>
-            <div>
-              <label className="label">State</label>
-              <input className="input" {...register('state')} />
-            </div>
-            <div>
-              <label className="label">Budget (INR)</label>
-              <input type="number" className="input" {...register('budget_amount')} placeholder="0.00" />
-            </div>
-            <div>
-              <label className="label">Cost Center</label>
-              <input className="input" {...register('cost_center')} />
-            </div>
-          </div>
-          <div className="flex justify-end pt-2">
-            <button type="submit" className="btn-primary" disabled={createEvent.isPending}>
-              {createEvent.isPending ? 'Saving…' : 'Save & Continue →'}
-            </button>
-          </div>
-        </form>
+        <EventFormStep1
+          register={register}
+          errors={errors}
+          watch={watch}
+          handleSubmit={handleSubmit}
+          saving={saving}
+          user={user}
+          divisions={divisions}
+          therapeutics={therapeutics}
+          brands={brands}
+          isCME={isCME}
+          isAdvisory={isAdvisory}
+          isSponsorship={isSponsorship}
+          onSave={saveEvent}
+          onCancel={() => navigate('/events')}
+        />
       )}
 
-      {/* Step 1: Doctors */}
+      {/* STEP 2: Event Info */}
       {step === 1 && (
-        <div className="card space-y-4">
-          <h3 className="font-semibold">Add Doctors / HCPs</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <input className="input" placeholder="Doctor Name *" value={doctorForm.doctor_name} onChange={e => setDoctorForm(p => ({...p, doctor_name: e.target.value}))} />
-            <input className="input" placeholder="Specialization" value={doctorForm.specialization} onChange={e => setDoctorForm(p => ({...p, specialization: e.target.value}))} />
-            <input className="input" placeholder="Mobile No" value={doctorForm.mobile_no} onChange={e => setDoctorForm(p => ({...p, mobile_no: e.target.value}))} />
-            <input className="input" placeholder="PAN Number" value={doctorForm.pan_number} onChange={e => setDoctorForm(p => ({...p, pan_number: e.target.value}))} />
-            <input type="number" className="input" placeholder="FMV Amount (INR)" value={doctorForm.fmv_amount} onChange={e => setDoctorForm(p => ({...p, fmv_amount: e.target.value}))} />
-            <button className="btn-primary flex items-center gap-1" onClick={() => { addDoctor.mutate(doctorForm); setDoctorForm({ doctor_name:'', specialization:'', mobile_no:'', pan_number:'', fmv_amount:'' }) }}>
-              <Plus size={14} /> Add
-            </button>
-          </div>
-          {doctors.length > 0 && (
-            <table className="w-full text-sm border rounded-lg overflow-hidden">
-              <thead className="bg-gray-50"><tr>{['Name','Specialization','Mobile','PAN','FMV'].map(h => <th key={h} className="px-3 py-2 text-left text-xs text-gray-500">{h}</th>)}</tr></thead>
-              <tbody>{doctors.map((d,i) => <tr key={i} className="border-t"><td className="px-3 py-2">{d.doctor_name}</td><td className="px-3 py-2">{d.specialization}</td><td className="px-3 py-2">{d.mobile_no}</td><td className="px-3 py-2">{d.pan_number}</td><td className="px-3 py-2">{d.fmv_amount}</td></tr>)}</tbody>
-            </table>
-          )}
-          <div className="flex justify-between pt-2">
-            <button className="btn-secondary" onClick={() => setStep(0)}><ChevronLeft size={16} /> Back</button>
-            <button className="btn-primary" onClick={() => setStep(2)}>Continue <ChevronRight size={16} /></button>
-          </div>
-        </div>
+        <EventFormStep2
+          register={register}
+          handleSubmit={handleSubmit}
+          saving={saving}
+          eventCode={existingEvent?.event_code}
+          isCME={isCME}
+          isAdvisory={isAdvisory}
+          onSave={saveEvent}
+          onBack={() => setStep(0)}
+        />
       )}
 
-      {/* Step 2: Costs */}
+      {/* STEP 3: Costs & HCPs */}
       {step === 2 && (
-        <div className="card space-y-4">
-          <h3 className="font-semibold">Event Costs</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <input className="input" placeholder="Cost Head *" value={costForm.cost_head} onChange={e => setCostForm(p => ({...p, cost_head: e.target.value}))} />
-            <input type="number" className="input" placeholder="Estimated Amount" value={costForm.estimated_amount} onChange={e => setCostForm(p => ({...p, estimated_amount: e.target.value}))} />
-            <input className="input" placeholder="Vendor Name" value={costForm.vendor_name} onChange={e => setCostForm(p => ({...p, vendor_name: e.target.value}))} />
-          </div>
-          <button className="btn-primary flex items-center gap-1 w-fit" onClick={() => { addCost.mutate(costForm); setCostForm({ cost_head:'', estimated_amount:'', vendor_name:'' }) }}>
-            <Plus size={14} /> Add Cost
-          </button>
-          {costs.length > 0 && (
-            <table className="w-full text-sm border rounded-lg overflow-hidden">
-              <thead className="bg-gray-50"><tr>{['Cost Head','Amount','Vendor'].map(h => <th key={h} className="px-3 py-2 text-left text-xs text-gray-500">{h}</th>)}</tr></thead>
-              <tbody>{costs.map((c,i) => <tr key={i} className="border-t"><td className="px-3 py-2">{c.cost_head}</td><td className="px-3 py-2">₹{c.estimated_amount}</td><td className="px-3 py-2">{c.vendor_name}</td></tr>)}</tbody>
-            </table>
-          )}
-          <div className="flex justify-between pt-2">
-            <button className="btn-secondary" onClick={() => setStep(1)}><ChevronLeft size={16} /> Back</button>
-            <button className="btn-primary" onClick={() => setStep(3)}>Continue <ChevronRight size={16} /></button>
-          </div>
-        </div>
+        <EventFormStep3
+          register={register}
+          saving={saving}
+          getValues={getValues}
+          watch={watch}
+          doctors={doctors}
+          setDoctors={setDoctors}
+          fmvParams={fmvParams}
+          eventMeals={eventMeals}
+          setEventMeals={setEventMeals}
+          doctorSearchOpen={doctorSearchOpen}
+          setDoctorSearchOpen={setDoctorSearchOpen}
+          addDoctor={addDoctor}
+          onSave={saveEvent}
+          onBack={() => setStep(1)}
+        />
       )}
 
-      {/* Step 3: Documents */}
+      {/* STEP 4: Documents */}
       {step === 3 && (
-        <div className="card space-y-4">
-          <h3 className="font-semibold">Upload Documents</h3>
-          <p className="text-sm text-gray-500">Upload invitation letter, agenda, attendance sheet, etc.</p>
-          <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center text-gray-400">
-            Document upload available after event is saved.<br />
-            Proceed to submit the event first, then attach documents.
-          </div>
-          <div className="flex justify-between pt-2">
-            <button className="btn-secondary" onClick={() => setStep(2)}><ChevronLeft size={16} /> Back</button>
-            <button className="btn-primary" onClick={() => setStep(4)}>Continue <ChevronRight size={16} /></button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: Review */}
-      {step === 4 && (
-        <div className="card space-y-4">
-          <h3 className="font-semibold">Review & Submit</h3>
-          <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-800">
-            <p className="font-medium mb-2">Event Summary</p>
-            <p>{doctors.length} doctor(s) added • {costs.length} cost line(s)</p>
-          </div>
-          <p className="text-sm text-gray-600">
-            By submitting, the event will be sent for Compliance and Finance approval.
-          </p>
-          <div className="flex justify-between pt-2">
-            <button className="btn-secondary" onClick={() => setStep(3)}><ChevronLeft size={16} /> Back</button>
-            <button className="btn-primary bg-emerald-600 hover:bg-emerald-700" onClick={() => submitEvent.mutate()} disabled={submitEvent.isPending}>
-              {submitEvent.isPending ? 'Submitting…' : '✓ Submit for Approval'}
-            </button>
-          </div>
-        </div>
+        <EventFormStep4
+          eventType={eventType}
+          doctors={doctors}
+          saving={saving}
+          preEventDocs={preEventDocs}
+          preDocUploads={preDocUploads}
+          setPreDocUploads={setPreDocUploads}
+          onSaveDraft={handleSaveDraft}
+          onSubmit={handleSubmitEvent}
+          onBack={() => setStep(2)}
+        />
       )}
     </div>
   )

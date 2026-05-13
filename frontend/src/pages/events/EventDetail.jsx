@@ -2,487 +2,326 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { eventsApi, eventAgreementsApi, masterApi } from '../../api/endpoints'
+import { eventsApi } from '../../api/endpoints'
 import { fmtDate, fmtCurrency } from '../../utils/helpers'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Modal from '../../components/ui/Modal'
-import FmvCalculator from '../../components/FmvCalculator'
-import DoctorSearchModal from '../../components/DoctorSearchModal'
-import {
-  ArrowLeft, CheckCircle, XCircle, Plus, Trash2, FileSignature, UserCheck
-} from 'lucide-react'
+import { ArrowLeft, CheckCircle, XCircle, Edit2, Download, Eye, ChevronDown, ChevronUp } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
 
-const TABS = ['Overview', 'Doctors & HCPs', 'Agreements', 'Costs', 'Documents']
+// Approval levels for progress calculation
+const PRE_LEVELS = ['Draft', 'Pending L1', 'Pending L2', 'Pending Compliance', 'Pre-Approved']
+const POST_LEVELS = ['Post L1', 'Post L2', 'Post Compliance', 'Post Coordinator', 'Post GST', 'Post Finance', 'Completed']
+const ALL_LEVELS = [...PRE_LEVELS, ...POST_LEVELS]
+
+function getProgress(status) {
+  const idx = ALL_LEVELS.indexOf(status)
+  if (idx === -1) return 0
+  return Math.round(((idx + 1) / ALL_LEVELS.length) * 100)
+}
+
+function Field({ label, value, wide }) {
+  return (
+    <div className={wide ? 'col-span-2' : ''}>
+      <p className="text-xs text-gray-400 mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-gray-800">{value || '—'}</p>
+    </div>
+  )
+}
 
 export default function EventDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { user } = useAuthStore()
-  const [tab, setTab] = useState('Overview')
   const [rejectModal, setRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
-  const [addAgreementModal, setAddAgreementModal] = useState(false)
-  const [doctorSearchOpen, setDoctorSearchOpen] = useState(false)
-  const [selectedDoctor, setSelectedDoctor] = useState(null)
-  const [fmvDoctorModal, setFmvDoctorModal] = useState(false)
-  const [fmvDoctor, setFmvDoctor] = useState(null)
-  const [nonMclForm, setNonMclForm] = useState({ name: '', pan: '', email: '' })
+  const [auditOpen, setAuditOpen] = useState(false)
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['event', id],
     queryFn: () => eventsApi.get(id).then(r => r.data),
   })
 
-  const { data: agreements = [] } = useQuery({
-    queryKey: ['event-agreements', id],
-    queryFn: () => eventAgreementsApi.list(id).then(r => r.data),
-    enabled: !!id,
+  const approve = useMutation({
+    mutationFn: (remarks) => {
+      const s = event.status
+      if (s === 'Pending L1') return eventsApi.approveL1(id, remarks)
+      if (s === 'Pending L2') return eventsApi.approveL2(id, remarks)
+      if (s === 'Pending Compliance') return eventsApi.approveCompliance(id, remarks)
+      if (s === 'Post L1') return eventsApi.approvePostL1(id, remarks)
+      if (s === 'Post L2') return eventsApi.approvePostL2(id, remarks)
+      if (s === 'Post Compliance') return eventsApi.approvePostCompliance(id, remarks)
+      if (s === 'Post Coordinator') return eventsApi.approvePostCoordinator(id, remarks)
+      if (s === 'Post GST') return eventsApi.approvePostGst(id, remarks)
+      if (s === 'Post Finance') return eventsApi.approvePostFinance(id, remarks)
+      return eventsApi.approve(id, remarks)
+    },
+    onSuccess: () => { qc.invalidateQueries(['event', id]); toast.success('Approved') },
   })
 
-  const approve = useMutation({
-    mutationFn: (remarks) => eventsApi.approve(id, remarks),
-    onSuccess: () => { qc.invalidateQueries(['event', id]); toast.success('Event approved') },
-  })
   const reject = useMutation({
     mutationFn: (reason) => eventsApi.reject(id, reason),
-    onSuccess: () => { qc.invalidateQueries(['event', id]); setRejectModal(false); toast.success('Event rejected') },
-  })
-
-  const createAgreement = useMutation({
-    mutationFn: (data) => eventAgreementsApi.create(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries(['event-agreements', id])
-      setAddAgreementModal(false)
-      setSelectedDoctor(null)
-      setNonMclForm({ name: '', pan: '', email: '' })
-      toast.success('Agreement created')
-    },
-  })
-
-  const updateAgreementStatus = useMutation({
-    mutationFn: ({ agreementId, status, remark }) =>
-      eventAgreementsApi.updateStatus(id, agreementId, status, remark),
-    onSuccess: () => { qc.invalidateQueries(['event-agreements', id]); toast.success('Agreement updated') },
-  })
-
-  const deleteAgreement = useMutation({
-    mutationFn: (agreementId) => eventAgreementsApi.delete(id, agreementId),
-    onSuccess: () => { qc.invalidateQueries(['event-agreements', id]); toast.success('Agreement deleted') },
+    onSuccess: () => { qc.invalidateQueries(['event', id]); setRejectModal(false); toast.success('Rejected') },
   })
 
   if (isLoading) return <div className="p-8"><LoadingSpinner /></div>
   if (!event) return <div className="p-8 text-red-500">Event not found</div>
 
-  const canApprove = ['Administrator', 'ComplianceUser', 'FinanceUser'].includes(user?.role) && event.status === 'Submitted'
+  const canApprove = (() => {
+    const s = event.status
+    if (!s) return false
+    const isAdmin = user?.role === 'Administrator'
+    if (isAdmin) return s !== 'Draft' && s !== 'Pre-Approved' && s !== 'Completed' && s !== 'Rejected'
+    const userId = user?.id
+    if (s === 'Pending L1' || s === 'Post L1') return event.l1_approver_id == userId
+    if (s === 'Pending L2' || s === 'Post L2') return event.l2_approver_id == userId
+    if (s === 'Pending Compliance' || s === 'Post Compliance') return user?.role === 'ComplianceUser'
+    if (s === 'Post Coordinator') return user?.role === 'DivisionCoOrdinator'
+    if (s === 'Post GST') return user?.role === 'GSTuser'
+    if (s === 'Post Finance') return user?.role === 'FinanceUser'
+    return false
+  })()
 
-  const handleAddAgreement = () => {
-    const data = selectedDoctor
-      ? { doctor_id: selectedDoctor.id, is_hcp_doctor: true }
-      : {
-          non_mcl_name: nonMclForm.name,
-          non_mcl_pan: nonMclForm.pan,
-          non_mcl_email: nonMclForm.email,
-          is_hcp_doctor: false,
-        }
-    createAgreement.mutate(data)
-  }
+  const isDraft = event.status === 'Draft'
+  const isInitiator = user?.id === event.initiator_id
+  const endDatePassed = event.event_end_date && new Date(event.event_end_date) < new Date()
+  const showPostEventBanner = isInitiator && event.status === 'Pre-Approved' && endDatePassed
+  const progress = getProgress(event.status)
 
   return (
     <div className="p-8 max-w-6xl">
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/events')} className="text-gray-400 hover:text-gray-700">
-          <ArrowLeft size={20} />
-        </button>
-        <PageHeader
-          title={event.event_title}
-          subtitle={`${event.event_code} • ${event.event_type || 'Event'}`}
-          actions={
-            <div className="flex gap-2">
-              {canApprove && (
-                <>
-                  <button
-                    className="btn-primary bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1"
-                    onClick={() => approve.mutate()}
-                  >
-                    <CheckCircle size={15} /> Approve
-                  </button>
-                  <button
-                    className="btn-danger flex items-center gap-1"
-                    onClick={() => setRejectModal(true)}
-                  >
-                    <XCircle size={15} /> Reject
-                  </button>
-                </>
-              )}
-              <StatusBadge status={event.status} />
-            </div>
-          }
-        />
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 border-b mb-6">
-        {TABS.map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
-              tab === t
-                ? 'border-blue-600 text-blue-700 bg-blue-50'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {t}
-            {t === 'Agreements' && agreements.length > 0 && (
-              <span className="ml-1.5 bg-blue-100 text-blue-700 rounded-full text-xs px-1.5 py-0.5">
-                {agreements.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Overview Tab */}
-      {tab === 'Overview' && (
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            ['Event Date', fmtDate(event.event_date)],
-            ['End Date', fmtDate(event.event_end_date)],
-            ['Venue', event.venue || '—'],
-            ['City', event.city || '—'],
-            ['State', event.state || '—'],
-            ['Budget', fmtCurrency(event.budget_amount)],
-            ['Actual Cost', fmtCurrency(event.actual_amount)],
-            ['Cost Center', event.cost_center || '—'],
-            ['Expected Attendance', event.expected_attendance || '—'],
-            ['Actual Attendance', event.actual_attendance || '—'],
-            ['Event Category', event.event_category || '—'],
-            ['Status', event.status],
-          ].map(([label, value]) => (
-            <div key={label} className="card py-3 px-4">
-              <p className="text-xs text-gray-400 mb-1">{label}</p>
-              <p className="font-medium text-sm">{value}</p>
-            </div>
-          ))}
-          {event.compliance_remarks && (
-            <div className="card col-span-3 py-3 px-4 bg-blue-50">
-              <p className="text-xs text-gray-400 mb-1">Compliance Remarks</p>
-              <p className="text-sm">{event.compliance_remarks}</p>
-            </div>
-          )}
-          {event.rejection_reason && (
-            <div className="card col-span-3 py-3 px-4 bg-red-50">
-              <p className="text-xs text-red-400 mb-1">Rejection Reason</p>
-              <p className="text-sm text-red-700">{event.rejection_reason}</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Doctors & HCPs Tab */}
-      {tab === 'Doctors & HCPs' && (
-        <div className="space-y-4">
-          {event.doctors?.length > 0 ? (
-            <div className="card">
-              <h3 className="font-semibold mb-3">Doctors / HCPs ({event.doctors.length})</h3>
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {['Name', 'Qualification', 'Specialization', 'City', 'PAN', 'FMV', 'Action'].map(h => (
-                      <th key={h} className="px-3 py-2 text-left text-xs text-gray-500">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {event.doctors.map(d => (
-                    <tr key={d.id}>
-                      <td className="px-3 py-2 font-medium">{d.doctor_name}</td>
-                      <td className="px-3 py-2 text-gray-500 text-xs">{d.qualification}</td>
-                      <td className="px-3 py-2 text-gray-500">{d.specialization}</td>
-                      <td className="px-3 py-2">{d.city}</td>
-                      <td className="px-3 py-2 font-mono text-xs">{d.pan_number}</td>
-                      <td className="px-3 py-2">{fmtCurrency(d.fmv_amount)}</td>
-                      <td className="px-3 py-2">
-                        <button
-                          className="text-xs text-blue-600 hover:underline"
-                          onClick={() => { setFmvDoctor(null); setFmvDoctorModal(true) }}
-                        >
-                          FMV Calc
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="card p-8 text-center text-gray-400">
-              No doctors added to this event yet.
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Agreements Tab */}
-      {tab === 'Agreements' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-500">
-              Agreements are generated post-event for each participating HCP/doctor.
-            </p>
-            <button
-              className="btn-primary flex items-center gap-1.5 text-sm"
-              onClick={() => setAddAgreementModal(true)}
-            >
-              <Plus size={15} /> Add Agreement
-            </button>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/events')} className="text-gray-400 hover:text-gray-700"><ArrowLeft size={20} /></button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{event.event_title}</h1>
+            <p className="text-sm text-gray-500">{event.event_code} • {event.event_type || 'Event'}</p>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {isDraft && isInitiator && <button className="btn-secondary flex items-center gap-1" onClick={() => navigate(`/events/${id}/edit`)}><Edit2 size={14} /> Edit</button>}
+          {canApprove && <>
+            <button className="btn-primary bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1" onClick={() => approve.mutate('')}><CheckCircle size={15} /> Approve</button>
+            <button className="btn-danger flex items-center gap-1" onClick={() => setRejectModal(true)}><XCircle size={15} /> Reject</button>
+          </>}
+          <StatusBadge status={event.status} />
+        </div>
+      </div>
 
-          {agreements.length === 0 ? (
-            <div className="card p-8 text-center">
-              <FileSignature size={32} className="text-gray-300 mx-auto mb-2" />
-              <p className="text-gray-400">No agreements yet. Add agreements for HCPs who participated in this event.</p>
+      {/* Progress Bar with Audit Trail */}
+      <div className="card mb-6 cursor-pointer" onClick={() => setAuditOpen(!auditOpen)}>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-medium text-gray-700">Approval Progress</p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">{event.status}</span>
+            {auditOpen ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+          </div>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className={`h-3 rounded-full transition-all ${progress >= 100 ? 'bg-emerald-500' : progress > 50 ? 'bg-blue-500' : 'bg-amber-500'}`} style={{ width: `${progress}%` }} />
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-xs text-gray-400">Draft</span>
+          <span className="text-xs text-gray-400">Pre-Approved</span>
+          <span className="text-xs text-gray-400">Completed</span>
+        </div>
+
+        {/* Audit Trail (expandable) */}
+        {auditOpen && (
+          <div className="mt-4 pt-4 border-t space-y-3">
+            <p className="text-sm font-semibold text-gray-700">Audit Trail</p>
+            {event.audit_trail?.length > 0 ? (
+              <div className="space-y-2">
+                {event.audit_trail.map((entry, i) => (
+                  <div key={entry.id || i} className="flex items-start gap-3 text-sm">
+                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${i === 0 ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{entry.action}</span>
+                        {entry.to_status && <StatusBadge status={entry.to_status} />}
+                      </div>
+                      <p className="text-xs text-gray-500">by {entry.performed_by} • {fmtDate(entry.created_at)}</p>
+                      {entry.remarks && <p className="text-xs text-gray-600 mt-0.5 bg-gray-50 px-2 py-1 rounded">{entry.remarks}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-xs text-gray-400">No audit trail entries yet.</p>}
+            <div className="grid grid-cols-3 gap-3 pt-2 border-t">
+              <Field label="L1 Approver" value={event.l1_approver_name} />
+              <Field label="L2 Approver" value={event.l2_approver_name} />
+              <Field label="Current Pending" value={event.status} />
             </div>
-          ) : (
-            <div className="card overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {['Doctor / HCP', 'Type', 'PAN', 'Agreement Date', 'Status', 'Actions'].map(h => (
-                      <th key={h} className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {agreements.map(ag => (
-                    <tr key={ag.id}>
-                      <td className="px-4 py-3 font-medium">
-                        {ag.is_hcp_doctor
-                          ? (ag.doctor_name || `Doctor #${ag.doctor_id}`)
-                          : (ag.non_mcl_name || 'Non-MCL HCP')}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          ag.is_hcp_doctor ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
-                        }`}>
-                          {ag.is_hcp_doctor ? 'MCL Doctor' : 'Non-MCL HCP'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs">
-                        {ag.is_hcp_doctor ? ag.doctor_pan : ag.non_mcl_pan}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {ag.agreement_date ? fmtDate(ag.agreement_date) : '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={ag.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          {ag.status === 'Pending' && canApprove && (
-                            <>
-                              <button
-                                className="text-xs text-emerald-600 hover:underline"
-                                onClick={() => updateAgreementStatus.mutate({ agreementId: ag.id, status: 'Approved' })}
-                              >
-                                Approve
-                              </button>
-                              <button
-                                className="text-xs text-red-500 hover:underline"
-                                onClick={() => updateAgreementStatus.mutate({ agreementId: ag.id, status: 'Cancelled' })}
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          )}
-                          <button
-                            className="text-xs text-gray-400 hover:text-red-500"
-                            onClick={() => deleteAgreement.mutate(ag.id)}
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+          </div>
+        )}
+      </div>
+
+      {/* Post-event banner */}
+      {showPostEventBanner && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+          <div>
+            <p className="font-medium text-amber-800">Post-Event Documents Required</p>
+            <p className="text-sm text-amber-600">Event end date has passed. Upload post-event documents to proceed.</p>
+          </div>
+          <button className="btn-primary bg-amber-600 hover:bg-amber-700" onClick={() => navigate(`/events/${id}/post-documents`)}>Upload Post-Event Docs →</button>
+        </div>
+      )}
+
+      {/* Rejection reason */}
+      {event.rejection_reason && (
+        <div className="mb-6 card bg-red-50 border-red-200">
+          <p className="text-xs text-red-400 mb-1">Rejection Reason</p>
+          <p className="text-sm text-red-700">{event.rejection_reason}</p>
+        </div>
+      )}
+
+      {/* Section 1: Basic Details */}
+      <div className="card mb-4">
+        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase tracking-wide">Basic Details</h3>
+        <div className="grid grid-cols-4 gap-4">
+          <Field label="Event Type" value={event.event_type} />
+          <Field label="Initiator" value={event.initiator_name} />
+          <Field label="Division" value={event.division_id} />
+          <Field label="Therapeutic Area" value={event.therapeutic_area} />
+          <Field label="Brand" value={event.brand} />
+          <Field label="Budget Type" value={event.budget_type} />
+          <Field label="Platform" value={event.platform} />
+          <Field label="Topic" value={event.topic} />
+          {event.event_type === 'Corporate Sponsorship' && <>
+            <Field label="Conference Type" value={event.conference_type} />
+            <Field label="Solicited/Unsolicited" value={event.solicited_unsolicited} />
+            <Field label="Sponsorship Type" value={event.sponsorship_type} />
+            <Field label="Sponsorship Amount" value={fmtCurrency(event.sponsorship_amount)} />
+          </>}
+        </div>
+      </div>
+
+      {/* Section 2: Event Info */}
+      <div className="card mb-4">
+        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase tracking-wide">Event Information</h3>
+        <div className="grid grid-cols-4 gap-4">
+          <Field label="Start Date" value={fmtDate(event.event_date)} />
+          <Field label="End Date" value={fmtDate(event.event_end_date)} />
+          <Field label="City" value={event.city} />
+          <Field label="State" value={event.state} />
+          <Field label="Venue" value={event.venue} />
+          <Field label="On Field Execution By" value={event.on_field_execution_by} />
+          <Field label="Emcure Attendees" value={event.proposed_emcure_attendees} />
+          <Field label="Promotional Material Approved" value={event.promotional_material_approved} />
+          <Field label="HCPs Professional Services" value={event.num_hcps_professional_services} />
+          <Field label="Proposed HCPs" value={event.proposed_num_hcps} />
+        </div>
+        {event.rationale && <div className="mt-3"><Field label="Rationale" value={event.rationale} wide /></div>}
+        {event.agenda && <div className="mt-3"><Field label="Agenda" value={event.agenda} wide /></div>}
+      </div>
+
+      {/* Section 3: Meals & Costs */}
+      <div className="card mb-4">
+        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase tracking-wide">Meals & Beverages</h3>
+        {event.meals?.length > 0 ? (
+          <table className="w-full text-sm border rounded-lg overflow-hidden">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2 text-left text-xs text-gray-500">Meal</th>
+                <th className="px-4 py-2 text-left text-xs text-gray-500">Max Capping (₹)</th>
+                <th className="px-4 py-2 text-left text-xs text-gray-500">Cost Per Attendee (₹)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {event.meals.map(m => (
+                <tr key={m.id}>
+                  <td className="px-4 py-2 font-medium">{m.meal_name}</td>
+                  <td className="px-4 py-2 text-gray-500">{m.max_cost ? fmtCurrency(m.max_cost) : '—'}</td>
+                  <td className="px-4 py-2 font-medium">{m.cost_per_attendee ? fmtCurrency(m.cost_per_attendee) : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : <p className="text-sm text-gray-400">No meals added.</p>}
+      </div>
+
+      <div className="card mb-4">
+        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase tracking-wide">Other Event Costs</h3>
+        <div className="grid grid-cols-4 gap-4">
+          <Field label="Min Guarantee (Pax)" value={event.minimum_guarantee_pax} />
+          <Field label="Venue Charges" value={fmtCurrency(event.venue_charges)} />
+          <Field label="AV/Platform Cost" value={fmtCurrency(event.av_platform_cost)} />
+          <Field label="Other Amount" value={fmtCurrency(event.other_amount)} />
+          <Field label="BTC Facility" value={event.btc_facility} />
+          {event.other_amount_description && <Field label="Other Description" value={event.other_amount_description} />}
+        </div>
+      </div>
+
+      {/* Section 4: HCPs */}
+      <div className="card mb-4">
+        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase tracking-wide">HCP Details ({event.doctors?.length || 0})</h3>
+        {event.doctors?.length > 0 ? (
+          <div className="overflow-x-auto border rounded-lg">
+            <table className="text-xs w-full" style={{minWidth: '1200px'}}>
+              <thead className="bg-gray-100 border-b">
+                <tr>
+                  {['Name','Type','PAN','Email','FMV Cat','Pts','Rate','Derived','Honorarium','Cab','Flight','Accom','Remark'].map(h => (
+                    <th key={h} className="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">{h}</th>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Costs Tab */}
-      {tab === 'Costs' && (
-        <div>
-          {event.costs?.length > 0 ? (
-            <div className="card">
-              <h3 className="font-semibold mb-3">Event Costs</h3>
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {['Cost Head', 'Vendor', 'Estimated', 'Actual'].map(h => (
-                      <th key={h} className="px-3 py-2 text-left text-xs text-gray-500">{h}</th>
-                    ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {event.doctors.map(d => (
+                  <tr key={d.id} className="hover:bg-gray-50">
+                    <td className="px-2 py-1.5 font-medium whitespace-nowrap">{d.doctor_name}</td>
+                    <td className="px-2 py-1.5"><span className={`text-xs px-1.5 py-0.5 rounded ${d.is_mcl !== false ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{d.is_mcl !== false ? 'MCL' : 'Non-MCL'}</span></td>
+                    <td className="px-2 py-1.5 font-mono">{d.pan_number || '—'}</td>
+                    <td className="px-2 py-1.5">{d.email || '—'}</td>
+                    <td className="px-2 py-1.5"><span className="font-bold">{d.fmv_category || '—'}</span></td>
+                    <td className="px-2 py-1.5 text-center">{d.fmv_total_points || '—'}</td>
+                    <td className="px-2 py-1.5">{d.fmv_hourly_rate ? fmtCurrency(d.fmv_hourly_rate) : '—'}</td>
+                    <td className="px-2 py-1.5 font-medium">{d.derived_honorarium ? fmtCurrency(d.derived_honorarium) : '—'}</td>
+                    <td className="px-2 py-1.5 font-medium">{d.honorarium ? fmtCurrency(d.honorarium) : '—'}</td>
+                    <td className="px-2 py-1.5">{d.cab_cost ? fmtCurrency(d.cab_cost) : '—'}</td>
+                    <td className="px-2 py-1.5">{d.flight_cost ? fmtCurrency(d.flight_cost) : '—'}</td>
+                    <td className="px-2 py-1.5">{d.accommodation_cost ? fmtCurrency(d.accommodation_cost) : '—'}</td>
+                    <td className="px-2 py-1.5">{d.remark || '—'}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {event.costs.map(c => (
-                    <tr key={c.id}>
-                      <td className="px-3 py-2 font-medium">{c.cost_head}</td>
-                      <td className="px-3 py-2 text-gray-500">{c.vendor_name}</td>
-                      <td className="px-3 py-2">{fmtCurrency(c.estimated_amount)}</td>
-                      <td className="px-3 py-2">{fmtCurrency(c.actual_amount)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="card p-8 text-center text-gray-400">No costs recorded.</div>
-          )}
-        </div>
-      )}
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : <p className="text-sm text-gray-400">No HCPs added.</p>}
+      </div>
 
-      {/* Documents Tab */}
-      {tab === 'Documents' && (
-        <div className="card p-8 text-center text-gray-400">
-          Document upload functionality available when creating/editing event.
-        </div>
-      )}
+      {/* Section 5: Documents */}
+      <div className="card mb-4">
+        <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase tracking-wide">Uploaded Documents</h3>
+        {event.documents?.length > 0 ? (
+          <div className="space-y-2">
+            {event.documents.map(d => (
+              <div key={d.id} className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50">
+                <div>
+                  <p className="text-sm font-medium">{d.document_name}</p>
+                  <p className="text-xs text-gray-500">{d.document_type} • {fmtDate(d.uploaded_at)}</p>
+                </div>
+                <div className="flex gap-2">
+                  {d.file_path && <a href={`/${d.file_path}`} target="_blank" rel="noopener noreferrer" className="btn-secondary text-xs flex items-center gap-1 py-1 px-2"><Eye size={12} /> View</a>}
+                  {d.file_path && <a href={`/${d.file_path}`} download className="btn-secondary text-xs flex items-center gap-1 py-1 px-2"><Download size={12} /> Download</a>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : <p className="text-sm text-gray-400">No documents uploaded.</p>}
+      </div>
 
       {/* Reject Modal */}
       <Modal open={rejectModal} onClose={() => setRejectModal(false)} title="Reject Event">
         <div className="space-y-4">
-          <div>
-            <label className="label">Reason for Rejection *</label>
-            <textarea
-              className="input h-24"
-              value={rejectReason}
-              onChange={e => setRejectReason(e.target.value)}
-              placeholder="Please provide a reason…"
-            />
-          </div>
+          <textarea className="input h-24" value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection…" />
           <div className="flex justify-end gap-2">
             <button className="btn-secondary" onClick={() => setRejectModal(false)}>Cancel</button>
-            <button
-              className="btn-danger"
-              onClick={() => reject.mutate(rejectReason)}
-              disabled={!rejectReason}
-            >
-              Reject Event
-            </button>
+            <button className="btn-danger" onClick={() => reject.mutate(rejectReason)} disabled={!rejectReason}>Reject</button>
           </div>
-        </div>
-      </Modal>
-
-      {/* Add Agreement Modal */}
-      <Modal
-        open={addAgreementModal}
-        onClose={() => { setAddAgreementModal(false); setSelectedDoctor(null); setNonMclForm({ name: '', pan: '', email: '' }) }}
-        title="Add Agreement"
-        size="lg"
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              className={`border-2 rounded-lg p-3 text-left transition-colors ${
-                selectedDoctor !== null
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-blue-200'
-              }`}
-              onClick={() => { setDoctorSearchOpen(true) }}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <UserCheck size={16} className="text-blue-600" />
-                <span className="text-sm font-medium text-blue-700">MCL Doctor</span>
-              </div>
-              <p className="text-xs text-gray-500">Select from the Master Customer List</p>
-              {selectedDoctor && (
-                <p className="text-xs font-medium text-blue-800 mt-1 truncate">
-                  {selectedDoctor.full_name || `${selectedDoctor.first_name} ${selectedDoctor.last_name}`}
-                </p>
-              )}
-            </button>
-            <div className={`border-2 rounded-lg p-3 transition-colors ${
-              selectedDoctor === null && (nonMclForm.name || nonMclForm.pan)
-                ? 'border-amber-500 bg-amber-50'
-                : 'border-gray-200'
-            }`}>
-              <div className="flex items-center gap-2 mb-2">
-                <UserCheck size={16} className="text-amber-600" />
-                <span className="text-sm font-medium text-amber-700">Non-MCL HCP</span>
-              </div>
-              <input
-                className="input text-xs py-1 mb-1"
-                placeholder="Full Name"
-                value={nonMclForm.name}
-                onChange={e => { setSelectedDoctor(null); setNonMclForm(f => ({ ...f, name: e.target.value })) }}
-              />
-              <input
-                className="input text-xs py-1 mb-1"
-                placeholder="PAN Number"
-                value={nonMclForm.pan}
-                onChange={e => { setSelectedDoctor(null); setNonMclForm(f => ({ ...f, pan: e.target.value })) }}
-              />
-              <input
-                className="input text-xs py-1"
-                placeholder="Email (optional)"
-                value={nonMclForm.email}
-                onChange={e => { setSelectedDoctor(null); setNonMclForm(f => ({ ...f, email: e.target.value })) }}
-              />
-            </div>
-          </div>
-
-          {/* FMV Calculator inline */}
-          {selectedDoctor && (
-            <FmvCalculator doctor={selectedDoctor} />
-          )}
-
-          <div className="flex justify-end gap-2 pt-2 border-t">
-            <button
-              className="btn-secondary"
-              onClick={() => { setAddAgreementModal(false); setSelectedDoctor(null) }}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn-primary"
-              disabled={!selectedDoctor && !nonMclForm.name}
-              onClick={handleAddAgreement}
-            >
-              Create Agreement
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Doctor Search Modal */}
-      <DoctorSearchModal
-        open={doctorSearchOpen}
-        onClose={() => setDoctorSearchOpen(false)}
-        onSelect={(doc) => { setSelectedDoctor(doc); setDoctorSearchOpen(false) }}
-      />
-
-      {/* Standalone FMV Calculator Modal */}
-      <Modal
-        open={fmvDoctorModal}
-        onClose={() => { setFmvDoctorModal(false); setFmvDoctor(null) }}
-        title="FMV Calculator"
-        size="lg"
-      >
-        <div className="space-y-3">
-          <button
-            className="btn-secondary text-sm"
-            onClick={() => setDoctorSearchOpen(true)}
-          >
-            {fmvDoctor ? 'Change Doctor' : 'Select MCL Doctor'}
-          </button>
-          <FmvCalculator doctor={fmvDoctor} />
         </div>
       </Modal>
     </div>

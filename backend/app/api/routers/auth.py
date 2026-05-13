@@ -11,7 +11,7 @@ from typing import List
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -22,7 +22,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Account is disabled")
     token = create_access_token(data={"sub": user.email})
-    return Token(access_token=token, user=UserOut.model_validate(user))
+    user_data = UserOut.model_validate(user).model_dump()
+    user_data["roles"] = [ra.role for ra in user.role_assignments] if user.role_assignments else []
+    return {"access_token": token, "token_type": "bearer", "user": user_data}
 
 
 @router.get("/me", response_model=UserOut)
@@ -57,14 +59,23 @@ def change_password(
     return {"message": "Password updated successfully"}
 
 
-@router.get("/users", response_model=List[UserOut])
+@router.get("/users")
 def list_users(
     skip: int = 0,
     limit: int = 2000,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    return db.query(User).order_by(User.first_name, User.last_name).offset(skip).limit(limit).all()
+    users = db.query(User).order_by(User.first_name, User.last_name).offset(skip).limit(limit).all()
+    result = []
+    for u in users:
+        user_dict = UserOut.model_validate(u).model_dump()
+        if u.manager:
+            user_dict["manager_name"] = f"{u.manager.first_name or ''} {u.manager.last_name or ''}".strip()
+        # Include multiple roles
+        user_dict["roles"] = [ra.role for ra in u.role_assignments] if u.role_assignments else []
+        result.append(user_dict)
+    return result
 
 
 @router.post("/users", response_model=UserOut)
@@ -85,6 +96,7 @@ def create_user(
         role=data.role,
         division_id=data.division_id,
         designation_title=data.designation_title,
+        manager_id=data.manager_id,
     )
     db.add(user)
     db.commit()
@@ -107,3 +119,38 @@ def update_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.get("/users/{user_id}/roles")
+def get_user_roles(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    from app.models.user import UserRoleAssignment
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return [ra.role for ra in user.role_assignments]
+
+
+@router.post("/users/{user_id}/roles")
+def assign_user_role(user_id: int, role: str, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    from app.models.user import UserRoleAssignment
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Check if already assigned
+    existing = db.query(UserRoleAssignment).filter(UserRoleAssignment.user_id == user_id, UserRoleAssignment.role == role).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Role already assigned")
+    db.add(UserRoleAssignment(user_id=user_id, role=role))
+    db.commit()
+    return {"ok": True, "roles": [ra.role for ra in db.query(UserRoleAssignment).filter(UserRoleAssignment.user_id == user_id).all()]}
+
+
+@router.delete("/users/{user_id}/roles/{role}")
+def remove_user_role(user_id: int, role: str, db: Session = Depends(get_db), current_user: User = Depends(require_admin)):
+    from app.models.user import UserRoleAssignment
+    ra = db.query(UserRoleAssignment).filter(UserRoleAssignment.user_id == user_id, UserRoleAssignment.role == role).first()
+    if not ra:
+        raise HTTPException(status_code=404, detail="Role not found")
+    db.delete(ra)
+    db.commit()
+    return {"ok": True}

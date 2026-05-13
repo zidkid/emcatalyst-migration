@@ -6,7 +6,7 @@ import {
   ChevronUp, Video, List, CheckSquare, AlignLeft, ToggleLeft, ArrowLeft, FileText
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { brsApi } from '../../api/endpoints'
+import { brsApi, accessApi } from '../../api/endpoints'
 import PageHeader from '../../components/ui/PageHeader'
 import Modal from '../../components/ui/Modal'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -185,7 +185,7 @@ function SurveyEditor({ surveyId, onBack }) {
   })
 
   const [editingMeta, setEditingMeta] = useState(false)
-  const [meta, setMeta] = useState({ title: '', description: '', honorarium_upper_limit: 0, agreement_template: '' })
+  const [meta, setMeta] = useState({ title: '', description: '', total_honorarium_amount: 0, agreement_template: '' })
 
   const updateMeta = useMutation({
     mutationFn: () => brsApi.updateSurvey(surveyId, meta),
@@ -231,9 +231,9 @@ function SurveyEditor({ surveyId, onBack }) {
             <textarea className="input" rows={2} value={meta.description}
               onChange={e => setMeta(m => ({ ...m, description: e.target.value }))}
               placeholder="Description" />
-            <input className="input" type="number" value={meta.honorarium_upper_limit}
-              onChange={e => setMeta(m => ({ ...m, honorarium_upper_limit: parseFloat(e.target.value) || 0 }))}
-              placeholder="Honorarium Upper Limit (₹)" />
+            <input className="input" type="number" value={meta.total_honorarium_amount}
+              onChange={e => setMeta(m => ({ ...m, total_honorarium_amount: parseFloat(e.target.value) || 0 }))}
+              placeholder="Total Honorarium Amount (₹)" />
             <div>
               <label className="label text-xs">Agreement Template</label>
               <textarea className="input font-mono text-xs" rows={8} value={meta.agreement_template}
@@ -250,13 +250,13 @@ function SurveyEditor({ surveyId, onBack }) {
             <div>
               <h3 className="font-bold text-lg text-gray-900">{survey?.title}</h3>
               {survey?.description && <p className="text-sm text-gray-500 mt-1">{survey.description}</p>}
-              {survey?.honorarium_upper_limit > 0 && (
-                <p className="text-sm text-green-700 mt-1">Honorarium Limit: ₹{survey.honorarium_upper_limit.toLocaleString('en-IN')}</p>
+              {survey?.total_honorarium_amount > 0 && (
+                <p className="text-sm text-green-700 mt-1">Total Honorarium: ₹{survey.total_honorarium_amount.toLocaleString('en-IN')}</p>
               )}
               <p className="text-xs text-gray-400 mt-1">{survey?.questions?.length || 0} questions</p>
             </div>
             <button className="btn-secondary text-sm flex items-center gap-1"
-              onClick={() => { setMeta({ title: survey.title, description: survey.description || '', honorarium_upper_limit: survey.honorarium_upper_limit || 0, agreement_template: survey.agreement_template || '' }); setEditingMeta(true) }}>
+              onClick={() => { setMeta({ title: survey.title, description: survey.description || '', total_honorarium_amount: survey.total_honorarium_amount || 0, agreement_template: survey.agreement_template || '' }); setEditingMeta(true) }}>
               <Edit3 size={14} /> Edit
             </button>
           </div>
@@ -350,18 +350,24 @@ export default function SurveyBuilder() {
   const qc = useQueryClient()
   const [activeSurveyId, setActiveSurveyId] = useState(null)
   const [showNewSurvey, setShowNewSurvey] = useState(false)
-  const [newSurvey, setNewSurvey] = useState({ title: '', description: '', honorarium_upper_limit: '' })
+  const [newSurvey, setNewSurvey] = useState({ title: '', description: '', total_honorarium_amount: '', division_id: '' })
 
   const { data: surveys = [], isLoading } = useQuery({
     queryKey: ['brs-surveys'],
     queryFn: () => brsApi.listSurveys().then(r => r.data),
   })
 
+  const { data: divisions = [] } = useQuery({
+    queryKey: ['divisions'],
+    queryFn: () => accessApi.listDivisions().then(r => r.data),
+  })
+
   const createSurveyMut = useMutation({
     mutationFn: () => brsApi.createSurvey({
       title: newSurvey.title,
       description: newSurvey.description,
-      honorarium_upper_limit: parseFloat(newSurvey.honorarium_upper_limit) || 0,
+      total_honorarium_amount: parseFloat(newSurvey.total_honorarium_amount) || 0,
+      division_id: newSurvey.division_id ? parseInt(newSurvey.division_id) : undefined,
     }),
     onSuccess: (res) => {
       toast.success('Survey created!')
@@ -429,8 +435,8 @@ export default function SurveyBuilder() {
               {s.description && <p className="text-xs text-gray-500 mb-3">{s.description}</p>}
               <div className="flex items-center gap-3 text-xs text-gray-500 mb-4">
                 <span>{s.question_count} questions</span>
-                {s.honorarium_upper_limit > 0 && (
-                  <span>Limit: ₹{s.honorarium_upper_limit.toLocaleString('en-IN')}</span>
+                {s.total_honorarium_amount > 0 && (
+                  <span>Limit: ₹{s.total_honorarium_amount.toLocaleString('en-IN')}</span>
                 )}
               </div>
               <div className="flex gap-2">
@@ -462,9 +468,17 @@ export default function SurveyBuilder() {
                 onChange={e => setNewSurvey(s => ({ ...s, description: e.target.value }))} />
             </div>
             <div>
-              <label className="label">Honorarium Upper Limit (₹)</label>
-              <input className="input" type="number" value={newSurvey.honorarium_upper_limit}
-                onChange={e => setNewSurvey(s => ({ ...s, honorarium_upper_limit: e.target.value }))} />
+              <label className="label">Division <span className="text-red-500">*</span></label>
+              <select className="input" value={newSurvey.division_id}
+                onChange={e => setNewSurvey(s => ({ ...s, division_id: e.target.value }))}>
+                <option value="">Select Division</option>
+                {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Total Honorarium Amount (₹)</label>
+              <input className="input" type="number" value={newSurvey.total_honorarium_amount}
+                onChange={e => setNewSurvey(s => ({ ...s, total_honorarium_amount: e.target.value }))} />
             </div>
             <div className="flex gap-3 justify-end">
               <button className="btn-secondary" onClick={() => setShowNewSurvey(false)}>Cancel</button>

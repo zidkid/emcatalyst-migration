@@ -7,7 +7,7 @@ from app.db.base import get_db
 from app.api.deps import require_admin
 from app.models.master import (
     EventType, DocumentType, Designation, CompanyCode, Enumeration,
-    HcpDoctor, FmvCriteria, MasterSpeciality, MasterHcpRole,
+    HcpDoctor, FmvCriteria, FmvParameter, MasterSpeciality, MasterHcpRole,
     MasterTherapeutic, MasterState,
     MasterBrand, MasterMeal, MasterCity, MasterSponsorshipType
 )
@@ -105,8 +105,54 @@ class DivisionOut(BaseModel):
 
 
 @router.get("/event-types", response_model=List[EventTypeOut])
-def list_event_types(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return db.query(EventType).filter(EventType.is_active == True).all()
+def list_event_types(all: bool = False, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    q = db.query(EventType)
+    if not all:
+        q = q.filter(EventType.is_active == True)
+    return q.all()
+
+
+@router.post("/event-types")
+def create_event_type(
+    name: str, code: Optional[str] = None, max_fmv: Optional[float] = None,
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)
+):
+    et = EventType(name=name, code=code, max_fmv=max_fmv)
+    db.add(et)
+    db.commit()
+    db.refresh(et)
+    return {"id": et.id, "name": et.name, "code": et.code, "max_fmv": et.max_fmv}
+
+
+@router.put("/event-types/{et_id}")
+def update_event_type(
+    et_id: int, name: Optional[str] = None, code: Optional[str] = None,
+    max_fmv: Optional[float] = None, is_active: Optional[bool] = None,
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)
+):
+    et = db.query(EventType).filter(EventType.id == et_id).first()
+    if not et:
+        raise HTTPException(status_code=404, detail="Event type not found")
+    if name is not None:
+        et.name = name
+    if code is not None:
+        et.code = code
+    if max_fmv is not None:
+        et.max_fmv = max_fmv
+    if is_active is not None:
+        et.is_active = is_active
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/event-types/{et_id}")
+def delete_event_type(et_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    et = db.query(EventType).filter(EventType.id == et_id).first()
+    if not et:
+        raise HTTPException(status_code=404, detail="Event type not found")
+    db.delete(et)
+    db.commit()
+    return {"ok": True}
 
 
 @router.get("/document-types")
@@ -186,24 +232,300 @@ def list_fmv_criteria(
     return db.query(FmvCriteria).filter(FmvCriteria.is_active == True).all()
 
 
+@router.get("/fmv-parameters")
+def list_fmv_parameters(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    """Get all FMV parameters grouped by parameter_name"""
+    params = db.query(FmvParameter).filter(FmvParameter.is_active == True).order_by(FmvParameter.parameter_name, FmvParameter.sort_order).all()
+    # Group by parameter_name
+    grouped = {}
+    for p in params:
+        if p.parameter_name not in grouped:
+            grouped[p.parameter_name] = []
+        grouped[p.parameter_name].append({
+            "id": p.id, "option_code": p.option_code,
+            "option_label": p.option_label, "points": p.points
+        })
+    return grouped
+
+
+@router.post("/fmv-parameters")
+def create_fmv_parameter(
+    parameter_name: str, option_label: str, option_code: str = "", points: int = 1,
+    sort_order: int = 0,
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)
+):
+    p = FmvParameter(parameter_name=parameter_name, option_label=option_label, option_code=option_code, points=points, sort_order=sort_order)
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    return {"id": p.id, "parameter_name": p.parameter_name, "option_label": p.option_label, "points": p.points}
+
+
+@router.put("/fmv-parameters/{param_id}")
+def update_fmv_parameter(
+    param_id: int, option_label: Optional[str] = None, points: Optional[int] = None,
+    is_active: Optional[bool] = None,
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)
+):
+    p = db.query(FmvParameter).filter(FmvParameter.id == param_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    if option_label is not None: p.option_label = option_label
+    if points is not None: p.points = points
+    if is_active is not None: p.is_active = is_active
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/fmv-parameters/{param_id}")
+def delete_fmv_parameter(param_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    p = db.query(FmvParameter).filter(FmvParameter.id == param_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Not found")
+    db.delete(p)
+    db.commit()
+    return {"ok": True}
+
+
+# --- HCP Doctors CRUD ---
+
+@router.post("/hcp-doctors", response_model=HcpDoctorOut)
+def create_hcp_doctor(
+    full_name: str,
+    first_name: Optional[str] = None,
+    last_name: Optional[str] = None,
+    qualification: Optional[str] = None,
+    email: Optional[str] = None,
+    pan_number: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    mobile_number: Optional[str] = None,
+    doctor_type: Optional[str] = None,
+    hourly_rate: Optional[float] = None,
+    max_capping: Optional[float] = None,
+    bank_name: Optional[str] = None,
+    account_number: Optional[str] = None,
+    ifsc_code: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    doc = HcpDoctor(
+        full_name=full_name, first_name=first_name, last_name=last_name,
+        qualification=qualification, email=email, pan_number=pan_number,
+        city=city, state=state, mobile_number=mobile_number,
+        doctor_type=doctor_type, hourly_rate=hourly_rate, max_capping=max_capping,
+        bank_name=bank_name, account_number=account_number, ifsc_code=ifsc_code
+    )
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+    return doc
+
+
+@router.put("/hcp-doctors/{doctor_id}", response_model=HcpDoctorOut)
+def update_hcp_doctor(
+    doctor_id: int,
+    full_name: Optional[str] = None,
+    first_name: Optional[str] = None,
+    last_name: Optional[str] = None,
+    qualification: Optional[str] = None,
+    email: Optional[str] = None,
+    pan_number: Optional[str] = None,
+    city: Optional[str] = None,
+    state: Optional[str] = None,
+    mobile_number: Optional[str] = None,
+    doctor_type: Optional[str] = None,
+    hourly_rate: Optional[float] = None,
+    max_capping: Optional[float] = None,
+    bank_name: Optional[str] = None,
+    account_number: Optional[str] = None,
+    ifsc_code: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    doc = db.query(HcpDoctor).filter(HcpDoctor.id == doctor_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+    for field, value in [
+        ("full_name", full_name), ("first_name", first_name), ("last_name", last_name),
+        ("qualification", qualification), ("email", email), ("pan_number", pan_number),
+        ("city", city), ("state", state), ("mobile_number", mobile_number),
+        ("doctor_type", doctor_type), ("hourly_rate", hourly_rate), ("max_capping", max_capping),
+        ("bank_name", bank_name), ("account_number", account_number), ("ifsc_code", ifsc_code),
+        ("is_active", is_active),
+    ]:
+        if value is not None:
+            setattr(doc, field, value)
+    db.commit()
+    db.refresh(doc)
+    return doc
+
+
+@router.delete("/hcp-doctors/{doctor_id}")
+def delete_hcp_doctor(doctor_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    doc = db.query(HcpDoctor).filter(HcpDoctor.id == doctor_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+    db.delete(doc)
+    db.commit()
+    return {"ok": True}
+
+
 @router.get("/specialities", response_model=List[MasterItemOut])
 def list_specialities(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return db.query(MasterSpeciality).filter(MasterSpeciality.is_active == True).order_by(MasterSpeciality.name).all()
+    return db.query(MasterSpeciality).order_by(MasterSpeciality.name).all()
+
+
+@router.post("/specialities", response_model=MasterItemOut)
+def create_speciality(name: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = MasterSpeciality(name=name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/specialities/{item_id}", response_model=MasterItemOut)
+def update_speciality(item_id: int, name: Optional[str] = None, is_active: Optional[bool] = None,
+                      db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = db.query(MasterSpeciality).filter(MasterSpeciality.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    if name is not None:
+        item.name = name
+    if is_active is not None:
+        item.is_active = is_active
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/specialities/{item_id}")
+def delete_speciality(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = db.query(MasterSpeciality).filter(MasterSpeciality.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    db.delete(item)
+    db.commit()
+    return {"ok": True}
 
 
 @router.get("/hcp-roles", response_model=List[MasterItemOut])
 def list_hcp_roles(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return db.query(MasterHcpRole).filter(MasterHcpRole.is_active == True).all()
+    return db.query(MasterHcpRole).all()
+
+
+@router.post("/hcp-roles", response_model=MasterItemOut)
+def create_hcp_role(name: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = MasterHcpRole(name=name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/hcp-roles/{item_id}", response_model=MasterItemOut)
+def update_hcp_role(item_id: int, name: Optional[str] = None, is_active: Optional[bool] = None,
+                    db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = db.query(MasterHcpRole).filter(MasterHcpRole.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    if name is not None:
+        item.name = name
+    if is_active is not None:
+        item.is_active = is_active
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/hcp-roles/{item_id}")
+def delete_hcp_role(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = db.query(MasterHcpRole).filter(MasterHcpRole.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    db.delete(item)
+    db.commit()
+    return {"ok": True}
 
 
 @router.get("/therapeutics", response_model=List[MasterItemOut])
 def list_therapeutics(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return db.query(MasterTherapeutic).filter(MasterTherapeutic.is_active == True).order_by(MasterTherapeutic.name).all()
+    return db.query(MasterTherapeutic).order_by(MasterTherapeutic.name).all()
+
+
+@router.post("/therapeutics", response_model=MasterItemOut)
+def create_therapeutic(name: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = MasterTherapeutic(name=name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/therapeutics/{item_id}", response_model=MasterItemOut)
+def update_therapeutic(item_id: int, name: Optional[str] = None, is_active: Optional[bool] = None,
+                       db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = db.query(MasterTherapeutic).filter(MasterTherapeutic.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    if name is not None:
+        item.name = name
+    if is_active is not None:
+        item.is_active = is_active
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/therapeutics/{item_id}")
+def delete_therapeutic(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = db.query(MasterTherapeutic).filter(MasterTherapeutic.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    db.delete(item)
+    db.commit()
+    return {"ok": True}
 
 
 @router.get("/states", response_model=List[MasterItemOut])
 def list_states(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return db.query(MasterState).filter(MasterState.is_active == True).order_by(MasterState.name).all()
+    return db.query(MasterState).order_by(MasterState.name).all()
+
+
+@router.post("/states", response_model=MasterItemOut)
+def create_state(name: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = MasterState(name=name)
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/states/{item_id}", response_model=MasterItemOut)
+def update_state(item_id: int, name: Optional[str] = None, is_active: Optional[bool] = None,
+                 db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = db.query(MasterState).filter(MasterState.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    if name is not None:
+        item.name = name
+    if is_active is not None:
+        item.is_active = is_active
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/states/{item_id}")
+def delete_state(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    item = db.query(MasterState).filter(MasterState.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Not found")
+    db.delete(item)
+    db.commit()
+    return {"ok": True}
 
 
 # --- Brands ---
@@ -270,42 +592,55 @@ def update_brand(
 
 # --- Meals ---
 
-@router.get("/meals", response_model=List[MasterItemOut])
+@router.get("/meals")
 def list_meals(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    return db.query(MasterMeal).filter(MasterMeal.is_active == True).order_by(MasterMeal.name).all()
+    meals = db.query(MasterMeal).filter(MasterMeal.is_active == True).order_by(MasterMeal.name).all()
+    return [{"id": m.id, "name": m.name, "max_cost": float(m.max_cost) if m.max_cost else None, "is_active": m.is_active} for m in meals]
 
 
-@router.post("/meals", response_model=MasterItemOut)
+@router.post("/meals")
 def create_meal(
-    name: str,
+    name: str, max_cost: Optional[float] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(get_current_active_user)
 ):
-    meal = MasterMeal(name=name)
+    meal = MasterMeal(name=name, max_cost=max_cost)
     db.add(meal)
     db.commit()
     db.refresh(meal)
-    return meal
+    return {"id": meal.id, "name": meal.name, "max_cost": float(meal.max_cost) if meal.max_cost else None}
 
 
-@router.put("/meals/{meal_id}", response_model=MasterItemOut)
+@router.put("/meals/{meal_id}")
 def update_meal(
     meal_id: int,
     name: Optional[str] = None,
+    max_cost: Optional[float] = None,
     is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(get_current_active_user)
 ):
     meal = db.query(MasterMeal).filter(MasterMeal.id == meal_id).first()
     if not meal:
         raise HTTPException(status_code=404, detail="Meal not found")
     if name is not None:
         meal.name = name
+    if max_cost is not None:
+        meal.max_cost = max_cost
     if is_active is not None:
         meal.is_active = is_active
     db.commit()
-    db.refresh(meal)
-    return meal
+    return {"ok": True}
+
+
+@router.delete("/meals/{meal_id}")
+def delete_meal(meal_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    meal = db.query(MasterMeal).filter(MasterMeal.id == meal_id).first()
+    if not meal:
+        raise HTTPException(status_code=404, detail="Meal not found")
+    db.delete(meal)
+    db.commit()
+    return {"ok": True}
 
 
 # --- Cities ---
@@ -432,6 +767,8 @@ class DocumentTypeOut(BaseModel):
     id: int
     code: Optional[str] = None
     name: str
+    event_type_code: Optional[str] = None
+    stage: Optional[str] = "pre"
     is_mandatory: bool = False
     is_active: bool = True
 
@@ -444,17 +781,38 @@ def list_document_types_full(db: Session = Depends(get_db), current_user: User =
     return db.query(DocumentType).order_by(DocumentType.name).all()
 
 
+@router.get("/document-types-for-event", response_model=List[DocumentTypeOut])
+def list_document_types_for_event(
+    event_type_code: Optional[str] = None,
+    stage: Optional[str] = "pre",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get document types applicable for a specific event type and stage (pre/post)."""
+    q = db.query(DocumentType).filter(DocumentType.is_active == True, DocumentType.stage == stage)
+    if event_type_code:
+        from sqlalchemy import or_
+        q = q.filter(or_(
+            DocumentType.event_type_code == event_type_code,
+            DocumentType.event_type_code.is_(None),
+            DocumentType.event_type_code == '',
+        ))
+    return q.order_by(DocumentType.is_mandatory.desc(), DocumentType.name).all()
+
+
 @router.post("/document-types", response_model=DocumentTypeOut)
 def create_document_type(
     name: str,
     code: Optional[str] = None,
+    event_type_code: Optional[str] = None,
+    stage: Optional[str] = "pre",
     is_mandatory: bool = False,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(get_current_active_user)
 ):
     if code and db.query(DocumentType).filter(DocumentType.code == code).first():
         raise HTTPException(status_code=400, detail="Code already exists")
-    dt = DocumentType(name=name, code=code, is_mandatory=is_mandatory)
+    dt = DocumentType(name=name, code=code, event_type_code=event_type_code, stage=stage, is_mandatory=is_mandatory)
     db.add(dt)
     db.commit()
     db.refresh(dt)
@@ -465,16 +823,22 @@ def create_document_type(
 def update_document_type(
     dt_id: int,
     name: Optional[str] = None,
+    event_type_code: Optional[str] = None,
+    stage: Optional[str] = None,
     is_mandatory: Optional[bool] = None,
     is_active: Optional[bool] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(get_current_active_user)
 ):
     dt = db.query(DocumentType).filter(DocumentType.id == dt_id).first()
     if not dt:
         raise HTTPException(status_code=404, detail="Document type not found")
     if name is not None:
         dt.name = name
+    if event_type_code is not None:
+        dt.event_type_code = event_type_code
+    if stage is not None:
+        dt.stage = stage
     if is_mandatory is not None:
         dt.is_mandatory = is_mandatory
     if is_active is not None:
@@ -482,6 +846,16 @@ def update_document_type(
     db.commit()
     db.refresh(dt)
     return dt
+
+
+@router.delete("/document-types/{dt_id}")
+def delete_document_type(dt_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    dt = db.query(DocumentType).filter(DocumentType.id == dt_id).first()
+    if not dt:
+        raise HTTPException(status_code=404, detail="Document type not found")
+    db.delete(dt)
+    db.commit()
+    return {"ok": True}
 
 
 # --- HCP Doctors full list (for Masters page) ---

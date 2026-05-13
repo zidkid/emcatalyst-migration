@@ -16,6 +16,8 @@ class UserRole(str, enum.Enum):
     FUNCTIONAL_USER = "FunctionalUser"
     MY_ADMIN = "MyAdmin"
     ANONYMOUS = "Anonymous"
+    MARKETING_HEAD = "MarketingHead"
+    DIVISION_HEAD = "DivisionHead"
 
 
 class Division(Base):
@@ -87,6 +89,16 @@ class UserGroupMember(Base):
     group_id = Column(Integer, ForeignKey("user_groups.id"), primary_key=True)
 
 
+class UserRoleAssignment(Base):
+    """Multiple roles per user"""
+    __tablename__ = "user_role_assignments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    role = Column(String(50), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -149,3 +161,4 @@ class User(Base):
     groups = relationship("UserGroup", secondary="user_group_members", back_populates="members")
     events_initiated = relationship("Event", foreign_keys="Event.initiator_id", back_populates="initiator")
     manager = relationship("User", foreign_keys=[manager_id], remote_side="User.id", backref="direct_reports")
+    role_assignments = relationship("UserRoleAssignment", backref="user", lazy="joined")

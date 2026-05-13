@@ -11,7 +11,8 @@ import Modal from '../../components/ui/Modal'
 
 const ROLES = [
   'Administrator', 'ComplianceUser', 'DivisionCoOrdinator', 'FinanceUser',
-  'GSTuser', 'OPEXUser', 'User', 'FunctionalUser', 'MyAdmin', 'Anonymous'
+  'GSTuser', 'OPEXUser', 'User', 'FunctionalUser', 'MyAdmin', 'Anonymous',
+  'MarketingHead', 'DivisionHead'
 ]
 
 const PAGE_SIZE = 50
@@ -24,6 +25,9 @@ export default function UserManagement() {
   const [editRoleModal, setEditRoleModal] = useState(false)
   const [editUser, setEditUser] = useState(null)
   const [editRole, setEditRole] = useState('')
+  const [editRoles, setEditRoles] = useState([])
+  const [editManagerId, setEditManagerId] = useState('')
+  const [managerSearch, setManagerSearch] = useState('')
   const { register, handleSubmit, reset } = useForm()
 
   const { data: users = [], isLoading } = useQuery({
@@ -65,8 +69,13 @@ export default function UserManagement() {
   const openEditRole = (u) => {
     setEditUser(u)
     setEditRole(u.role)
+    setEditRoles(u.roles || [])
+    setEditManagerId(u.manager_id || '')
     setEditRoleModal(true)
   }
+
+  // Build a list of potential managers (all users except the one being edited)
+  const managerOptions = users.filter(u => !editUser || u.id !== editUser.id)
 
   return (
     <div className="p-8">
@@ -103,7 +112,7 @@ export default function UserManagement() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  {['Emp ID', 'Name', 'Email', 'Division', 'Department', 'Role', 'Status', ''].map(h => (
+                  {['Emp ID', 'Name', 'Email', 'Division', 'Manager', 'Role', 'Status', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
                   ))}
                 </tr>
@@ -120,7 +129,7 @@ export default function UserManagement() {
                     </td>
                     <td className="px-4 py-2.5 text-gray-500 text-xs">{u.email}</td>
                     <td className="px-4 py-2.5 text-gray-500 text-xs">{divisionMap[u.division_id] || '—'}</td>
-                    <td className="px-4 py-2.5 text-gray-500 text-xs">{u.department || '—'}</td>
+                    <td className="px-4 py-2.5 text-gray-500 text-xs">{u.manager_name || '—'}</td>
                     <td className="px-4 py-2.5">
                       <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">{u.role}</span>
                     </td>
@@ -135,7 +144,7 @@ export default function UserManagement() {
                           className="text-xs text-blue-600 hover:underline flex items-center gap-1"
                           onClick={() => openEditRole(u)}
                         >
-                          <Edit2 size={12} /> Role
+                          <Edit2 size={12} /> Edit
                         </button>
                         <button
                           className="text-xs text-gray-400 hover:text-gray-700 hover:underline"
@@ -192,7 +201,7 @@ export default function UserManagement() {
       )}
 
       {/* Edit Role Modal */}
-      <Modal open={editRoleModal} onClose={() => setEditRoleModal(false)} title="Edit User Role">
+      <Modal open={editRoleModal} onClose={() => setEditRoleModal(false)} title="Edit User">
         {editUser && (
           <div className="space-y-4">
             <div>
@@ -202,10 +211,48 @@ export default function UserManagement() {
               <p className="text-xs text-gray-500">{editUser.email}</p>
             </div>
             <div>
-              <label className="label">Role</label>
+              <label className="label">Primary Role</label>
               <select className="input" value={editRole} onChange={e => setEditRole(e.target.value)}>
                 {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
+            </div>
+            <div>
+              <label className="label">Additional Roles</label>
+              <div className="grid grid-cols-3 gap-2 p-3 border rounded-lg max-h-40 overflow-y-auto">
+                {ROLES.map(r => (
+                  <label key={r} className="flex items-center gap-2 text-xs cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editRoles.includes(r)}
+                      onChange={e => {
+                        if (e.target.checked) setEditRoles(prev => [...prev, r])
+                        else setEditRoles(prev => prev.filter(x => x !== r))
+                      }}
+                    />
+                    {r}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Select additional roles (e.g. MarketingHead, DivisionHead for BRS access)</p>
+            </div>
+            <div>
+              <label className="label">Manager (L1 Approver)</label>
+              <select
+                className="input"
+                value={editManagerId}
+                onChange={e => setEditManagerId(e.target.value)}
+              >
+                <option value="">— No Manager —</option>
+                {managerOptions
+                  .filter(m => !managerSearch || `${m.first_name} ${m.last_name} ${m.employee_id || ''}`.toLowerCase().includes(managerSearch.toLowerCase()))
+                  .slice(0, 100)
+                  .map(m => (
+                    <option key={m.id} value={m.id}>
+                      {[m.first_name, m.last_name].filter(Boolean).join(' ')} {m.employee_id ? `(${m.employee_id})` : ''} {m.designation_title ? `– ${m.designation_title}` : ''}
+                    </option>
+                  ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">L2 approver will be this manager's manager automatically.</p>
             </div>
             <div>
               <label className="label">Active</label>
@@ -218,13 +265,30 @@ export default function UserManagement() {
               <button className="btn-secondary" onClick={() => setEditRoleModal(false)}>Cancel</button>
               <button
                 className="btn-primary"
-                onClick={() => updateUser.mutate({
-                  id: editUser.id,
-                  data: {
-                    role: editRole,
-                    is_active: document.getElementById('active-select').value === 'true',
+                onClick={async () => {
+                  // Update primary role and manager
+                  await updateUser.mutateAsync({
+                    id: editUser.id,
+                    data: {
+                      role: editRole,
+                      manager_id: editManagerId ? parseInt(editManagerId) : null,
+                      is_active: document.getElementById('active-select').value === 'true',
+                    }
+                  })
+                  // Sync additional roles
+                  const currentRoles = editUser.roles || []
+                  const toAdd = editRoles.filter(r => !currentRoles.includes(r))
+                  const toRemove = currentRoles.filter(r => !editRoles.includes(r))
+                  for (const r of toAdd) {
+                    try { await authApi.assignUserRole(editUser.id, r) } catch(e) {}
                   }
-                })}
+                  for (const r of toRemove) {
+                    try { await authApi.removeUserRole(editUser.id, r) } catch(e) {}
+                  }
+                  qc.invalidateQueries(['users'])
+                  setEditRoleModal(false)
+                  toast.success('User updated')
+                }}
               >
                 Save
               </button>
@@ -235,7 +299,14 @@ export default function UserManagement() {
 
       {/* New User Modal */}
       <Modal open={newUserModal} onClose={() => setNewUserModal(false)} title="New User" size="md">
-        <form onSubmit={handleSubmit(d => createUser.mutate(d))} className="space-y-4">
+        <form onSubmit={handleSubmit(d => {
+          const payload = { ...d }
+          if (payload.manager_id) payload.manager_id = parseInt(payload.manager_id)
+          else delete payload.manager_id
+          if (payload.division_id) payload.division_id = parseInt(payload.division_id)
+          else delete payload.division_id
+          createUser.mutate(payload)
+        })} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div><label className="label">First Name</label><input className="input" {...register('first_name')} /></div>
             <div><label className="label">Last Name</label><input className="input" {...register('last_name')} /></div>
@@ -263,6 +334,18 @@ export default function UserManagement() {
                 <option value="">None</option>
                 {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
+            </div>
+            <div className="col-span-2">
+              <label className="label">Manager (L1 Approver)</label>
+              <select className="input" {...register('manager_id')}>
+                <option value="">— No Manager —</option>
+                {users.slice(0, 200).map(m => (
+                  <option key={m.id} value={m.id}>
+                    {[m.first_name, m.last_name].filter(Boolean).join(' ')} {m.employee_id ? `(${m.employee_id})` : ''} {m.designation_title ? `– ${m.designation_title}` : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">This user's direct manager. L2 is derived from the manager's own manager.</p>
             </div>
           </div>
           <div>

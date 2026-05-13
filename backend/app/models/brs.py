@@ -7,18 +7,11 @@ from app.db.base import Base
 
 class BrsStatus(str, enum.Enum):
     DRAFT = "Draft"
-    PENDING_L1 = "Pending L1"
-    PENDING_L2 = "Pending L2"
-    PENDING_COMPLIANCE = "Pending Compliance"
-    PENDING_HCP_FORM = "Pending HCP Form"
-    PENDING_SURVEY = "Pending Survey"
-    PENDING_SIGN = "Pending Sign"
-    SURVEY_COMPLETED = "Survey Completed"
-    PENDING_COORD_VERIFICATION = "Pending Coord. Verification"
-    PENDING_VENDOR_CREATION = "Pending Vendor Creation"
-    PENDING_FINANCE = "Pending Finance"
-    POSTED = "Posted"
-    PAID = "Paid"
+    SUBMITTED = "Submitted"
+    DH_APPROVED = "DH Approved"
+    DH_REJECTED = "DH Rejected"
+    DOCTOR_PENDING = "Doctor Pending"
+    COMPLETED = "Completed"
 
 
 class BrsQuestionType(str, enum.Enum):
@@ -30,95 +23,96 @@ class BrsQuestionType(str, enum.Enum):
 
 
 class BrsApplication(Base):
+    """BRS (Budget Request System) - created by Marketing Head, approved by Division Head"""
     __tablename__ = "brs_applications"
 
     id = Column(Integer, primary_key=True, index=True)
     brs_code = Column(String(50), unique=True, index=True)
-    survey_title = Column(String(500), nullable=False)
+    survey_id = Column(Integer, ForeignKey("brs_surveys.id"), nullable=True)
+    division_id = Column(Integer, ForeignKey("divisions.id"), nullable=True)
+    title = Column(String(500))
+    remarks = Column(Text)
+    status = Column(String(50), default=BrsStatus.DRAFT)
+
+    # Event-like fields
     therapeutic_area = Column(String(200))
     brand = Column(String(200))
+    budget_type = Column(String(50))
+    platform = Column(String(50))
     topic = Column(Text)
-    mode = Column(String(20), default="Online")
-    survey_duration_minutes = Column(Integer, default=30)
-    honorarium_amount = Column(Numeric(12, 2))
-    division_id = Column(Integer, ForeignKey("divisions.id"), nullable=True)
+    on_field_execution_by = Column(String(200))
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)
+    city = Column(String(100))
+    venue = Column(String(500))
+    rationale = Column(Text)
+    agenda = Column(Text)
     cost_center = Column(String(20))
-    company_code = Column(String(10))
-    remarks = Column(Text)
-    status = Column(Enum(BrsStatus), default=BrsStatus.DRAFT)
 
-    # HCP / Doctor
-    hcp_doctor_id = Column(Integer, ForeignKey("hcp_doctors.id"), nullable=True)
-    is_new_doctor = Column(Boolean, default=False)
-    new_doctor_name = Column(String(300))
-    new_doctor_email = Column(String(200))
-    new_doctor_phone = Column(String(20))
-    new_doctor_speciality = Column(String(200))
-    new_doctor_city = Column(String(100))
-    pan_number = Column(String(20))
-    bank_name = Column(String(200))
-    bank_account_no = Column(String(50))
-    ifsc_code = Column(String(20))
-
-    # Survey link (tokenized doctor portal)
-    survey_token = Column(String(100), unique=True, index=True)
-    survey_link_sent_at = Column(DateTime)
-    hcp_form_submitted_at = Column(DateTime)
-    survey_started_at = Column(DateTime)
-    survey_completed_at = Column(DateTime)
-    survey_responses = Column(JSON)
-
-    # Agreement & signature
-    agreement_sent_at = Column(DateTime)
-    agreement_signed_at = Column(DateTime)
-    signature_image_path = Column(String(500))
-    signature_otp_verified = Column(Boolean, default=False)
-
-    # Vendor
-    vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=True)
-    vendor_lookup_scenario = Column(Integer)
-    vendor_creation_notified_at = Column(DateTime)
-
-    # Workflow timestamps & actors
-    initiator_id = Column(Integer, ForeignKey("users.id"))
-    l1_approver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    l2_approver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    compliance_approver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    l1_approved_at = Column(DateTime)
-    l2_approved_at = Column(DateTime)
-    compliance_approved_at = Column(DateTime)
-    coord_verified_at = Column(DateTime)
-    finance_posted_at = Column(DateTime)
-    paid_at = Column(DateTime)
+    # Actors
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Marketing Head
+    approved_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Division Head
+    approved_at = Column(DateTime, nullable=True)
     rejection_reason = Column(Text)
-
-    pan_document_path = Column(String(500))
-
-    # Survey assignment
-    survey_id = Column(Integer, ForeignKey("brs_surveys.id"), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    initiator = relationship("User", foreign_keys=[initiator_id])
-    l1_approver = relationship("User", foreign_keys=[l1_approver_id])
-    l2_approver = relationship("User", foreign_keys=[l2_approver_id])
-    compliance_approver = relationship("User", foreign_keys=[compliance_approver_id])
-    hcp_doctor = relationship("HcpDoctor")
-    vendor = relationship("Vendor")
+    # Relationships
     survey = relationship("BrsSurvey", foreign_keys=[survey_id])
-    audit_trail = relationship("BrsAuditTrail", back_populates="application",
-                               order_by="BrsAuditTrail.created_at", cascade="all, delete-orphan")
-    otp_records = relationship("BrsOtp", back_populates="application", cascade="all, delete-orphan")
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    approved_by = relationship("User", foreign_keys=[approved_by_id])
+    doctors = relationship("BrsDoctor", back_populates="brs_application", cascade="all, delete-orphan")
+    audit_trail = relationship("BrsAuditTrail", back_populates="application", order_by="BrsAuditTrail.created_at", cascade="all, delete-orphan")
+
+
+class BrsDoctor(Base):
+    """Doctors added to a BRS application - multiple per BRS"""
+    __tablename__ = "brs_doctors"
+
+    id = Column(Integer, primary_key=True, index=True)
+    brs_application_id = Column(Integer, ForeignKey("brs_applications.id"), nullable=False)
+    hcp_doctor_id = Column(Integer, ForeignKey("hcp_doctors.id"), nullable=True)  # From MCL
+
+    # Editable by Marketing Head & Doctor
+    doctor_name = Column(String(300), nullable=False)
+    name_as_per_pan = Column(String(300))
+    pan_number = Column(String(20))
+    email = Column(String(200))
+    mobile = Column(String(20))
+    speciality = Column(String(200))
+    honorarium_amount = Column(Numeric(12, 2))
+
+    # Doctor login credentials (generated on DH approval)
+    login_id = Column(String(100), unique=True, nullable=True)
+    login_password = Column(String(200), nullable=True)  # hashed
+    login_token = Column(String(200), unique=True, nullable=True)
+
+    # Doctor self-service status
+    details_updated_at = Column(DateTime, nullable=True)
+    agreement_signed_at = Column(DateTime, nullable=True)
+    agreement_signature = Column(Text)  # base64 signature image
+    survey_completed_at = Column(DateTime, nullable=True)
+    survey_responses = Column(JSON)
+
+    # Status for this doctor entry
+    doctor_status = Column(String(50), default="Pending")  # Pending, Details Updated, Agreement Signed, Survey Completed
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    brs_application = relationship("BrsApplication", back_populates="doctors")
+    hcp_doctor = relationship("HcpDoctor")
 
 
 class BrsSurvey(Base):
+    """Survey template - assigned to a division"""
     __tablename__ = "brs_surveys"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(500), nullable=False)
     description = Column(Text)
-    honorarium_upper_limit = Column(Numeric(12, 2))
+    total_honorarium_amount = Column(Numeric(12, 2))
+    division_id = Column(Integer, ForeignKey("divisions.id"), nullable=True)  # Division-scoped
     is_active = Column(Boolean, default=True)
     requires_agreement_download = Column(Boolean, default=True)
     agreement_template = Column(Text)
@@ -163,17 +157,3 @@ class BrsAuditTrail(Base):
 
     application = relationship("BrsApplication", back_populates="audit_trail")
     performed_by = relationship("User")
-
-
-class BrsOtp(Base):
-    __tablename__ = "brs_otps"
-
-    id = Column(Integer, primary_key=True, index=True)
-    application_id = Column(Integer, ForeignKey("brs_applications.id"), nullable=False)
-    otp_code = Column(String(10), nullable=False)
-    mobile = Column(String(20))
-    expires_at = Column(DateTime, nullable=False)
-    used = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    application = relationship("BrsApplication", back_populates="otp_records")

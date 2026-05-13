@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Search, CalendarDays, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { eventsApi, masterApi } from '../../api/endpoints'
 import { fmtDate, fmtCurrency } from '../../utils/helpers'
 import PageHeader from '../../components/ui/PageHeader'
@@ -13,6 +14,7 @@ const PAGE_SIZE = 50
 
 export default function EventList() {
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
@@ -20,6 +22,12 @@ export default function EventList() {
   const { data: allEvents = [], isLoading } = useQuery({
     queryKey: ['events', statusFilter],
     queryFn: () => eventsApi.list({ status: statusFilter || undefined, limit: 2000 }).then(r => r.data),
+  })
+
+  const deleteEvent = useMutation({
+    mutationFn: (id) => eventsApi.delete(id),
+    onSuccess: () => { qc.invalidateQueries(['events']); toast.success('Event deleted') },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Error deleting event'),
   })
 
   const { data: divisions = [] } = useQuery({
@@ -69,7 +77,7 @@ export default function EventList() {
         </div>
         <select className="input w-40" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}>
           <option value="">All Status</option>
-          {['Draft','Submitted','Under Review','Approved','Rejected','Completed','Cancelled'].map(s => (
+          {['Draft','Pending L1','Pending L2','Pending Compliance','Pre-Approved','Post L1','Post L2','Post Compliance','Post Coordinator','Post Finance','Completed','Rejected','Cancelled'].map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
@@ -97,7 +105,7 @@ export default function EventList() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {events.map(e => (
-                <tr key={e.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/events/${e.id}`)}>
+                <tr key={e.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-mono text-xs text-blue-600">{e.event_code}</td>
                   <td className="px-4 py-3 font-medium max-w-xs truncate">{e.event_title}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{e.event_type || '—'}</td>
@@ -106,7 +114,19 @@ export default function EventList() {
                   <td className="px-4 py-3 text-xs">{fmtCurrency(e.budget_amount)}</td>
                   <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
                   <td className="px-4 py-3">
-                    <button className="text-blue-600 hover:underline text-xs">View</button>
+                    <div className="flex gap-2">
+                      <button className="text-blue-600 hover:underline text-xs" onClick={() => navigate(`/events/${e.id}`)}>View</button>
+                      {e.status === 'Draft' && (
+                        <>
+                          <button className="text-blue-600 hover:underline text-xs flex items-center gap-1" onClick={() => navigate(`/events/${e.id}/edit`)}>
+                            <Edit2 size={12} /> Edit
+                          </button>
+                          <button className="text-red-500 hover:underline text-xs flex items-center gap-1" onClick={() => { if (confirm('Delete this draft event?')) deleteEvent.mutate(e.id) }}>
+                            <Trash2 size={12} /> Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

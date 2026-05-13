@@ -1,329 +1,287 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { toast } from 'react-hot-toast'
-import { ArrowLeft, Search, UserCheck, UserPlus } from 'lucide-react'
-import { brsApi, masterApi } from '../../api/endpoints'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Plus, Trash2, Search, ChevronRight, ChevronLeft } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { brsApi, accessApi, masterApi } from '../../api/endpoints'
 import PageHeader from '../../components/ui/PageHeader'
+import DoctorSearchModal from '../../components/DoctorSearchModal'
+import useAuthStore from '../../store/authStore'
 
 export default function BrsForm() {
   const navigate = useNavigate()
-  const [doctorMode, setDoctorMode] = useState('mcl') // 'mcl' | 'new'
-  const [doctorSearch, setDoctorSearch] = useState('')
-  const [selectedDoctor, setSelectedDoctor] = useState(null)
-  const [showDoctorResults, setShowDoctorResults] = useState(false)
-
+  const { id: editId } = useParams()
+  const isEditMode = !!editId
+  const qc = useQueryClient()
+  const { user } = useAuthStore()
+  const [step, setStep] = useState(isEditMode ? 2 : 0) // edit mode goes straight to doctors
+  const [brsId, setBrsId] = useState(editId ? parseInt(editId) : null)
   const [form, setForm] = useState({
-    survey_title: '',
-    therapeutic_area: '',
-    brand: '',
-    topic: '',
-    mode: 'Online',
-    survey_duration_minutes: 30,
-    honorarium_amount: '',
-    division_id: '',
-    cost_center: '',
-    company_code: '',
-    remarks: '',
-    survey_id: '',
-    // New doctor fields
-    new_doctor_name: '',
-    new_doctor_email: '',
-    new_doctor_phone: '',
-    new_doctor_speciality: '',
-    new_doctor_city: '',
-    pan_number: '',
-    bank_name: '',
-    bank_account_no: '',
-    ifsc_code: '',
+    survey_id: '', title: '', therapeutic_area: '', brand: '',
+    topic: '', on_field_execution_by: '', start_date: '', end_date: '',
+    rationale: '', agenda: '', cost_center: '', remarks: '', division_id: '',
+  })
+  const [doctors, setDoctors] = useState([])
+  const [doctorSearchOpen, setDoctorSearchOpen] = useState(false)
+
+  const { data: surveys = [] } = useQuery({ queryKey: ['brs-surveys'], queryFn: () => brsApi.listSurveys().then(r => r.data) })
+  const { data: divisions = [] } = useQuery({ queryKey: ['divisions'], queryFn: () => accessApi.listDivisions().then(r => r.data) })
+  const { data: therapeutics = [] } = useQuery({ queryKey: ['therapeutics'], queryFn: () => masterApi.therapeutics().then(r => r.data) })
+  const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: () => masterApi.brands().then(r => r.data) })
+
+  // Load existing BRS in edit mode
+  const { data: existingBrs } = useQuery({
+    queryKey: ['brs', editId],
+    queryFn: () => brsApi.get(editId).then(r => r.data),
+    enabled: isEditMode,
   })
 
-  const { data: therapeutics = [] } = useQuery({
-    queryKey: ['therapeutics'],
-    queryFn: () => masterApi.therapeutics().then(r => r.data),
-  })
-  const { data: brands = [] } = useQuery({
-    queryKey: ['brands-all'],
-    queryFn: () => masterApi.brands('').then(r => r.data),
-  })
-  const { data: divisions = [] } = useQuery({
-    queryKey: ['master-divisions'],
-    queryFn: () => masterApi.divisions().then(r => r.data),
-  })
-  const { data: surveys = [] } = useQuery({
-    queryKey: ['brs-surveys'],
-    queryFn: () => brsApi.listSurveys().then(r => r.data),
-  })
-  const { data: doctorResults = [] } = useQuery({
-    queryKey: ['hcp-search', doctorSearch],
-    queryFn: () => masterApi.hcpDoctors(doctorSearch, 20).then(r => r.data),
-    enabled: doctorSearch.length >= 2,
-  })
-
-  const createMutation = useMutation({
-    mutationFn: (data) => brsApi.create(data),
-    onSuccess: (res) => {
-      toast.success(`BRS application ${res.data.brs_code} created!`)
-      navigate(`/brs/${res.data.id}`)
-    },
-    onError: (e) => toast.error(e.response?.data?.detail || 'Failed to create application'),
-  })
-
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!form.survey_title.trim()) return toast.error('Survey title is required')
-    if (doctorMode === 'mcl' && !selectedDoctor) return toast.error('Please select a doctor from MCL')
-    if (doctorMode === 'new' && !form.new_doctor_name.trim()) return toast.error('Doctor name is required')
-
-    const payload = {
-      ...form,
-      is_new_doctor: doctorMode === 'new',
-      hcp_doctor_id: doctorMode === 'mcl' ? selectedDoctor?.id : null,
-      honorarium_amount: form.honorarium_amount ? parseFloat(form.honorarium_amount) : null,
-      survey_duration_minutes: parseInt(form.survey_duration_minutes) || 30,
-      division_id: form.division_id ? parseInt(form.division_id) : null,
-      survey_id: form.survey_id ? parseInt(form.survey_id) : null,
-      pan_number: doctorMode === 'mcl' ? (selectedDoctor?.pan_number || form.pan_number) : form.pan_number,
+  useEffect(() => {
+    if (existingBrs && isEditMode) {
+      setDoctors(existingBrs.doctors || [])
     }
-    createMutation.mutate(payload)
+  }, [existingBrs, isEditMode])
+
+  const updateField = (field, value) => setForm(f => ({ ...f, [field]: value }))
+
+  // Create BRS
+  const createBrs = async () => {
+    if (!form.survey_id) { toast.error('Select a survey'); return }
+    if (!form.title) { toast.error('Title is required'); return }
+    if (!form.brand) { toast.error('Brand is required'); return }
+    try {
+      const payload = { ...form, survey_id: parseInt(form.survey_id) }
+      if (payload.division_id) payload.division_id = parseInt(payload.division_id)
+      // Remove empty strings
+      Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k] })
+      const res = await brsApi.create(payload)
+      setBrsId(res.data.id)
+      toast.success(`BRS ${res.data.brs_code} created`)
+      setStep(2)
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error creating BRS')
+    }
   }
 
-  const selectDoctor = (d) => {
-    setSelectedDoctor(d)
-    setForm(f => ({
-      ...f,
-      pan_number: d.pan_number || '',
-      bank_name: d.bank_name || '',
-      bank_account_no: d.account_number || '',
-      ifsc_code: d.ifsc_code || '',
-    }))
-    setShowDoctorResults(false)
-    setDoctorSearch(d.full_name || d.first_name || '')
+  // Add doctor
+  const addDoctorFromMcl = async (doc) => {
+    if (!brsId) return
+    try {
+      const res = await brsApi.addDoctor(brsId, {
+        hcp_doctor_id: doc.id,
+        doctor_name: doc.full_name || `${doc.first_name || ''} ${doc.last_name || ''}`.trim(),
+        email: doc.email || '',
+        pan_number: doc.pan_number || '',
+        mobile: doc.mobile_number || '',
+        speciality: doc.qualification || '',
+      })
+      setDoctors(prev => [...prev, { id: res.data.id, ...res.data, doctor_name: doc.full_name || `${doc.first_name || ''} ${doc.last_name || ''}`.trim(), email: doc.email, pan_number: doc.pan_number }])
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error adding doctor')
+    }
+    setDoctorSearchOpen(false)
+  }
+
+  const updateDoctorField = (doctorId, field, value) => setDoctors(prev => prev.map(d => d.id === doctorId ? { ...d, [field]: value } : d))
+
+  const removeDoctor = async (doctorId) => {
+    try { await brsApi.removeDoctor(brsId, doctorId); setDoctors(prev => prev.filter(d => d.id !== doctorId)); toast.success('Removed') } catch (e) { toast.error('Error') }
+  }
+
+  // Submit
+  const submitBrs = async () => {
+    if (doctors.length === 0) { toast.error('Add at least one doctor'); return }
+    // Save doctor details
+    for (const doc of doctors) {
+      try {
+        await brsApi.updateDoctor(brsId, doc.id, { name_as_per_pan: doc.name_as_per_pan, pan_number: doc.pan_number, email: doc.email, honorarium_amount: doc.honorarium_amount ? parseFloat(doc.honorarium_amount) : null })
+      } catch (e) {}
+    }
+    try {
+      await brsApi.submit(brsId)
+      qc.invalidateQueries(['brs-list'])
+      toast.success('BRS submitted for Division Head approval')
+      navigate('/brs')
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Error submitting')
+    }
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <PageHeader
-        title="New BRS Application"
-        subtitle="Bona Fide Research Survey — Initiate a doctor survey engagement"
-        actions={
-          <button className="btn-secondary flex items-center gap-2" onClick={() => navigate('/brs')}>
-            <ArrowLeft size={16} /> Back
-          </button>
-        }
-      />
+    <div className="p-8 max-w-5xl">
+      <PageHeader title="New BRS" subtitle="Create a Budget Request" />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Survey Details */}
-        <div className="card p-6">
-          <h3 className="font-semibold text-gray-800 mb-4 border-b pb-2">Survey Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="label">Survey Title <span className="text-red-500">*</span></label>
-              <input className="input" value={form.survey_title}
-                onChange={e => set('survey_title', e.target.value)}
-                placeholder="e.g. Cardiology Research Survey Q2 2026" />
+      {/* Stepper */}
+      <div className="flex items-center mb-8">
+        {['Basic Details', 'Event Info', 'Add Doctors'].map((label, i) => (
+          <div key={i} className="flex items-center flex-1">
+            <div className="flex items-center gap-2">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 ${i < step ? 'bg-emerald-500 border-emerald-500 text-white' : i === step ? 'border-red-500 text-red-500' : 'border-gray-300 text-gray-400'}`}>{i < step ? '✓' : `0${i + 1}`}</div>
+              <span className={`text-sm ${i === step ? 'font-semibold' : 'text-gray-400'}`}>{label}</span>
             </div>
-            <div>
-              <label className="label">Survey Template</label>
-              <select className="input" value={form.survey_id}
-                onChange={e => set('survey_id', e.target.value)}>
-                <option value="">— Select Survey Template —</option>
-                {surveys.map(s => (
-                  <option key={s.id} value={s.id}>{s.title}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label">Mode</label>
-              <select className="input" value={form.mode} onChange={e => set('mode', e.target.value)}>
-                <option>Online</option>
-                <option>Offline</option>
-              </select>
-            </div>
-            <div>
-              <label className="label">Therapeutic Area</label>
-              <select className="input" value={form.therapeutic_area}
-                onChange={e => set('therapeutic_area', e.target.value)}>
-                <option value="">— Select —</option>
-                {therapeutics.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Brand</label>
-              <select className="input" value={form.brand}
-                onChange={e => set('brand', e.target.value)}>
-                <option value="">— Select —</option>
-                {brands.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <label className="label">Topic / Agenda</label>
-              <textarea className="input" rows={3} value={form.topic}
-                onChange={e => set('topic', e.target.value)}
-                placeholder="Describe the survey topic and research objectives…" />
-            </div>
-            <div>
-              <label className="label">Survey Duration (minutes)</label>
-              <input className="input" type="number" min={5} max={180}
-                value={form.survey_duration_minutes}
-                onChange={e => set('survey_duration_minutes', e.target.value)} />
-            </div>
-            <div>
-              <label className="label">Honorarium Amount (₹)</label>
-              <input className="input" type="number" min={0}
-                value={form.honorarium_amount}
-                onChange={e => set('honorarium_amount', e.target.value)}
-                placeholder="Amount per business decision" />
-            </div>
+            {i < 2 && <div className={`flex-1 h-1 mx-3 rounded ${i < step ? 'bg-red-500' : 'bg-gray-200'}`} />}
           </div>
-        </div>
+        ))}
+      </div>
 
-        {/* Budget / Org */}
-        <div className="card p-6">
-          <h3 className="font-semibold text-gray-800 mb-4 border-b pb-2">Organisational Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Step 1: Basic Details */}
+      {step === 0 && (
+        <div className="card space-y-5">
+          <h3 className="text-lg font-bold">Basic Details</h3>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-400 mb-1">Initiated By</p>
+            <p className="text-sm font-medium">{user?.first_name} {user?.last_name} ({user?.employee_id || user?.email})</p>
+          </div>
+          <div className="grid grid-cols-4 gap-4">
             <div>
-              <label className="label">Division</label>
-              <select className="input" value={form.division_id}
-                onChange={e => set('division_id', e.target.value)}>
-                <option value="">— Select Division —</option>
+              <label className="label">Initiated By</label>
+              <input className="input bg-gray-50" value={`${user?.first_name || ''} ${user?.last_name || ''}`} disabled />
+            </div>
+            <div>
+              <label className="label">Employee ID</label>
+              <input className="input bg-gray-50" value={user?.employee_id || '—'} disabled />
+            </div>
+            <div>
+              <label className="label">Division *</label>
+              <select className="input" value={form.division_id || ''} onChange={e => updateField('division_id', e.target.value)}>
+                <option value="">Select</option>
                 {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div>
               <label className="label">Cost Center</label>
-              <input className="input" value={form.cost_center}
-                onChange={e => set('cost_center', e.target.value)} />
+              <input className="input" value={form.cost_center} onChange={e => updateField('cost_center', e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="label">Survey *</label>
+              <select className="input" value={form.survey_id} onChange={e => updateField('survey_id', e.target.value)}>
+                <option value="">Select survey</option>
+                {surveys.filter(s => !form.division_id || s.division_id == form.division_id || !s.division_id).map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
+              </select>
             </div>
             <div>
-              <label className="label">Company Code</label>
-              <input className="input" value={form.company_code}
-                onChange={e => set('company_code', e.target.value)} />
+              <label className="label">Title of Program *</label>
+              <input className="input" value={form.title} onChange={e => updateField('title', e.target.value)} />
             </div>
-            <div className="md:col-span-3">
-              <label className="label">Remarks</label>
-              <textarea className="input" rows={2} value={form.remarks}
-                onChange={e => set('remarks', e.target.value)} />
+            <div>
+              <label className="label">Brand *</label>
+              <select className="input" value={form.brand} onChange={e => updateField('brand', e.target.value)}>
+                <option value="">Select</option>
+                {brands.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+              </select>
             </div>
+            <div>
+              <label className="label">Therapeutic Area</label>
+              <select className="input" value={form.therapeutic_area} onChange={e => updateField('therapeutic_area', e.target.value)}>
+                <option value="">Select</option>
+                {therapeutics.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Topic</label>
+              <input className="input" value={form.topic} onChange={e => updateField('topic', e.target.value)} />
+            </div>
+          </div>
+          <div className="flex justify-between pt-2">
+            <button className="btn-secondary" onClick={() => navigate('/brs')}>Cancel</button>
+            <button className="btn-primary bg-red-600 hover:bg-red-700" onClick={() => setStep(1)}>Next <ChevronRight size={16} /></button>
           </div>
         </div>
+      )}
 
-        {/* Doctor Selection */}
-        <div className="card p-6">
-          <h3 className="font-semibold text-gray-800 mb-4 border-b pb-2">Doctor / HCP</h3>
-          <div className="flex gap-3 mb-4">
-            <button type="button"
-              onClick={() => setDoctorMode('mcl')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors
-                ${doctorMode === 'mcl' ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-600 hover:border-blue-400'}`}>
-              <UserCheck size={16} /> Select from MCL
-            </button>
-            <button type="button"
-              onClick={() => setDoctorMode('new')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors
-                ${doctorMode === 'new' ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-600 hover:border-blue-400'}`}>
-              <UserPlus size={16} /> New Doctor
-            </button>
+      {/* Step 2: Event Info */}
+      {step === 1 && (
+        <div className="card space-y-5">
+          <h3 className="text-lg font-bold">Event Information</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="label">On Field Execution By *</label>
+              <input className="input" value={form.on_field_execution_by} onChange={e => updateField('on_field_execution_by', e.target.value)} />
+            </div>
+            <div>
+              <label className="label">Start Date *</label>
+              <input type="date" className="input" value={form.start_date} onChange={e => updateField('start_date', e.target.value)} />
+            </div>
+            <div>
+              <label className="label">End Date *</label>
+              <input type="date" className="input" value={form.end_date} onChange={e => updateField('end_date', e.target.value)} />
+            </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Rationale *</label>
+              <textarea className="input h-20" value={form.rationale} onChange={e => updateField('rationale', e.target.value)} />
+            </div>
+            <div>
+              <label className="label">Agenda *</label>
+              <textarea className="input h-20" value={form.agenda} onChange={e => updateField('agenda', e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <label className="label">Remarks</label>
+            <textarea className="input h-16" value={form.remarks} onChange={e => updateField('remarks', e.target.value)} />
+          </div>
+          <div className="flex justify-between pt-2">
+            <button className="btn-secondary" onClick={() => setStep(0)}><ChevronLeft size={16} /> Previous</button>
+            <button className="btn-primary bg-red-600 hover:bg-red-700" onClick={createBrs}>Create & Add Doctors <ChevronRight size={16} /></button>
+          </div>
+        </div>
+      )}
 
-          {doctorMode === 'mcl' ? (
-            <div className="space-y-3">
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
-                <input className="input pl-9" placeholder="Search doctor by name, speciality…"
-                  value={doctorSearch}
-                  onChange={e => { setDoctorSearch(e.target.value); setShowDoctorResults(true) }}
-                  onFocus={() => setShowDoctorResults(true)} />
-                {showDoctorResults && doctorResults.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    {doctorResults.map(d => (
-                      <button key={d.id} type="button"
-                        className="w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm"
-                        onClick={() => selectDoctor(d)}>
-                        <span className="font-medium">{d.full_name || d.first_name}</span>
-                        <span className="text-gray-400 ml-2">• {d.qualification || d.doctor_type || 'Doctor'} • {d.city || '—'}</span>
-                      </button>
+      {/* Step 3: Add Doctors */}
+      {step === 2 && (
+        <div className="space-y-6">
+          <div className="card space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-lg">Add Doctors</h3>
+              <button className="btn-primary flex items-center gap-1 text-sm" onClick={() => setDoctorSearchOpen(true)}>
+                <Search size={14} /> Search MCL
+              </button>
+            </div>
+
+            {doctors.length > 0 ? (
+              <div className="overflow-x-auto border rounded-lg">
+                <table className="text-sm w-full" style={{ minWidth: '900px' }}>
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      {['Doctor Name', 'Name As Per PAN *', 'PAN Number *', 'Email *', 'Honorarium (₹)', ''].map(h => (
+                        <th key={h} className="px-3 py-2 text-left text-xs text-gray-500">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {doctors.map(d => (
+                      <tr key={d.id}>
+                        <td className="px-3 py-2 font-medium">{d.doctor_name}</td>
+                        <td className="px-3 py-2"><input className="input py-1 text-sm" value={d.name_as_per_pan || ''} onChange={e => updateDoctorField(d.id, 'name_as_per_pan', e.target.value)} /></td>
+                        <td className="px-3 py-2"><input className="input py-1 text-sm w-28" value={d.pan_number || ''} onChange={e => updateDoctorField(d.id, 'pan_number', e.target.value)} /></td>
+                        <td className="px-3 py-2"><input className="input py-1 text-sm" value={d.email || ''} onChange={e => updateDoctorField(d.id, 'email', e.target.value)} /></td>
+                        <td className="px-3 py-2"><input type="number" className="input py-1 text-sm w-24" value={d.honorarium_amount || ''} onChange={e => updateDoctorField(d.id, 'honorarium_amount', e.target.value)} /></td>
+                        <td className="px-3 py-2"><button className="text-red-400 hover:text-red-600" onClick={() => removeDoctor(d.id)}><Trash2 size={14} /></button></td>
+                      </tr>
                     ))}
-                  </div>
-                )}
+                  </tbody>
+                </table>
               </div>
-              {selectedDoctor && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-                  <p className="font-semibold text-blue-800">{selectedDoctor.full_name || selectedDoctor.first_name}</p>
-                  <p className="text-blue-600">{selectedDoctor.qualification || selectedDoctor.doctor_type || '—'} • {selectedDoctor.city || '—'}</p>
-                  <p className="text-blue-500 text-xs mt-1">{selectedDoctor.email || '—'} • {selectedDoctor.mobile_number || '—'}</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="label">Doctor Name <span className="text-red-500">*</span></label>
-                <input className="input" value={form.new_doctor_name}
-                  onChange={e => set('new_doctor_name', e.target.value)} />
+            ) : (
+              <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed rounded-lg">
+                No doctors added. Click "Search MCL" to add doctors.
               </div>
-              <div>
-                <label className="label">Email</label>
-                <input className="input" type="email" value={form.new_doctor_email}
-                  onChange={e => set('new_doctor_email', e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Mobile</label>
-                <input className="input" type="tel" value={form.new_doctor_phone}
-                  onChange={e => set('new_doctor_phone', e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Speciality</label>
-                <input className="input" value={form.new_doctor_speciality}
-                  onChange={e => set('new_doctor_speciality', e.target.value)} />
-              </div>
-              <div>
-                <label className="label">City</label>
-                <input className="input" value={form.new_doctor_city}
-                  onChange={e => set('new_doctor_city', e.target.value)} />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* KYC / Bank Details */}
-        <div className="card p-6">
-          <h3 className="font-semibold text-gray-800 mb-4 border-b pb-2">KYC & Bank Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="label">PAN Number</label>
-              <input className="input uppercase" value={form.pan_number}
-                maxLength={10}
-                onChange={e => set('pan_number', e.target.value.toUpperCase())} />
-            </div>
-            <div>
-              <label className="label">Bank Name</label>
-              <input className="input" value={form.bank_name}
-                onChange={e => set('bank_name', e.target.value)} />
-            </div>
-            <div>
-              <label className="label">Bank Account No</label>
-              <input className="input" value={form.bank_account_no}
-                onChange={e => set('bank_account_no', e.target.value)} />
-            </div>
-            <div>
-              <label className="label">IFSC Code</label>
-              <input className="input uppercase" value={form.ifsc_code}
-                onChange={e => set('ifsc_code', e.target.value.toUpperCase())} />
-            </div>
+            )}
           </div>
-        </div>
 
-        <div className="flex gap-3 justify-end">
-          <button type="button" className="btn-secondary" onClick={() => navigate('/brs')}>Cancel</button>
-          <button type="submit" className="btn-primary" disabled={createMutation.isPending}>
-            {createMutation.isPending ? 'Creating…' : 'Create BRS Application'}
-          </button>
+          <div className="flex justify-between">
+            <button className="btn-secondary" onClick={() => navigate('/brs')}>Cancel</button>
+            <button className="btn-primary bg-emerald-600 hover:bg-emerald-700" onClick={submitBrs}>
+              ✓ Submit for Approval
+            </button>
+          </div>
+
+          <DoctorSearchModal open={doctorSearchOpen} onClose={() => setDoctorSearchOpen(false)} onSelect={addDoctorFromMcl} />
         </div>
-      </form>
+      )}
     </div>
   )
 }

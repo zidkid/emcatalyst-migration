@@ -11,7 +11,13 @@ def send_email(to: str, subject: str, body_html: str, body_text: str = ""):
     from app.core.config import settings
     smtp_host = getattr(settings, "SMTP_HOST", None)
     if not smtp_host:
-        logger.info(f"[EMAIL-LOG] To={to} | Subject={subject}\n{body_text or body_html[:300]}")
+        print(f"\n{'='*60}")
+        print(f"📧 EMAIL TRIGGERED (SMTP not configured - logging only)")
+        print(f"{'='*60}")
+        print(f"  To:      {to}")
+        print(f"  Subject: {subject}")
+        print(f"  Body:    {body_text[:500] if body_text else body_html[:500]}")
+        print(f"{'='*60}\n")
         return True
 
     try:
@@ -23,15 +29,28 @@ def send_email(to: str, subject: str, body_html: str, body_text: str = ""):
             msg.attach(MIMEText(body_text, "plain"))
         msg.attach(MIMEText(body_html, "html"))
 
-        with smtplib.SMTP(smtp_host, getattr(settings, "SMTP_PORT", 587)) as server:
-            server.starttls()
-            smtp_user = getattr(settings, "SMTP_USER", "")
-            smtp_pass = getattr(settings, "SMTP_PASSWORD", "")
-            if smtp_user:
-                server.login(smtp_user, smtp_pass)
-            server.sendmail(msg["From"], [to], msg.as_string())
+        smtp_port = getattr(settings, "SMTP_PORT", 587)
+        if smtp_port == 25:
+            # Plain SMTP without TLS
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                smtp_user = getattr(settings, "SMTP_USER", "")
+                smtp_pass = getattr(settings, "SMTP_PASSWORD", "")
+                if smtp_user:
+                    server.login(smtp_user, smtp_pass)
+                server.sendmail(msg["From"], [to], msg.as_string())
+        else:
+            # SMTP with STARTTLS (port 587)
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                smtp_user = getattr(settings, "SMTP_USER", "")
+                smtp_pass = getattr(settings, "SMTP_PASSWORD", "")
+                if smtp_user:
+                    server.login(smtp_user, smtp_pass)
+                server.sendmail(msg["From"], [to], msg.as_string())
+        print(f"✅ EMAIL SENT to {to} | Subject: {subject}")
         return True
     except Exception as e:
+        print(f"❌ EMAIL FAILED to {to} | Error: {e}")
         logger.error(f"[EMAIL-ERROR] To={to} | {e}")
         return False
 
@@ -98,3 +117,61 @@ def send_vendor_creation_notification(application_code: str, doctor_name: str,
 """
     for email in ["yogesh.thakar@emcure.com", "anup.kumar@emcure.com"]:
         send_email(email, subject, body_html)
+
+
+def send_brs_doctor_credentials(doctor_email: str, doctor_name: str, brs_code: str,
+                                 survey_title: str, login_id: str, password: str,
+                                 portal_url: str):
+    """Send login credentials to doctor after Division Head approval"""
+    subject = f"BRS Survey Access — {survey_title} ({brs_code})"
+    body_html = f"""
+<html><body style="font-family:Arial,sans-serif;color:#333;">
+<div style="max-width:600px;margin:auto;border:1px solid #ddd;border-radius:8px;overflow:hidden;">
+  <div style="background:#003087;padding:24px;text-align:center;">
+    <h2 style="color:#fff;margin:0;">Emcure Pharmaceuticals</h2>
+    <p style="color:#adc8f0;margin:4px 0 0;">BRS Doctor Portal</p>
+  </div>
+  <div style="padding:32px;">
+    <p>Dear Dr. {doctor_name},</p>
+    <p>You have been selected to participate in a Bona Fide Research Survey. Your access credentials are below:</p>
+    <div style="background:#f5f8ff;border:1px solid #d0dff5;padding:20px;margin:20px 0;border-radius:6px;">
+      <p style="margin:0 0 8px;"><strong>Survey:</strong> {survey_title}</p>
+      <p style="margin:0 0 8px;"><strong>BRS Code:</strong> {brs_code}</p>
+      <hr style="border:none;border-top:1px solid #d0dff5;margin:12px 0;">
+      <p style="margin:0 0 8px;"><strong>Login ID:</strong> <code style="background:#e8f0fe;padding:2px 8px;border-radius:3px;">{login_id}</code></p>
+      <p style="margin:0;"><strong>Password:</strong> <code style="background:#e8f0fe;padding:2px 8px;border-radius:3px;">{password}</code></p>
+    </div>
+    <p>Please follow these steps:</p>
+    <ol style="padding-left:20px;">
+      <li>Click the button below to access the portal</li>
+      <li>Login with the credentials above</li>
+      <li>Update your personal details</li>
+      <li>Sign the agreement</li>
+      <li>Complete the survey</li>
+    </ol>
+    <div style="text-align:center;margin:32px 0;">
+      <a href="{portal_url}" style="background:#003087;color:#fff;padding:14px 32px;border-radius:6px;
+         text-decoration:none;font-size:16px;font-weight:bold;">Access Portal →</a>
+    </div>
+    <p style="font-size:12px;color:#888;">Portal URL: {portal_url}</p>
+    <p style="font-size:12px;color:#888;">Please do not share your credentials with anyone.</p>
+  </div>
+  <div style="background:#f9f9f9;padding:16px;text-align:center;font-size:12px;color:#999;">
+    Emcure Pharmaceuticals Ltd. | This email is auto-generated.
+  </div>
+</div>
+</body></html>
+"""
+    body_text = f"""Dear Dr. {doctor_name},
+
+Survey: {survey_title}
+BRS Code: {brs_code}
+
+Login ID: {login_id}
+Password: {password}
+
+Portal: {portal_url}
+
+Steps: Login → Update Details → Sign Agreement → Complete Survey
+"""
+    return send_email(doctor_email, subject, body_html, body_text)

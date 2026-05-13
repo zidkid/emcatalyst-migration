@@ -96,6 +96,12 @@ class BrsApplication(Base):
 
     pan_document_path = Column(String(500))
 
+    # KYC / Banking — for new doctors (MCL doctors store this on HcpDoctor profile)
+    pan_number = Column(String(20))
+    bank_name = Column(String(200))
+    bank_account_no = Column(String(50))
+    ifsc_code = Column(String(20))
+
     # Survey assignment
     survey_id = Column(Integer, ForeignKey("brs_surveys.id"), nullable=True)
 

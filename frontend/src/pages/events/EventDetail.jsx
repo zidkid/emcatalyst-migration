@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { eventsApi } from '../../api/endpoints'
+import api from '../../api/client'
 import { fmtDate, fmtCurrency } from '../../utils/helpers'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
@@ -45,6 +46,13 @@ export default function EventDetail() {
     queryFn: () => eventsApi.get(id).then(r => r.data),
   })
 
+  const { data: canApproveData } = useQuery({
+    queryKey: ['event-can-approve', id],
+    queryFn: () => api.get(`/events/${id}/can-approve`).then(r => r.data),
+    enabled: !!event && event.status !== 'Draft' && event.status !== 'Pre-Approved' && event.status !== 'Completed' && event.status !== 'Rejected',
+    retry: false,
+  })
+
   const approve = useMutation({
     mutationFn: (remarks) => {
       const s = event.status
@@ -70,20 +78,7 @@ export default function EventDetail() {
   if (isLoading) return <div className="p-8"><LoadingSpinner /></div>
   if (!event) return <div className="p-8 text-red-500">Event not found</div>
 
-  const canApprove = (() => {
-    const s = event.status
-    if (!s) return false
-    const isAdmin = user?.role === 'Administrator'
-    if (isAdmin) return s !== 'Draft' && s !== 'Pre-Approved' && s !== 'Completed' && s !== 'Rejected'
-    const userId = user?.id
-    if (s === 'Pending L1' || s === 'Post L1') return event.l1_approver_id == userId
-    if (s === 'Pending L2' || s === 'Post L2') return event.l2_approver_id == userId
-    if (s === 'Pending Compliance' || s === 'Post Compliance') return user?.role === 'ComplianceUser'
-    if (s === 'Post Coordinator') return user?.role === 'DivisionCoOrdinator'
-    if (s === 'Post GST') return user?.role === 'GSTuser'
-    if (s === 'Post Finance') return user?.role === 'FinanceUser'
-    return false
-  })()
+  const canApprove = canApproveData?.can_approve === true
 
   const isDraft = event.status === 'Draft'
   const isInitiator = user?.id === event.initiator_id

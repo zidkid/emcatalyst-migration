@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { brsApi } from '../../api/endpoints'
+import api from '../../api/client'
 import { fmtDate, fmtCurrency } from '../../utils/helpers'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
@@ -24,6 +25,13 @@ export default function BrsDetail() {
     queryFn: () => brsApi.get(id).then(r => r.data),
   })
 
+  const { data: canApproveData } = useQuery({
+    queryKey: ['brs-can-approve', id],
+    queryFn: () => api.get(`/brs/${id}/can-approve`).then(r => r.data),
+    enabled: !!brs && brs.status === 'Submitted',
+    retry: false,
+  })
+
   const approve = useMutation({
     mutationFn: (remarks) => brsApi.approve(id, remarks),
     onSuccess: () => { qc.invalidateQueries(['brs', id]); toast.success('BRS Approved. Doctor credentials generated.') },
@@ -39,8 +47,7 @@ export default function BrsDetail() {
   if (isLoading) return <div className="p-8"><LoadingSpinner /></div>
   if (!brs) return <div className="p-8 text-red-500">BRS not found</div>
 
-  const isDivisionHead = user?.role === 'DivisionHead' || user?.roles?.includes('DivisionHead') || user?.role === 'Administrator'
-  const canApprove = isDivisionHead && brs.status === 'Submitted'
+  const canApprove = canApproveData?.can_approve === true
 
   return (
     <div className="p-8 max-w-5xl">

@@ -155,25 +155,44 @@ def submit_event(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    from app.services.workflow_service import get_first_step, resolve_approver
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.DRAFT:
         raise HTTPException(status_code=400, detail="Only draft events can be submitted")
 
-    # Auto-assign L1 and L2 from the initiator's manager chain
-    initiator = db.query(User).filter(User.id == current_user.id).first()
-    l1 = db.query(User).filter(User.id == initiator.manager_id).first() if initiator and initiator.manager_id else None
-    l2 = db.query(User).filter(User.id == l1.manager_id).first() if l1 and l1.manager_id else None
+    # Use workflow engine to determine first step
+    first_step = get_first_step(db, "event_pre_approval")
+    if first_step:
+        # Resolve L1 and L2 approvers from workflow steps
+        initiator = db.query(User).filter(User.id == current_user.id).first()
+        l1 = resolve_approver(db, first_step, initiator)
+        if l1:
+            event.l1_approver_id = l1.id
 
-    if l1:
-        event.l1_approver_id = l1.id
-    if l2:
-        event.l2_approver_id = l2.id
+        # Try to resolve L2 from second step
+        from app.services.workflow_service import get_next_step
+        second_step = get_next_step(db, "event_pre_approval", first_step.pending_status)
+        if second_step and second_step.approver_type == "reporting_manager":
+            l2 = resolve_approver(db, second_step, initiator)
+            if l2:
+                event.l2_approver_id = l2.id
 
-    event.status = EventStatus.PENDING_L1
-    _add_event_audit(db, event.id, "Submitted", EventStatus.DRAFT, EventStatus.PENDING_L1, current_user.id,
-                     f"L1: {l1.first_name + ' ' + (l1.last_name or '') if l1 else 'unassigned'}")
+        event.status = first_step.pending_status or EventStatus.PENDING_L1
+    else:
+        # Fallback to hardcoded logic if no workflow configured
+        initiator = db.query(User).filter(User.id == current_user.id).first()
+        l1 = db.query(User).filter(User.id == initiator.manager_id).first() if initiator and initiator.manager_id else None
+        l2 = db.query(User).filter(User.id == l1.manager_id).first() if l1 and l1.manager_id else None
+        if l1:
+            event.l1_approver_id = l1.id
+        if l2:
+            event.l2_approver_id = l2.id
+        event.status = EventStatus.PENDING_L1
+
+    _add_event_audit(db, event.id, "Submitted", EventStatus.DRAFT, event.status, current_user.id, "")
     db.commit()
     db.refresh(event)
     return event
@@ -186,18 +205,27 @@ def approve_l1(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.PENDING_L1:
         raise HTTPException(status_code=400, detail=f"Expected Pending L1, got {event.status}")
+
+    # Workflow authorization check
+    step = get_step_for_status(db, "event_pre_approval", EventStatus.PENDING_L1)
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     from datetime import datetime
-    event.status = EventStatus.PENDING_L2
+    next_status = step.approved_status if step else EventStatus.PENDING_L2
+    event.status = next_status
     event.l1_approver_id = current_user.id
     event.l1_approved_at = datetime.utcnow()
     if remarks:
         event.compliance_remarks = remarks
-    _add_event_audit(db, event.id, "L1 Approved", EventStatus.PENDING_L1, EventStatus.PENDING_L2, current_user.id, remarks or "")
+    _add_event_audit(db, event.id, "L1 Approved", EventStatus.PENDING_L1, next_status, current_user.id, remarks or "")
     db.commit()
     db.refresh(event)
     return event
@@ -210,18 +238,26 @@ def approve_l2(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.PENDING_L2:
         raise HTTPException(status_code=400, detail=f"Expected Pending L2, got {event.status}")
+
+    step = get_step_for_status(db, "event_pre_approval", EventStatus.PENDING_L2)
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     from datetime import datetime
-    event.status = EventStatus.PENDING_COMPLIANCE
+    next_status = step.approved_status if step else EventStatus.PENDING_COMPLIANCE
+    event.status = next_status
     event.l2_approver_id = current_user.id
     event.l2_approved_at = datetime.utcnow()
     if remarks:
         event.compliance_remarks = remarks
-    _add_event_audit(db, event.id, "L2 Approved", EventStatus.PENDING_L2, EventStatus.PENDING_COMPLIANCE, current_user.id, remarks or "")
+    _add_event_audit(db, event.id, "L2 Approved", EventStatus.PENDING_L2, next_status, current_user.id, remarks or "")
     db.commit()
     db.refresh(event)
     return event
@@ -234,17 +270,25 @@ def approve_compliance(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.PENDING_COMPLIANCE:
         raise HTTPException(status_code=400, detail=f"Expected Pending Compliance, got {event.status}")
+
+    step = get_step_for_status(db, "event_pre_approval", EventStatus.PENDING_COMPLIANCE)
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     from datetime import datetime
-    event.status = EventStatus.PRE_APPROVED
+    next_status = step.approved_status if step else EventStatus.PRE_APPROVED
+    event.status = next_status
     event.compliance_approved_at = datetime.utcnow()
     if remarks:
         event.compliance_remarks = remarks
-    _add_event_audit(db, event.id, "Compliance Approved", EventStatus.PENDING_COMPLIANCE, EventStatus.PRE_APPROVED, current_user.id, remarks or "")
+    _add_event_audit(db, event.id, "Compliance Approved", EventStatus.PENDING_COMPLIANCE, next_status, current_user.id, remarks or "")
     db.commit()
     db.refresh(event)
     return event
@@ -287,6 +331,47 @@ def reject_event(
     return event
 
 
+@router.get("/{event_id}/can-approve")
+def can_approve_event(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Check if current user can approve this event at its current status."""
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    status = event.status
+    # Not in an approvable state
+    non_approvable = [EventStatus.DRAFT, EventStatus.PRE_APPROVED, EventStatus.COMPLETED, EventStatus.REJECTED, EventStatus.CANCELLED]
+    if status in non_approvable:
+        return {"can_approve": False, "reason": "Event is not in an approvable state"}
+
+    # Determine which workflow to check
+    pre_statuses = [EventStatus.PENDING_L1, EventStatus.PENDING_L2, EventStatus.PENDING_COMPLIANCE]
+    post_statuses = [EventStatus.POST_L1, EventStatus.POST_L2, EventStatus.POST_COMPLIANCE,
+                     EventStatus.POST_COORDINATOR, EventStatus.POST_GST, EventStatus.POST_FINANCE]
+
+    workflow_key = None
+    if status in pre_statuses:
+        workflow_key = "event_pre_approval"
+    elif status in post_statuses:
+        workflow_key = "event_post_approval"
+
+    if not workflow_key:
+        return {"can_approve": False, "reason": "Unknown status for approval"}
+
+    step = get_step_for_status(db, workflow_key, status)
+    if not step:
+        return {"can_approve": False, "reason": "No workflow step configured for this status"}
+
+    can = can_user_approve_step(db, current_user, step, event.initiator_id)
+    return {"can_approve": can, "step_label": step.step_label}
+
+
 @router.post("/{event_id}/submit-post-event", response_model=EventOut)
 def submit_post_event(
     event_id: int,
@@ -309,14 +394,22 @@ def submit_post_event(
 
 @router.post("/{event_id}/approve-post-l1", response_model=EventOut)
 def approve_post_l1(event_id: int, remarks: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.POST_L1:
         raise HTTPException(status_code=400, detail=f"Expected Post L1, got {event.status}")
+
+    step = get_step_for_status(db, "event_post_approval", EventStatus.POST_L1)
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     old = event.status
-    event.status = EventStatus.POST_L2
-    _add_event_audit(db, event.id, "Post L1 Approved", old, EventStatus.POST_L2, current_user.id, remarks or "")
+    next_status = step.approved_status if step else EventStatus.POST_L2
+    event.status = next_status
+    _add_event_audit(db, event.id, "Post L1 Approved", old, next_status, current_user.id, remarks or "")
     db.commit()
     db.refresh(event)
     return event
@@ -324,14 +417,22 @@ def approve_post_l1(event_id: int, remarks: Optional[str] = None, db: Session = 
 
 @router.post("/{event_id}/approve-post-l2", response_model=EventOut)
 def approve_post_l2(event_id: int, remarks: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.POST_L2:
         raise HTTPException(status_code=400, detail=f"Expected Post L2, got {event.status}")
+
+    step = get_step_for_status(db, "event_post_approval", EventStatus.POST_L2)
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     old = event.status
-    event.status = EventStatus.POST_COMPLIANCE
-    _add_event_audit(db, event.id, "Post L2 Approved", old, EventStatus.POST_COMPLIANCE, current_user.id, remarks or "")
+    next_status = step.approved_status if step else EventStatus.POST_COMPLIANCE
+    event.status = next_status
+    _add_event_audit(db, event.id, "Post L2 Approved", old, next_status, current_user.id, remarks or "")
     db.commit()
     db.refresh(event)
     return event
@@ -339,14 +440,22 @@ def approve_post_l2(event_id: int, remarks: Optional[str] = None, db: Session = 
 
 @router.post("/{event_id}/approve-post-compliance", response_model=EventOut)
 def approve_post_compliance(event_id: int, remarks: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.POST_COMPLIANCE:
         raise HTTPException(status_code=400, detail=f"Expected Post Compliance, got {event.status}")
+
+    step = get_step_for_status(db, "event_post_approval", EventStatus.POST_COMPLIANCE)
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     old = event.status
-    event.status = EventStatus.POST_COORDINATOR
-    _add_event_audit(db, event.id, "Post Compliance Approved", old, EventStatus.POST_COORDINATOR, current_user.id, remarks or "")
+    next_status = step.approved_status if step else EventStatus.POST_COORDINATOR
+    event.status = next_status
+    _add_event_audit(db, event.id, "Post Compliance Approved", old, next_status, current_user.id, remarks or "")
     db.commit()
     db.refresh(event)
     return event
@@ -354,13 +463,22 @@ def approve_post_compliance(event_id: int, remarks: Optional[str] = None, db: Se
 
 @router.post("/{event_id}/approve-post-coordinator", response_model=EventOut)
 def approve_post_coordinator(event_id: int, remarks: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.POST_COORDINATOR:
         raise HTTPException(status_code=400, detail=f"Expected Post Coordinator, got {event.status}")
+
+    step = get_step_for_status(db, "event_post_approval", EventStatus.POST_COORDINATOR)
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     old = event.status
-    if event.event_type and 'corporate' in event.event_type.lower() and 'sponsorship' in event.event_type.lower():
+    if step and step.approved_status:
+        event.status = step.approved_status
+    elif event.event_type and 'corporate' in event.event_type.lower() and 'sponsorship' in event.event_type.lower():
         event.status = EventStatus.POST_GST
     else:
         event.status = EventStatus.POST_FINANCE
@@ -372,14 +490,22 @@ def approve_post_coordinator(event_id: int, remarks: Optional[str] = None, db: S
 
 @router.post("/{event_id}/approve-post-gst", response_model=EventOut)
 def approve_post_gst(event_id: int, remarks: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.POST_GST:
         raise HTTPException(status_code=400, detail=f"Expected Post GST, got {event.status}")
+
+    step = get_step_for_status(db, "event_post_approval", "Post GST")
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     old = event.status
-    event.status = EventStatus.POST_FINANCE
-    _add_event_audit(db, event.id, "Post GST Approved", old, EventStatus.POST_FINANCE, current_user.id, remarks or "")
+    next_status = step.approved_status if step else EventStatus.POST_FINANCE
+    event.status = next_status
+    _add_event_audit(db, event.id, "Post GST Approved", old, next_status, current_user.id, remarks or "")
     db.commit()
     db.refresh(event)
     return event
@@ -387,14 +513,22 @@ def approve_post_gst(event_id: int, remarks: Optional[str] = None, db: Session =
 
 @router.post("/{event_id}/approve-post-finance", response_model=EventOut)
 def approve_post_finance(event_id: int, remarks: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
     if event.status != EventStatus.POST_FINANCE:
         raise HTTPException(status_code=400, detail=f"Expected Post Finance, got {event.status}")
+
+    step = get_step_for_status(db, "event_post_approval", EventStatus.POST_FINANCE)
+    if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
+        raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
+
     old = event.status
-    event.status = EventStatus.COMPLETED
-    _add_event_audit(db, event.id, "Post Finance Approved - Completed", old, EventStatus.COMPLETED, current_user.id, remarks or "")
+    next_status = step.approved_status if step else EventStatus.COMPLETED
+    event.status = next_status
+    _add_event_audit(db, event.id, "Post Finance Approved - Completed", old, next_status, current_user.id, remarks or "")
     db.commit()
     db.refresh(event)
     return event

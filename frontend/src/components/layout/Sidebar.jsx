@@ -1,32 +1,42 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, CalendarDays, FileText, Users, Building2,
-  BarChart3, ShoppingCart, Megaphone, Shield, LogOut, ChevronRight, Database, ClipboardList, GitBranch
+  BarChart3, ShoppingCart, Megaphone, Shield, LogOut, ChevronRight, Database, ClipboardList, GitBranch, Settings, Workflow
 } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
+import useAccessStore from '../../store/accessStore'
 import clsx from 'clsx'
 
 const navItems = [
-  { label: 'Dashboard',        path: '/',                icon: LayoutDashboard },
-  { label: 'Events',           path: '/events',          icon: CalendarDays },
-  { label: 'Approvals',        path: '/approvals',       icon: FileText },
-  { label: 'Vendors',          path: '/vendors',         icon: Building2 },
-  { label: 'Promotional',      path: '/promotional',     icon: Megaphone },
-  { label: 'BRS',              path: '/brs',             icon: ClipboardList },
-  { label: 'Masters',          path: '/masters',         icon: Database },
-  { label: 'Reports',          path: '/reports',         icon: BarChart3 },
-  { label: 'Access Mgmt',      path: '/access',          icon: Shield },
-  { label: 'Users',            path: '/users',           icon: Users },
-  { label: 'Hierarchy',        path: '/hierarchy',       icon: GitBranch },
+  { label: 'Dashboard',        path: '/',                icon: LayoutDashboard, pageKey: 'dashboard' },
+  { label: 'Events',           path: '/events',          icon: CalendarDays,    pageKey: 'events_list' },
+  { label: 'Approvals',        path: '/approvals',       icon: FileText,        pageKey: 'approvals_list' },
+  { label: 'Vendors',          path: '/vendors',         icon: Building2,       pageKey: 'vendors_list' },
+  { label: 'Promotional',      path: '/promotional',     icon: Megaphone,       pageKey: 'promotional_list' },
+  { label: 'BRS',              path: '/brs',             icon: ClipboardList,   pageKey: 'brs_list' },
+  { label: 'Masters',          path: '/masters',         icon: Database,        pageKey: 'masters' },
+  { label: 'Reports',          path: '/reports',         icon: BarChart3,       pageKey: 'reports' },
+  { label: 'Access Mgmt',      path: '/access',          icon: Shield,          pageKey: 'access_management' },
+  { label: 'Users',            path: '/users',           icon: Users,           pageKey: 'users' },
+  { label: 'Hierarchy',        path: '/hierarchy',       icon: GitBranch,       pageKey: 'hierarchy' },
+  { label: 'RBAC Config',      path: '/admin/rbac',      icon: Settings,        pageKey: 'admin_rbac' },
+  { label: 'Workflows',        path: '/admin/workflows', icon: Workflow,        pageKey: 'admin_workflows' },
 ]
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore()
+  const { accessiblePages, loaded } = useAccessStore()
   const navigate = useNavigate()
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    useAccessStore.getState().clearAccess()
+    navigate('/login', { replace: true })
+  }
+
+  const hasAccess = (pageKey) => {
+    if (!loaded) return true // Show all while loading
+    return accessiblePages.includes(pageKey)
   }
 
   return (
@@ -44,23 +54,25 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-4 overflow-y-auto">
-        {navItems.map(({ label, path, icon: Icon }) => (
-          <NavLink
-            key={path}
-            to={path}
-            end={path === '/'}
-            className={({ isActive }) =>
-              clsx(
-                'flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-colors mb-0.5',
-                isActive
-                  ? 'bg-white/15 text-white font-medium'
-                  : 'text-blue-200 hover:bg-white/10 hover:text-white'
-              )
-            }
-          >
-            <Icon size={18} />
-            <span className="flex-1">{label}</span>
-          </NavLink>
+        {navItems.map(({ label, path, icon: Icon, pageKey }) => (
+          hasAccess(pageKey) && (
+            <NavLink
+              key={path}
+              to={path}
+              end={path === '/'}
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg text-sm transition-colors mb-0.5',
+                  isActive
+                    ? 'bg-white/15 text-white font-medium'
+                    : 'text-blue-200 hover:bg-white/10 hover:text-white'
+                )
+              }
+            >
+              <Icon size={18} />
+              <span className="flex-1">{label}</span>
+            </NavLink>
+          )
         ))}
       </nav>
 

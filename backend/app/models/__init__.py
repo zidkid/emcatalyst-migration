@@ -29,3 +29,4 @@ from app.models.brs import (
     BrsAuditTrail, BrsDoctor, BrsStatus, BrsQuestionType
 )
 from app.models.rbac import Role, Page, RolePageAccess
+from app.models.workflow import ApprovalWorkflow, ApprovalWorkflowStep

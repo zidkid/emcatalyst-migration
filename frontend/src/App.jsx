@@ -1,10 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
+import { useEffect } from 'react'
 import useAuthStore from './store/authStore'
+import useAccessStore from './store/accessStore'
 
 import ErrorBoundary from './components/ErrorBoundary'
 import Layout from './components/layout/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/auth/Login'
 import Dashboard from './pages/Dashboard'
 import EventList from './pages/events/EventList'
@@ -30,6 +33,9 @@ import BrsDetail from './pages/brs/BrsDetail'
 import SurveyBuilder from './pages/brs/SurveyBuilder'
 import SurveyPortal from './pages/brs/SurveyPortal'
 import DoctorLogin from './pages/brs/DoctorLogin'
+import RBACConfig from './pages/admin/RBACConfig'
+import WorkflowConfig from './pages/admin/WorkflowConfig'
+import Unauthorized from './pages/Unauthorized'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
@@ -37,7 +43,32 @@ const queryClient = new QueryClient({
 
 function PrivateRoute({ children }) {
   const { token } = useAuthStore()
+
+  useEffect(() => {
+    // Handle browser back/forward cache (bfcache)
+    const handlePageShow = (e) => {
+      if (e.persisted && !localStorage.getItem('token')) {
+        window.location.href = '/login'
+      }
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
+  }, [])
+
   return token ? children : <Navigate to="/login" replace />
+}
+
+function AccessLoader({ children }) {
+  const { token } = useAuthStore()
+  const { fetchAccess, loaded } = useAccessStore()
+
+  useEffect(() => {
+    if (token) {
+      fetchAccess()
+    }
+  }, [token, fetchAccess])
+
+  return children
 }
 
 export default function App() {
@@ -46,40 +77,45 @@ export default function App() {
       <BrowserRouter>
         <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
         <ErrorBoundary>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-              <Route index element={<Dashboard />} />
-              <Route path="events" element={<EventList />} />
-              <Route path="events/new" element={<EventForm />} />
-              <Route path="events/:id/edit" element={<EventForm />} />
-              <Route path="events/:id" element={<EventDetail />} />
-              <Route path="events/:id/post-documents" element={<PostEventDocuments />} />
-              <Route path="approvals" element={<InvoiceList />} />
-              <Route path="approvals/new" element={<InvoiceForm />} />
-              <Route path="approvals/:id" element={<InvoiceDetail />} />
-              <Route path="agreements" element={<AgreementList />} />
-              <Route path="agreements/new" element={<AgreementForm />} />
-              <Route path="vendors" element={<VendorList />} />
-              <Route path="vendors/new" element={<VendorList />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="access" element={<AccessManagement />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="hierarchy" element={<HierarchyView />} />
-              <Route path="promotional" element={<PromotionalList />} />
-              <Route path="promotional/new" element={<PromotionalForm />} />
-              <Route path="masters" element={<Masters />} />
-              <Route path="brs" element={<BrsList />} />
-              <Route path="brs/new" element={<BrsForm />} />
-              <Route path="brs/:id/edit" element={<BrsForm />} />
-              <Route path="brs/survey-builder" element={<SurveyBuilder />} />
-              <Route path="brs/:id" element={<BrsDetail />} />
-            </Route>
-            {/* Public doctor portal — no auth required */}
-            <Route path="/brs/survey/:token" element={<SurveyPortal />} />
-            <Route path="/brs/doctor-login" element={<DoctorLogin />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AccessLoader>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                <Route index element={<ProtectedRoute pageKey="dashboard"><Dashboard /></ProtectedRoute>} />
+                <Route path="events" element={<ProtectedRoute pageKey="events_list"><EventList /></ProtectedRoute>} />
+                <Route path="events/new" element={<ProtectedRoute pageKey="events_create"><EventForm /></ProtectedRoute>} />
+                <Route path="events/:id/edit" element={<ProtectedRoute pageKey="events_edit"><EventForm /></ProtectedRoute>} />
+                <Route path="events/:id" element={<ProtectedRoute pageKey="events_detail"><EventDetail /></ProtectedRoute>} />
+                <Route path="events/:id/post-documents" element={<ProtectedRoute pageKey="events_post_docs"><PostEventDocuments /></ProtectedRoute>} />
+                <Route path="approvals" element={<ProtectedRoute pageKey="approvals_list"><InvoiceList /></ProtectedRoute>} />
+                <Route path="approvals/new" element={<ProtectedRoute pageKey="approvals_create"><InvoiceForm /></ProtectedRoute>} />
+                <Route path="approvals/:id" element={<ProtectedRoute pageKey="approvals_detail"><InvoiceDetail /></ProtectedRoute>} />
+                <Route path="agreements" element={<ProtectedRoute pageKey="agreements_list"><AgreementList /></ProtectedRoute>} />
+                <Route path="agreements/new" element={<ProtectedRoute pageKey="agreements_create"><AgreementForm /></ProtectedRoute>} />
+                <Route path="vendors" element={<ProtectedRoute pageKey="vendors_list"><VendorList /></ProtectedRoute>} />
+                <Route path="vendors/new" element={<ProtectedRoute pageKey="vendors_list"><VendorList /></ProtectedRoute>} />
+                <Route path="reports" element={<ProtectedRoute pageKey="reports"><Reports /></ProtectedRoute>} />
+                <Route path="access" element={<ProtectedRoute pageKey="access_management"><AccessManagement /></ProtectedRoute>} />
+                <Route path="users" element={<ProtectedRoute pageKey="users"><UserManagement /></ProtectedRoute>} />
+                <Route path="hierarchy" element={<ProtectedRoute pageKey="hierarchy"><HierarchyView /></ProtectedRoute>} />
+                <Route path="promotional" element={<ProtectedRoute pageKey="promotional_list"><PromotionalList /></ProtectedRoute>} />
+                <Route path="promotional/new" element={<ProtectedRoute pageKey="promotional_create"><PromotionalForm /></ProtectedRoute>} />
+                <Route path="masters" element={<ProtectedRoute pageKey="masters"><Masters /></ProtectedRoute>} />
+                <Route path="brs" element={<ProtectedRoute pageKey="brs_list"><BrsList /></ProtectedRoute>} />
+                <Route path="brs/new" element={<ProtectedRoute pageKey="brs_create"><BrsForm /></ProtectedRoute>} />
+                <Route path="brs/:id/edit" element={<ProtectedRoute pageKey="brs_edit"><BrsForm /></ProtectedRoute>} />
+                <Route path="brs/survey-builder" element={<ProtectedRoute pageKey="brs_survey_builder"><SurveyBuilder /></ProtectedRoute>} />
+                <Route path="brs/:id" element={<ProtectedRoute pageKey="brs_detail"><BrsDetail /></ProtectedRoute>} />
+                <Route path="admin/rbac" element={<ProtectedRoute pageKey="admin_rbac"><RBACConfig /></ProtectedRoute>} />
+                <Route path="admin/workflows" element={<ProtectedRoute pageKey="admin_workflows"><WorkflowConfig /></ProtectedRoute>} />
+              </Route>
+              {/* Public doctor portal — no auth required */}
+              <Route path="/brs/survey/:token" element={<SurveyPortal />} />
+              <Route path="/brs/doctor-login" element={<DoctorLogin />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AccessLoader>
         </ErrorBoundary>
       </BrowserRouter>
     </QueryClientProvider>

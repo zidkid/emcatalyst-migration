@@ -1,15 +1,44 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { authApi } from '../../api/endpoints'
 import useAuthStore from '../../store/authStore'
+import useAccessStore from '../../store/accessStore'
+import api from '../../api/client'
+
+const PAGE_ROUTES = {
+  dashboard: '/',
+  events_list: '/events',
+  approvals_list: '/approvals',
+  vendors_list: '/vendors',
+  promotional_list: '/promotional',
+  brs_list: '/brs',
+  masters: '/masters',
+  reports: '/reports',
+  access_management: '/access',
+  users: '/users',
+  hierarchy: '/hierarchy',
+  agreements_list: '/agreements',
+  admin_rbac: '/admin/rbac',
+  admin_workflows: '/admin/workflows',
+}
 
 export default function Login() {
   const navigate = useNavigate()
-  const { setAuth } = useAuthStore()
+  const { token, setAuth } = useAuthStore()
+  const { accessiblePages, loaded } = useAccessStore()
   const [loading, setLoading] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm()
+
+  // If already logged in, redirect to first accessible page
+  if (token) {
+    if (loaded && accessiblePages.length > 0) {
+      const target = accessiblePages.find(pk => PAGE_ROUTES[pk])
+      return <Navigate to={target ? PAGE_ROUTES[target] : '/'} replace />
+    }
+    return <Navigate to="/" replace />
+  }
 
   const onSubmit = async ({ email, password }) => {
     setLoading(true)
@@ -17,7 +46,25 @@ export default function Login() {
       const res = await authApi.login(email, password)
       setAuth(res.data.user, res.data.access_token)
       toast.success(`Welcome, ${res.data.user.first_name || 'User'}!`)
-      navigate('/')
+
+      // Fetch access and navigate to first accessible page
+      try {
+        const accessRes = await api.get('/rbac/access/me')
+        const pages = accessRes.data.pages || []
+        useAccessStore.getState().fetchAccess()
+
+        // Find first accessible nav page
+        let targetRoute = '/'
+        for (const pageKey of pages) {
+          if (PAGE_ROUTES[pageKey]) {
+            targetRoute = PAGE_ROUTES[pageKey]
+            break
+          }
+        }
+        navigate(targetRoute)
+      } catch {
+        navigate('/')
+      }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Login failed')
     } finally {

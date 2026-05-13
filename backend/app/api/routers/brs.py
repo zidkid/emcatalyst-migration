@@ -345,6 +345,28 @@ def get_application(app_id: int, db: Session = Depends(get_db), current_user: Us
     }
 
 
+@router.get("/{app_id}/can-approve")
+def can_approve_application(app_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Check if current user can approve/reject this BRS at its current status."""
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
+    app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
+    if not app:
+        raise HTTPException(404, "BRS not found")
+
+    if app.status != BrsStatus.SUBMITTED:
+        return {"can_approve": False, "reason": "BRS is not in Submitted status"}
+
+    step = get_step_for_status(db, "brs_approval", BrsStatus.SUBMITTED)
+    if not step:
+        # Fallback: check old hardcoded role
+        can = _has_role(current_user, "DivisionHead") or current_user.is_superuser
+        return {"can_approve": can, "reason": "" if can else "No workflow step configured and user is not Division Head"}
+
+    can = can_user_approve_step(db, current_user, step, app.created_by_id)
+    return {"can_approve": can, "step_label": step.step_label, "reason": "" if can else "You are not authorized for this approval step"}
+
+
 # ─────────────────────────────────────────────
 #  Doctor Management (within a BRS)
 # ─────────────────────────────────────────────
@@ -421,9 +443,8 @@ def submit_application(app_id: int, db: Session = Depends(get_db), current_user:
 
 @router.post("/{app_id}/approve")
 def approve_application(app_id: int, remarks: str = "", db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Division Head approves BRS — triggers doctor email"""
-    if not _has_role(current_user, "DivisionHead"):
-        raise HTTPException(403, "Only Division Head can approve BRS")
+    """Approve BRS — uses dynamic workflow to check authorization"""
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
 
     app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
     if not app:
@@ -431,11 +452,23 @@ def approve_application(app_id: int, remarks: str = "", db: Session = Depends(ge
     if app.status != BrsStatus.SUBMITTED:
         raise HTTPException(400, f"Expected Submitted, got {app.status}")
 
+    # Dynamic workflow authorization
+    step = get_step_for_status(db, "brs_approval", BrsStatus.SUBMITTED)
+    if step:
+        if not can_user_approve_step(db, current_user, step, app.created_by_id):
+            raise HTTPException(403, "You are not authorized to approve this BRS")
+        next_status = step.approved_status or BrsStatus.DOCTOR_PENDING
+    else:
+        # Fallback to hardcoded check
+        if not _has_role(current_user, "DivisionHead"):
+            raise HTTPException(403, "Only Division Head can approve BRS")
+        next_status = BrsStatus.DOCTOR_PENDING
+
     old = app.status
-    app.status = BrsStatus.DOCTOR_PENDING
+    app.status = next_status
     app.approved_by_id = current_user.id
     app.approved_at = datetime.utcnow()
-    _add_audit(db, app.id, "DH Approved", old, BrsStatus.DOCTOR_PENDING, current_user.id, remarks)
+    _add_audit(db, app.id, "Approved", old, next_status, current_user.id, remarks)
 
     # Generate login credentials for each doctor and send email
     from app.core.email import send_brs_doctor_credentials
@@ -468,9 +501,8 @@ def approve_application(app_id: int, remarks: str = "", db: Session = Depends(ge
 
 @router.post("/{app_id}/reject")
 def reject_application(app_id: int, reason: str = "", db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Division Head rejects BRS"""
-    if not _has_role(current_user, "DivisionHead"):
-        raise HTTPException(403, "Only Division Head can reject BRS")
+    """Reject BRS — uses dynamic workflow to check authorization"""
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
 
     app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
     if not app:
@@ -478,10 +510,19 @@ def reject_application(app_id: int, reason: str = "", db: Session = Depends(get_
     if app.status != BrsStatus.SUBMITTED:
         raise HTTPException(400, f"Expected Submitted, got {app.status}")
 
+    # Dynamic workflow authorization
+    step = get_step_for_status(db, "brs_approval", BrsStatus.SUBMITTED)
+    if step:
+        if not can_user_approve_step(db, current_user, step, app.created_by_id):
+            raise HTTPException(403, "You are not authorized to reject this BRS")
+    else:
+        if not _has_role(current_user, "DivisionHead"):
+            raise HTTPException(403, "Only Division Head can reject BRS")
+
     old = app.status
     app.status = BrsStatus.DH_REJECTED
     app.rejection_reason = reason
-    _add_audit(db, app.id, "DH Rejected", old, BrsStatus.DH_REJECTED, current_user.id, reason)
+    _add_audit(db, app.id, "Rejected", old, BrsStatus.DH_REJECTED, current_user.id, reason)
     db.commit()
     return {"status": app.status}
 

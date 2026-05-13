@@ -73,24 +73,42 @@ def approve_invoice(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
     invoice = db.query(VendorInvoice).filter(VendorInvoice.id == invoice_id).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
-    status_map = {
-        "ComplianceUser": InvoiceStatus.COMPLIANCE_APPROVED,
-        "FinanceUser": InvoiceStatus.FINANCE_APPROVED,
-        "GSTuser": InvoiceStatus.GST_VERIFIED,
-        "OPEXUser": InvoiceStatus.OPEX_APPROVED,
-    }
+    # Dynamic workflow authorization
+    current_status = invoice.status.value if hasattr(invoice.status, 'value') else str(invoice.status)
+    step = get_step_for_status(db, "invoice_approval", current_status)
 
-    if approval.action == "Approved":
-        new_status = status_map.get(approval.approver_role, InvoiceStatus.FINANCE_APPROVED)
-        invoice.status = new_status
-    elif approval.action == "Rejected":
-        invoice.status = InvoiceStatus.REJECTED
-    elif approval.action == "OnHold":
-        invoice.status = InvoiceStatus.ON_HOLD
+    if step:
+        if not can_user_approve_step(db, current_user, step, invoice.submitted_by_id):
+            raise HTTPException(status_code=403, detail="You are not authorized to approve this invoice at this stage")
+
+        if approval.action == "Approved":
+            invoice.status = step.approved_status
+        elif approval.action == "Rejected":
+            invoice.status = InvoiceStatus.REJECTED
+        elif approval.action == "OnHold":
+            invoice.status = InvoiceStatus.ON_HOLD
+    else:
+        # Fallback to hardcoded status map
+        status_map = {
+            "ComplianceUser": InvoiceStatus.COMPLIANCE_APPROVED,
+            "FinanceUser": InvoiceStatus.FINANCE_APPROVED,
+            "GSTuser": InvoiceStatus.GST_VERIFIED,
+            "OPEXUser": InvoiceStatus.OPEX_APPROVED,
+        }
+
+        if approval.action == "Approved":
+            new_status = status_map.get(approval.approver_role, InvoiceStatus.FINANCE_APPROVED)
+            invoice.status = new_status
+        elif approval.action == "Rejected":
+            invoice.status = InvoiceStatus.REJECTED
+        elif approval.action == "OnHold":
+            invoice.status = InvoiceStatus.ON_HOLD
 
     record = InvoiceApproval(
         invoice_id=invoice_id,

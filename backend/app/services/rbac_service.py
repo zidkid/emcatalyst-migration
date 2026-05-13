@@ -39,6 +39,7 @@ DEFAULT_PAGES = [
     {"page_key": "agreements_list", "page_label": "Agreements", "page_path": "/agreements", "nav_group": "Agreements"},
     {"page_key": "agreements_create", "page_label": "Create Agreement", "page_path": "/agreements/new", "nav_group": "Agreements"},
     {"page_key": "admin_rbac", "page_label": "RBAC Config", "page_path": "/admin/rbac", "nav_group": "Admin"},
+    {"page_key": "admin_workflows", "page_label": "Approval Workflows", "page_path": "/admin/workflows", "nav_group": "Admin"},
 ]
 
 

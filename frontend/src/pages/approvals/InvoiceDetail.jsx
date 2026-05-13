@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { invoicesApi } from '../../api/endpoints'
+import api from '../../api/client'
 import { fmtDate, fmtCurrency, fmtDateTime } from '../../utils/helpers'
 import PageHeader from '../../components/ui/PageHeader'
 import StatusBadge from '../../components/ui/StatusBadge'
@@ -10,13 +11,6 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Modal from '../../components/ui/Modal'
 import { ArrowLeft } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
-
-const ROLE_NEXT_STATUS = {
-  ComplianceUser: 'Compliance Approved',
-  FinanceUser: 'Finance Approved',
-  GSTuser: 'GST Verified',
-  OPEXUser: 'OPEX Approved',
-}
 
 export default function InvoiceDetail() {
   const { id } = useParams()
@@ -32,9 +26,20 @@ export default function InvoiceDetail() {
     queryFn: () => invoicesApi.get(id).then(r => r.data),
   })
 
+  const { data: canApproveData } = useQuery({
+    queryKey: ['invoice-can-approve', id, invoice?.status],
+    queryFn: () => api.post('/workflows/can-approve', {
+      workflow_key: 'invoice_approval',
+      current_status: invoice?.status,
+      initiator_id: invoice?.submitted_by_id,
+    }).then(r => r.data),
+    enabled: !!invoice && invoice.status !== 'Paid' && invoice.status !== 'Rejected' && invoice.status !== 'Payment Initiated',
+    retry: false,
+  })
+
   const approve = useMutation({
     mutationFn: () => invoicesApi.approve(id, { action, remarks, approver_role: user?.role }),
-    onSuccess: () => { qc.invalidateQueries(['invoice', id]); setApprovalModal(false); toast.success(`Invoice ${action}`) },
+    onSuccess: () => { qc.invalidateQueries(['invoice', id]); qc.invalidateQueries(['invoice-can-approve']); setApprovalModal(false); toast.success(`Invoice ${action}`) },
   })
   const postToSap = useMutation({
     mutationFn: () => invoicesApi.postToSap(id),
@@ -44,7 +49,7 @@ export default function InvoiceDetail() {
   if (isLoading) return <div className="p-8"><LoadingSpinner /></div>
   if (!invoice) return <div className="p-8 text-red-500">Invoice not found</div>
 
-  const canApprove = ROLE_NEXT_STATUS[user?.role]
+  const canApprove = canApproveData?.can_approve === true
   const canPost = user?.role === 'FinanceUser' && invoice.status === 'OPEX Approved'
 
   return (

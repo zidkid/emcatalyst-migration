@@ -4,16 +4,11 @@ import { Plus, Search, Users, ChevronLeft, ChevronRight, Edit2 } from 'lucide-re
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { authApi, masterApi } from '../../api/endpoints'
+import api from '../../api/client'
 import PageHeader from '../../components/ui/PageHeader'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import Modal from '../../components/ui/Modal'
-
-const ROLES = [
-  'Administrator', 'ComplianceUser', 'DivisionCoOrdinator', 'FinanceUser',
-  'GSTuser', 'OPEXUser', 'User', 'FunctionalUser', 'MyAdmin', 'Anonymous',
-  'MarketingHead', 'DivisionHead'
-]
 
 const PAGE_SIZE = 50
 
@@ -39,6 +34,36 @@ export default function UserManagement() {
     queryKey: ['master-divisions'],
     queryFn: () => masterApi.divisions().then(r => r.data),
   })
+
+  const { data: rbacRoles = [] } = useQuery({
+    queryKey: ['rbac-roles'],
+    queryFn: () => api.get('/rbac/roles').then(r => r.data),
+  })
+
+  // Map RBAC role names to backend enum values for the role dropdown
+  const ROLE_MAP = {
+    'Administrator': 'Administrator',
+    'Marketing Head': 'MarketingHead',
+    'Division Head': 'DivisionHead',
+    'Compliance User': 'ComplianceUser',
+    'Finance User': 'FinanceUser',
+    'User': 'User',
+  }
+
+  // Build roles list: use RBAC roles if available, fallback to defaults
+  const ROLES = rbacRoles.length > 0
+    ? rbacRoles.filter(r => r.is_active).map(r => ({
+        label: r.name,
+        value: ROLE_MAP[r.name] || r.name,
+      }))
+    : [
+        { label: 'Administrator', value: 'Administrator' },
+        { label: 'Marketing Head', value: 'MarketingHead' },
+        { label: 'Division Head', value: 'DivisionHead' },
+        { label: 'Compliance User', value: 'ComplianceUser' },
+        { label: 'Finance User', value: 'FinanceUser' },
+        { label: 'User', value: 'User' },
+      ]
 
   const divisionMap = Object.fromEntries(divisions.map(d => [d.id, d.name]))
 
@@ -131,7 +156,9 @@ export default function UserManagement() {
                     <td className="px-4 py-2.5 text-gray-500 text-xs">{divisionMap[u.division_id] || '—'}</td>
                     <td className="px-4 py-2.5 text-gray-500 text-xs">{u.manager_name || '—'}</td>
                     <td className="px-4 py-2.5">
-                      <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">{u.role}</span>
+                      <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">
+                        {ROLES.find(r => r.value === u.role)?.label || u.role}
+                      </span>
                     </td>
                     <td className="px-4 py-2.5">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${u.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
@@ -213,27 +240,27 @@ export default function UserManagement() {
             <div>
               <label className="label">Primary Role</label>
               <select className="input" value={editRole} onChange={e => setEditRole(e.target.value)}>
-                {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             </div>
             <div>
               <label className="label">Additional Roles</label>
               <div className="grid grid-cols-3 gap-2 p-3 border rounded-lg max-h-40 overflow-y-auto">
                 {ROLES.map(r => (
-                  <label key={r} className="flex items-center gap-2 text-xs cursor-pointer">
+                  <label key={r.value} className="flex items-center gap-2 text-xs cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={editRoles.includes(r)}
+                      checked={editRoles.includes(r.value)}
                       onChange={e => {
-                        if (e.target.checked) setEditRoles(prev => [...prev, r])
-                        else setEditRoles(prev => prev.filter(x => x !== r))
+                        if (e.target.checked) setEditRoles(prev => [...prev, r.value])
+                        else setEditRoles(prev => prev.filter(x => x !== r.value))
                       }}
                     />
-                    {r}
+                    {r.label}
                   </label>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-1">Select additional roles (e.g. MarketingHead, DivisionHead for BRS access)</p>
+              <p className="text-xs text-gray-400 mt-1">Select additional roles (e.g. Marketing Head, Division Head for BRS access)</p>
             </div>
             <div>
               <label className="label">Manager (L1 Approver)</label>
@@ -325,7 +352,7 @@ export default function UserManagement() {
             <div>
               <label className="label">Role</label>
               <select className="input" {...register('role')}>
-                {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             </div>
             <div>

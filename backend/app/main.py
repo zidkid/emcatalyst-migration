@@ -8,6 +8,7 @@ import logging
 from app.core.config import settings
 from app.api.routers import auth, events, vendors, approvals, agreements, reports, access, promotional, master, brs, import_mcl
 from app.api.routers import rbac as rbac_router
+from app.api.routers import workflows as workflow_router
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +26,12 @@ def seed_rbac_data():
     """Seed RBAC roles, pages, and admin access."""
     from app.db.base import SessionLocal
     from app.services.rbac_service import seed_rbac
+    from app.services.workflow_service import seed_workflows
 
     db = SessionLocal()
     try:
         seed_rbac(db)
+        seed_workflows(db)
     finally:
         db.close()
 
@@ -78,6 +81,7 @@ app.include_router(master.router, prefix=PREFIX)
 app.include_router(brs.router, prefix=PREFIX)
 app.include_router(import_mcl.router, prefix=PREFIX)
 app.include_router(rbac_router.router, prefix=PREFIX)
+app.include_router(workflow_router.router, prefix=PREFIX)
 
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

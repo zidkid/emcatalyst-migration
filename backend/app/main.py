@@ -7,6 +7,7 @@ import logging
 
 from app.core.config import settings
 from app.api.routers import auth, events, vendors, approvals, agreements, reports, access, promotional, master, brs, import_mcl
+from app.api.routers import rbac as rbac_router
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,18 @@ def run_migrations():
     command.upgrade(alembic_cfg, "head")
 
 
+def seed_rbac_data():
+    """Seed RBAC roles, pages, and admin access."""
+    from app.db.base import SessionLocal
+    from app.services.rbac_service import seed_rbac
+
+    db = SessionLocal()
+    try:
+        seed_rbac(db)
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: run pending migrations
@@ -28,6 +41,12 @@ async def lifespan(app: FastAPI):
         logger.info("Database migrations applied successfully.")
     except Exception as e:
         logger.warning(f"Migration skipped or failed: {e}")
+    # Seed RBAC data
+    try:
+        seed_rbac_data()
+        logger.info("RBAC data seeded successfully.")
+    except Exception as e:
+        logger.warning(f"RBAC seeding skipped or failed: {e}")
     yield
 
 
@@ -58,6 +77,7 @@ app.include_router(promotional.router, prefix=PREFIX)
 app.include_router(master.router, prefix=PREFIX)
 app.include_router(brs.router, prefix=PREFIX)
 app.include_router(import_mcl.router, prefix=PREFIX)
+app.include_router(rbac_router.router, prefix=PREFIX)
 
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

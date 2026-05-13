@@ -28,3 +28,4 @@ from app.models.brs import (
     BrsApplication, BrsSurvey, BrsSurveyQuestion,
     BrsAuditTrail, BrsDoctor, BrsStatus, BrsQuestionType
 )
+from app.models.rbac import Role, Page, RolePageAccess

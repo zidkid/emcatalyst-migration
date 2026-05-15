@@ -16,18 +16,10 @@ import EventList from './pages/events/EventList'
 import EventForm from './pages/events/EventForm'
 import EventDetail from './pages/events/EventDetail'
 import PostEventDocuments from './pages/events/PostEventDocuments'
-import InvoiceList from './pages/approvals/InvoiceList'
-import InvoiceForm from './pages/approvals/InvoiceForm'
-import InvoiceDetail from './pages/approvals/InvoiceDetail'
-import VendorList from './pages/vendors/VendorList'
-import AgreementList from './pages/agreements/AgreementList'
-import AgreementForm from './pages/agreements/AgreementForm'
-import Reports from './pages/reports/Reports'
-import AccessManagement from './pages/access/AccessManagement'
+
 import UserManagement from './pages/users/UserManagement'
 import HierarchyView from './pages/users/HierarchyView'
-import PromotionalList from './pages/promotional/PromotionalList'
-import PromotionalForm from './pages/promotional/PromotionalForm'
+
 import Masters from './pages/masters/Masters'
 import BrsList from './pages/brs/BrsList'
 import BrsForm from './pages/brs/BrsForm'
@@ -93,19 +85,11 @@ export default function App() {
                 <Route path="events/:id/edit" element={<ProtectedRoute pageKey="events_edit"><EventForm /></ProtectedRoute>} />
                 <Route path="events/:id" element={<ProtectedRoute pageKey="events_detail"><EventDetail /></ProtectedRoute>} />
                 <Route path="events/:id/post-documents" element={<ProtectedRoute pageKey="events_post_docs"><PostEventDocuments /></ProtectedRoute>} />
-                <Route path="approvals" element={<ProtectedRoute pageKey="approvals_list"><InvoiceList /></ProtectedRoute>} />
-                <Route path="approvals/new" element={<ProtectedRoute pageKey="approvals_create"><InvoiceForm /></ProtectedRoute>} />
-                <Route path="approvals/:id" element={<ProtectedRoute pageKey="approvals_detail"><InvoiceDetail /></ProtectedRoute>} />
-                <Route path="agreements" element={<ProtectedRoute pageKey="agreements_list"><AgreementList /></ProtectedRoute>} />
-                <Route path="agreements/new" element={<ProtectedRoute pageKey="agreements_create"><AgreementForm /></ProtectedRoute>} />
-                <Route path="vendors" element={<ProtectedRoute pageKey="vendors_list"><VendorList /></ProtectedRoute>} />
-                <Route path="vendors/new" element={<ProtectedRoute pageKey="vendors_list"><VendorList /></ProtectedRoute>} />
-                <Route path="reports" element={<ProtectedRoute pageKey="reports"><Reports /></ProtectedRoute>} />
-                <Route path="access" element={<ProtectedRoute pageKey="access_management"><AccessManagement /></ProtectedRoute>} />
+
+
                 <Route path="users" element={<ProtectedRoute pageKey="users"><UserManagement /></ProtectedRoute>} />
                 <Route path="hierarchy" element={<ProtectedRoute pageKey="hierarchy"><HierarchyView /></ProtectedRoute>} />
-                <Route path="promotional" element={<ProtectedRoute pageKey="promotional_list"><PromotionalList /></ProtectedRoute>} />
-                <Route path="promotional/new" element={<ProtectedRoute pageKey="promotional_create"><PromotionalForm /></ProtectedRoute>} />
+
                 <Route path="masters" element={<ProtectedRoute pageKey="masters"><Masters /></ProtectedRoute>} />
                 <Route path="brs" element={<ProtectedRoute pageKey="brs_list"><BrsList /></ProtectedRoute>} />
                 <Route path="brs/new" element={<ProtectedRoute pageKey="brs_create"><BrsForm /></ProtectedRoute>} />

@@ -11,11 +11,14 @@ const CONFERENCE_TYPES = ['NCON', 'RCON', 'Local']
 const SPONSORSHIP_TYPES_OPTIONS = ['Stall', 'Scientific Session', 'Advertising Space', 'Other']
 
 export default function EventFormStep1({
-  register, errors, watch, handleSubmit, saving, user,
+  register, errors, watch, setValue, handleSubmit, saving, user,
   divisions, therapeutics, brands,
   isCME, isAdvisory, isSponsorship,
   onSave, onCancel,
 }) {
+  const selectedDivisionId = watch('division_id')
+  const selectedDiv = divisions.find(d => String(d.id) === String(selectedDivisionId))
+
   return (
     <form onSubmit={handleSubmit(d => onSave(d, true))} className="card space-y-5">
       <h3 className="text-lg font-bold">Event Details</h3>
@@ -32,14 +35,20 @@ export default function EventFormStep1({
         </div>
         <div>
           <label className="label">Division</label>
-          <select className="input" {...register('division_id')}>
+          <select className="input" {...register('division_id')} onChange={e => {
+            const val = e.target.value
+            setValue('division_id', val)
+            const div = divisions.find(d => String(d.id) === val)
+            setValue('cost_center', div?.costcenter || '')
+          }}>
             <option value="">Select</option>
             {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
         <div>
           <label className="label">Cost-Center</label>
-          <input className="input" {...register('cost_center')} />
+          <input className="input bg-gray-50" value={selectedDiv?.costcenter || watch('cost_center') || ''} disabled />
+          <input type="hidden" {...register('cost_center')} />
         </div>
       </div>
 

@@ -169,14 +169,19 @@ export default function BrsForm() {
             </div>
             <div>
               <label className="label">Division *</label>
-              <select className="input" value={form.division_id || ''} onChange={e => updateField('division_id', e.target.value)}>
+              <select className="input" value={form.division_id || ''} onChange={e => {
+                const divId = e.target.value
+                updateField('division_id', divId)
+                const selectedDiv = divisions.find(d => d.id == divId)
+                updateField('cost_center', selectedDiv?.costcenter || '')
+              }}>
                 <option value="">Select</option>
                 {divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
             <div>
               <label className="label">Cost Center</label>
-              <input className="input" value={form.cost_center} onChange={e => updateField('cost_center', e.target.value)} />
+              <input className="input bg-gray-50" value={form.cost_center} disabled />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">

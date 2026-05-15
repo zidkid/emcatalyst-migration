@@ -22,6 +22,18 @@ class UserRole(str, enum.Enum):
     DIVISION_HEAD = "DivisionHead"
 
 
+class Entity(Base):
+    __tablename__ = "entities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    entity_code = Column(String(20), unique=True, nullable=False)
+    name = Column(String(200), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    divisions = relationship("Division", back_populates="entity")
+
+
 class Division(Base):
     __tablename__ = "divisions"
 
@@ -33,34 +45,12 @@ class Division(Base):
     costcenter = Column(String(200))
     profitcenter = Column(String(200))
     eventcodeprefix = Column(String(200))
+    entity_id = Column(Integer, ForeignKey("entities.id"), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     users = relationship("User", back_populates="division")
-    cost_centers = relationship("CostCenter", back_populates="division")
-
-
-class CostCenter(Base):
-    __tablename__ = "cost_centers"
-
-    id = Column(Integer, primary_key=True, index=True)
-    cost_center_id = Column(String(20), unique=True, nullable=False)
-    name = Column(String(200), nullable=False)
-    division_id = Column(Integer, ForeignKey("divisions.id"))
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    division = relationship("Division", back_populates="cost_centers")
-    users = relationship("User", back_populates="cost_center")
-
-
-class Function(Base):
-    __tablename__ = "functions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    code = Column(String(20))
-    is_active = Column(Boolean, default=True)
+    entity = relationship("Entity", back_populates="divisions")
 
 
 class Territory(Base):
@@ -157,8 +147,6 @@ class User(Base):
     mendix_id = Column(String(30), unique=True, nullable=True)
 
     division_id = Column(Integer, ForeignKey("divisions.id"), nullable=True)
-    cost_center_id = Column(Integer, ForeignKey("cost_centers.id"), nullable=True)
-    function_id = Column(Integer, ForeignKey("functions.id"), nullable=True)
     territory_id = Column(Integer, ForeignKey("territories.id"), nullable=True)
     manager_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
@@ -169,7 +157,6 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     division = relationship("Division", back_populates="users")
-    cost_center = relationship("CostCenter", back_populates="users")
     groups = relationship("UserGroup", secondary="user_group_members", back_populates="members")
     events_initiated = relationship("Event", foreign_keys="Event.initiator_id", back_populates="initiator")
     manager = relationship("User", foreign_keys=[manager_id], remote_side="User.id", backref="direct_reports")

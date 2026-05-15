@@ -15,7 +15,7 @@ def create_tables():
 
 
 def seed_data(db: Session):
-    from app.models.user import User, Division, CostCenter, Function, Territory
+    from app.models.user import User, Division, Territory
     from app.models.master import EventType, DocumentType, Designation, CompanyCode, Enumeration
 
     # Admin user

@@ -7,12 +7,8 @@ import useAuthStore from '../store/authStore'
 const PAGE_ROUTES = {
   dashboard: '/',
   events_list: '/events',
-  approvals_list: '/approvals',
-  vendors_list: '/vendors',
-  promotional_list: '/promotional',
   brs_list: '/brs',
   masters: '/masters',
-  reports: '/reports',
   access_management: '/access',
   users: '/users',
   hierarchy: '/hierarchy',

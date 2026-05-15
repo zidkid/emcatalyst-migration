@@ -255,6 +255,7 @@ export default function EventForm() {
           register={register}
           errors={errors}
           watch={watch}
+          setValue={setValue}
           handleSubmit={handleSubmit}
           saving={saving}
           user={user}

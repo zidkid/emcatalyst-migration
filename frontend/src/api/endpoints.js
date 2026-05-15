@@ -64,55 +64,13 @@ export const eventsApi = {
     api.post(`/events/${eventId}/documents`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 }
 
-// Vendors
-export const vendorsApi = {
-  list: (params) => api.get('/vendors/', { params }),
-  create: (data) => api.post('/vendors/', data),
-  get: (id) => api.get(`/vendors/${id}`),
-  update: (id, data) => api.put(`/vendors/${id}`, data),
-  addBankDetail: (id, data) => api.post(`/vendors/${id}/bank-details`, data),
-}
 
-// Invoices / Approvals
-export const invoicesApi = {
-  list: (params) => api.get('/invoices/', { params }),
-  create: (data) => api.post('/invoices/', data),
-  get: (id) => api.get(`/invoices/${id}`),
-  update: (id, data) => api.put(`/invoices/${id}`, data),
-  approve: (id, data) => api.post(`/invoices/${id}/approve`, data),
-  postToSap: (id) => api.post(`/invoices/${id}/post-to-sap`),
-}
-
-// Agreements
-export const agreementsApi = {
-  list: (params) => api.get('/agreements/', { params }),
-  create: (data) => api.post('/agreements/', data),
-  get: (id) => api.get(`/agreements/${id}`),
-  update: (id, data) => api.put(`/agreements/${id}`, data),
-  approve: (id) => api.post(`/agreements/${id}/approve`),
-}
-
-// Reports
-export const reportsApi = {
-  dashboard: () => api.get('/reports/dashboard'),
-  events: (params) => api.get('/reports/events', { params }),
-  financeAllocation: (params) => api.get('/reports/finance-allocation', { params }),
-  auditTrail: (params) => api.get('/reports/audit-trail', { params }),
-  cmeEvents: (params) => api.get('/reports/cme-events', { params }),
-  divisionWise: (params) => api.get('/reports/division-wise', { params }),
-  hcpHonorarium: (params) => api.get('/reports/hcp-honorarium', { params }),
-  stateWise: (params) => api.get('/reports/state-wise', { params }),
-  eventTypeWise: (params) => api.get('/reports/event-type-wise', { params }),
-}
 
 // Access Management
 export const accessApi = {
   listDivisions: () => api.get('/access/divisions'),
   listMyDivisions: () => api.get('/access/divisions/my'),
   createDivision: (name, code) => api.post('/access/divisions', null, { params: { name, code } }),
-  listCostCenters: (division_id) => api.get('/access/cost-centers', { params: { division_id } }),
-  createCostCenter: (data) => api.post('/access/cost-centers', null, { params: data }),
-  listFunctions: () => api.get('/access/functions'),
   // Hierarchy
   myChain: () => api.get('/access/hierarchy/my-chain'),
   myTeam: () => api.get('/access/hierarchy/team'),
@@ -122,14 +80,7 @@ export const accessApi = {
   subordinatesByRole: (role) => api.get('/access/hierarchy/subordinates-by-role', { params: { role } }),
 }
 
-// Promotional
-export const promotionalApi = {
-  list: (params) => api.get('/promotional/', { params }),
-  create: (data) => api.post('/promotional/', data),
-  get: (id) => api.get(`/promotional/${id}`),
-  update: (id, data) => api.put(`/promotional/${id}`, data),
-  approve: (id, remarks) => api.post(`/promotional/${id}/approve`, null, { params: { remarks } }),
-}
+
 
 // Master Data
 export const masterApi = {
@@ -188,6 +139,15 @@ export const masterApi = {
   sponsorshipTypes: () => api.get('/master/sponsorship-types'),
   createSponsorshipType: (data) => api.post('/master/sponsorship-types', null, { params: data }),
   updateSponsorshipType: (id, data) => api.put(`/master/sponsorship-types/${id}`, null, { params: data }),
+  // Entities
+  entities: () => api.get('/master/entities'),
+  createEntity: (data) => api.post('/master/entities', null, { params: data }),
+  updateEntity: (id, data) => api.put(`/master/entities/${id}`, null, { params: data }),
+  deleteEntity: (id) => api.delete(`/master/entities/${id}`),
+  // Divisions CRUD
+  createDivision: (data) => api.post('/master/divisions', null, { params: data }),
+  updateDivision: (id, data) => api.put(`/master/divisions/${id}`, null, { params: data }),
+  deleteDivision: (id) => api.delete(`/master/divisions/${id}`),
 }
 
 // BRS Module

@@ -8,8 +8,10 @@ import BrandsTab from './components/BrandsTab'
 import DocumentTypesTab from './components/DocumentTypesTab'
 import TherapeuticsTab from './components/TherapeuticsTab'
 import MealsTab from './components/MealsTab'
+import DivisionsTab from './components/DivisionsTab'
+import EntitiesTab from './components/EntitiesTab'
 
-const TABS = ['FMV Parameters', 'Doctors (MCL)', 'Therapeutics', 'Brands', 'Meals', 'Document Types']
+const TABS = ['FMV Parameters', 'Doctors (MCL)', 'Therapeutics', 'Brands', 'Meals', 'Document Types', 'Divisions', 'Entities']
 
 export default function Masters() {
   const [activeTab, setActiveTab] = useState(0)
@@ -38,6 +40,8 @@ export default function Masters() {
       {activeTab === 3 && <BrandsTab />}
       {activeTab === 4 && <MealsTab />}
       {activeTab === 5 && <DocumentTypesTab />}
+      {activeTab === 6 && <DivisionsTab />}
+      {activeTab === 7 && <EntitiesTab />}
     </div>
   )
 }

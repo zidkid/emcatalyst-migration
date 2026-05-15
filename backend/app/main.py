@@ -9,7 +9,7 @@ import os
 import logging
 
 from app.core.config import settings
-from app.api.routers import auth, events, vendors, approvals, agreements, reports, access, promotional, master, brs, import_mcl
+from app.api.routers import auth, events, access, master, brs, import_mcl
 from app.api.routers import rbac as rbac_router
 from app.api.routers import workflows as workflow_router
 from app.api.routers import brs_bulk
@@ -87,12 +87,7 @@ async def no_cache_for_api(request: Request, call_next):
 PREFIX = "/api"
 app.include_router(auth.router, prefix=PREFIX)
 app.include_router(events.router, prefix=PREFIX)
-app.include_router(vendors.router, prefix=PREFIX)
-app.include_router(approvals.router, prefix=PREFIX)
-app.include_router(agreements.router, prefix=PREFIX)
-app.include_router(reports.router, prefix=PREFIX)
 app.include_router(access.router, prefix=PREFIX)
-app.include_router(promotional.router, prefix=PREFIX)
 app.include_router(master.router, prefix=PREFIX)
 app.include_router(brs.router, prefix=PREFIX)
 app.include_router(import_mcl.router, prefix=PREFIX)

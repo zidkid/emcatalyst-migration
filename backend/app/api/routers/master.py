@@ -11,7 +11,7 @@ from app.models.master import (
     MasterTherapeutic, MasterState,
     MasterBrand, MasterMeal, MasterCity, MasterSponsorshipType
 )
-from app.models.user import Division
+from app.models.user import Division, Entity
 from app.api.deps import get_current_active_user
 from app.models.user import User
 
@@ -105,6 +105,8 @@ class DivisionOut(BaseModel):
     costcenter: Optional[str] = None
     profitcenter: Optional[str] = None
     eventcodeprefix: Optional[str] = None
+    entity_id: Optional[int] = None
+    entity_name: Optional[str] = None
     is_active: bool = True
 
     class Config:
@@ -194,7 +196,189 @@ def list_divisions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    return db.query(Division).filter(Division.is_active == True).order_by(Division.name).all()
+    divisions = db.query(Division).filter(Division.is_active == True).order_by(Division.name).all()
+    result = []
+    for d in divisions:
+        item = {
+            "id": d.id, "mendix_id": d.mendix_id, "name": d.name, "code": d.code,
+            "cluster": d.cluster, "costcenter": d.costcenter, "profitcenter": d.profitcenter,
+            "eventcodeprefix": d.eventcodeprefix, "entity_id": d.entity_id,
+            "entity_name": d.entity.name if d.entity else None, "is_active": d.is_active,
+        }
+        result.append(item)
+    return result
+
+
+@router.post("/divisions")
+def create_division(
+    name: str,
+    code: Optional[str] = None,
+    cluster: Optional[str] = None,
+    costcenter: Optional[str] = None,
+    profitcenter: Optional[str] = None,
+    eventcodeprefix: Optional[str] = None,
+    entity_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    # Auto-generate prefix from first 3 uppercase chars of name if not provided
+    if not eventcodeprefix and name:
+        eventcodeprefix = name[:3].upper()
+    # Validate prefix: max 3 chars, uppercase only
+    if eventcodeprefix:
+        eventcodeprefix = eventcodeprefix[:3].upper()
+    # Check unique name
+    existing = db.query(Division).filter(Division.name == name).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Division with this name already exists")
+    div = Division(
+        name=name, code=code, cluster=cluster, costcenter=costcenter,
+        profitcenter=profitcenter, eventcodeprefix=eventcodeprefix, entity_id=entity_id,
+    )
+    db.add(div)
+    db.commit()
+    db.refresh(div)
+    return {"id": div.id, "name": div.name, "code": div.code, "eventcodeprefix": div.eventcodeprefix}
+
+
+@router.put("/divisions/{division_id}")
+def update_division(
+    division_id: int,
+    name: Optional[str] = None,
+    code: Optional[str] = None,
+    cluster: Optional[str] = None,
+    costcenter: Optional[str] = None,
+    profitcenter: Optional[str] = None,
+    eventcodeprefix: Optional[str] = None,
+    entity_id: Optional[int] = None,
+    is_active: Optional[bool] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    div = db.query(Division).filter(Division.id == division_id).first()
+    if not div:
+        raise HTTPException(status_code=404, detail="Division not found")
+    if name is not None:
+        div.name = name
+    if code is not None:
+        div.code = code
+    if cluster is not None:
+        div.cluster = cluster
+    if costcenter is not None:
+        div.costcenter = costcenter
+    if profitcenter is not None:
+        div.profitcenter = profitcenter
+    if eventcodeprefix is not None:
+        # Validate: max 3 chars, uppercase only
+        eventcodeprefix = eventcodeprefix[:3].upper()
+        div.eventcodeprefix = eventcodeprefix
+    if entity_id is not None:
+        div.entity_id = entity_id if entity_id != 0 else None
+    if is_active is not None:
+        div.is_active = is_active
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/divisions/{division_id}")
+def delete_division(
+    division_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    div = db.query(Division).filter(Division.id == division_id).first()
+    if not div:
+        raise HTTPException(status_code=404, detail="Division not found")
+    # Check if any users are linked
+    from app.models.user import User as UserModel
+    user_count = db.query(UserModel).filter(UserModel.division_id == division_id).count()
+    if user_count > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete: {user_count} users are assigned to this division")
+    db.delete(div)
+    db.commit()
+    return {"ok": True}
+
+
+# --- Entities ---
+
+class EntityOut(BaseModel):
+    id: int
+    entity_code: str
+    name: str
+    is_active: bool = True
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/entities", response_model=List[EntityOut])
+def list_entities(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    return db.query(Entity).filter(Entity.is_active == True).order_by(Entity.name).all()
+
+
+@router.post("/entities")
+def create_entity(
+    entity_code: str,
+    name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    # Validate entity_code unique
+    existing = db.query(Entity).filter(Entity.entity_code == entity_code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Entity with this code already exists")
+    e = Entity(entity_code=entity_code, name=name)
+    db.add(e)
+    db.commit()
+    db.refresh(e)
+    return {"id": e.id, "entity_code": e.entity_code, "name": e.name}
+
+
+@router.put("/entities/{entity_id}")
+def update_entity(
+    entity_id: int,
+    entity_code: Optional[str] = None,
+    name: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    e = db.query(Entity).filter(Entity.id == entity_id).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="Entity not found")
+    if entity_code is not None:
+        # Check uniqueness
+        dup = db.query(Entity).filter(Entity.entity_code == entity_code, Entity.id != entity_id).first()
+        if dup:
+            raise HTTPException(status_code=400, detail="Entity code already in use")
+        e.entity_code = entity_code
+    if name is not None:
+        e.name = name
+    if is_active is not None:
+        e.is_active = is_active
+    db.commit()
+    return {"ok": True}
+
+
+@router.delete("/entities/{entity_id}")
+def delete_entity(
+    entity_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    e = db.query(Entity).filter(Entity.id == entity_id).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="Entity not found")
+    # Check no divisions linked
+    linked = db.query(Division).filter(Division.entity_id == entity_id).count()
+    if linked > 0:
+        raise HTTPException(status_code=400, detail=f"Cannot delete: {linked} divisions are linked to this entity")
+    db.delete(e)
+    db.commit()
+    return {"ok": True}
 
 
 @router.get("/hcp-doctors")

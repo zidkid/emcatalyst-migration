@@ -1,8 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import {
-  LayoutDashboard, CalendarDays, FileText, Users, Building2,
-  BarChart3, Megaphone, Shield, LogOut, Database, ClipboardList,
+  LayoutDashboard, CalendarDays, Users,
+  LogOut, Database, ClipboardList,
   GitBranch, Settings, Workflow, KeyRound
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -21,9 +21,6 @@ const navGroups = [
     label: 'Operations',
     items: [
       { label: 'Events', path: '/events', icon: CalendarDays, pageKey: 'events_list' },
-      { label: 'Approvals', path: '/approvals', icon: FileText, pageKey: 'approvals_list' },
-      { label: 'Vendors', path: '/vendors', icon: Building2, pageKey: 'vendors_list' },
-      { label: 'Promotional', path: '/promotional', icon: Megaphone, pageKey: 'promotional_list' },
       { label: 'BRS', path: '/brs', icon: ClipboardList, pageKey: 'brs_list' },
     ]
   },
@@ -31,13 +28,11 @@ const navGroups = [
     label: 'Data',
     items: [
       { label: 'Masters', path: '/masters', icon: Database, pageKey: 'masters' },
-      { label: 'Reports', path: '/reports', icon: BarChart3, pageKey: 'reports' },
     ]
   },
   {
     label: 'Admin',
     items: [
-      { label: 'Access Mgmt', path: '/access', icon: Shield, pageKey: 'access_management' },
       { label: 'Users', path: '/users', icon: Users, pageKey: 'users' },
       { label: 'Hierarchy', path: '/hierarchy', icon: GitBranch, pageKey: 'hierarchy' },
       { label: 'RBAC Config', path: '/admin/rbac', icon: Settings, pageKey: 'admin_rbac' },

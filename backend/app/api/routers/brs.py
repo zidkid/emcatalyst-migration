@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import secrets
 import string
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.db.base import get_db
 from app.api.deps import get_current_user
@@ -17,6 +19,7 @@ from app.models.master import HcpDoctor
 from app.core.security import get_password_hash
 
 router = APIRouter(prefix="/brs", tags=["BRS"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 # ─────────────────────────────────────────────
@@ -28,6 +31,7 @@ def _generate_brs_code(db: Session) -> str:
     prefix = f"BRS{date.today().strftime('%Y%m')}"
     last = (db.query(BrsApplication)
             .filter(BrsApplication.brs_code.like(f"{prefix}%"))
+            .with_for_update()
             .order_by(desc(BrsApplication.brs_code))
             .first())
     seq = 1
@@ -180,7 +184,7 @@ def update_survey(
     if agreement_template is not None: s.agreement_template = agreement_template
     if requires_agreement_download is not None: s.requires_agreement_download = requires_agreement_download
     if is_active is not None: s.is_active = is_active
-    s.updated_at = datetime.utcnow()
+    s.updated_at = datetime.now(timezone.utc)
     db.commit()
     return {"ok": True}
 
@@ -362,7 +366,7 @@ def list_applications(
 
 @router.post("/")
 def create_application(
-    data: dict,
+    data: dict = Body(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -518,7 +522,7 @@ def can_approve_application(app_id: int, db: Session = Depends(get_db), current_
 # ─────────────────────────────────────────────
 
 @router.post("/{app_id}/doctors")
-def add_doctor(app_id: int, data: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def add_doctor(app_id: int, data: dict = Body(...), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Marketing Head adds a doctor to BRS"""
     app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
     if not app:
@@ -544,7 +548,7 @@ def add_doctor(app_id: int, data: dict, db: Session = Depends(get_db), current_u
 
 
 @router.put("/{app_id}/doctors/{doctor_id}")
-def update_doctor(app_id: int, doctor_id: int, data: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def update_doctor(app_id: int, doctor_id: int, data: dict = Body(...), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     doc = db.query(BrsDoctor).filter(BrsDoctor.id == doctor_id, BrsDoctor.brs_application_id == app_id).first()
     if not doc:
         raise HTTPException(404, "Doctor not found")
@@ -593,7 +597,7 @@ def submit_application(app_id: int, db: Session = Depends(get_db), current_user:
 
 
 @router.post("/{app_id}/approve")
-def approve_application(app_id: int, remarks: str = "", db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def approve_application(app_id: int, remarks: str = "", background_tasks: BackgroundTasks = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Approve BRS — uses dynamic workflow to check authorization"""
     from app.services.workflow_service import get_step_for_status, can_user_approve_step
 
@@ -618,7 +622,7 @@ def approve_application(app_id: int, remarks: str = "", db: Session = Depends(ge
     old = app.status
     app.status = next_status
     app.approved_by_id = current_user.id
-    app.approved_at = datetime.utcnow()
+    app.approved_at = datetime.now(timezone.utc)
     _add_audit(db, app.id, "Approved", old, next_status, current_user.id, remarks)
 
     # Generate login credentials for each doctor
@@ -652,8 +656,12 @@ def approve_application(app_id: int, remarks: str = "", db: Session = Depends(ge
     if tm_employee_id:
         tm_user = db.query(User).filter(User.employee_id == tm_employee_id).first()
 
-    if tm_user and tm_user.email:
-        send_brs_credentials_to_territory_manager(
+    db.commit()
+
+    # Send email in background (after commit) so it doesn't block the response
+    if tm_user and tm_user.email and background_tasks:
+        background_tasks.add_task(
+            send_brs_credentials_to_territory_manager,
             tm_email=tm_user.email,
             tm_name=f"{tm_user.first_name or ''} {tm_user.last_name or ''}".strip(),
             brs_code=app.brs_code,
@@ -663,7 +671,6 @@ def approve_application(app_id: int, remarks: str = "", db: Session = Depends(ge
             portal_url=portal_url,
         )
 
-    db.commit()
     return {"status": app.status, "message": "Approved. Doctor credentials generated and sent to Territory Manager."}
 
 
@@ -700,9 +707,12 @@ def reject_application(app_id: int, reason: str = "", db: Session = Depends(get_
 # ─────────────────────────────────────────────
 
 @router.post("/doctor-login")
-def doctor_login(login_id: str, password: str, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def doctor_login(request: Request, data: dict, db: Session = Depends(get_db)):
     """Doctor logs in with credentials received via email"""
     from app.core.security import verify_password
+    login_id = data.get("login_id", "")
+    password = data.get("password", "")
     doc = db.query(BrsDoctor).filter(BrsDoctor.login_id == login_id).first()
     if not doc or not doc.login_password:
         raise HTTPException(401, "Invalid credentials")
@@ -746,7 +756,7 @@ def doctor_portal_get(token: str, db: Session = Depends(get_db)):
 
 
 @router.post("/doctor-portal/{token}/update-details")
-def doctor_update_details(token: str, data: dict, db: Session = Depends(get_db)):
+def doctor_update_details(token: str, data: dict = Body(...), db: Session = Depends(get_db)):
     """Doctor updates their personal details"""
     doc = db.query(BrsDoctor).filter(BrsDoctor.login_token == token).first()
     if not doc:
@@ -754,7 +764,7 @@ def doctor_update_details(token: str, data: dict, db: Session = Depends(get_db))
     for field in ["name_as_per_pan", "pan_number", "email", "mobile", "speciality"]:
         if field in data:
             setattr(doc, field, data[field])
-    doc.details_updated_at = datetime.utcnow()
+    doc.details_updated_at = datetime.now(timezone.utc)
     doc.doctor_status = "Details Updated"
     db.commit()
     return {"ok": True}
@@ -766,7 +776,7 @@ def doctor_sign_agreement(token: str, signature: str = "", db: Session = Depends
     doc = db.query(BrsDoctor).filter(BrsDoctor.login_token == token).first()
     if not doc:
         raise HTTPException(404, "Invalid token")
-    doc.agreement_signed_at = datetime.utcnow()
+    doc.agreement_signed_at = datetime.now(timezone.utc)
     doc.agreement_signature = signature
     doc.doctor_status = "Agreement Signed"
     db.commit()
@@ -774,7 +784,7 @@ def doctor_sign_agreement(token: str, signature: str = "", db: Session = Depends
 
 
 @router.post("/doctor-portal/{token}/submit-survey")
-def doctor_submit_survey(token: str, data: dict, db: Session = Depends(get_db)):
+def doctor_submit_survey(token: str, data: dict = Body(...), db: Session = Depends(get_db)):
     """Doctor submits the survey — must have signed agreement first"""
     doc = db.query(BrsDoctor).filter(BrsDoctor.login_token == token).first()
     if not doc:
@@ -782,8 +792,14 @@ def doctor_submit_survey(token: str, data: dict, db: Session = Depends(get_db)):
     if not doc.agreement_signed_at:
         raise HTTPException(400, "Agreement must be signed before submitting survey")
 
-    doc.survey_responses = data.get("responses", {})
-    doc.survey_completed_at = datetime.utcnow()
+    responses = data.get("responses", {})
+    # Validate response size (max 100KB serialized)
+    import json
+    if len(json.dumps(responses)) > 100 * 1024:
+        raise HTTPException(400, "Survey responses too large")
+
+    doc.survey_responses = responses
+    doc.survey_completed_at = datetime.now(timezone.utc)
     doc.doctor_status = "Survey Completed"
 
     # Check if all doctors in this BRS have completed
@@ -822,6 +838,12 @@ async def doctor_upload_document(
     if document_type not in valid_doc_types:
         raise HTTPException(400, f"Invalid document type. Must be one of: {valid_doc_types}")
 
+    # Validate file size (max 5MB)
+    MAX_SIZE_BYTES = 5 * 1024 * 1024
+    contents = await file.read()
+    if len(contents) > MAX_SIZE_BYTES:
+        raise HTTPException(400, "File must be under 5MB")
+
     # Save file
     upload_dir = f"uploads/brs/doctors/{doc.id}"
     os.makedirs(upload_dir, exist_ok=True)
@@ -830,7 +852,7 @@ async def doctor_upload_document(
     file_path = os.path.join(upload_dir, filename)
 
     with open(file_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+        f.write(contents)
 
     # Save record
     doc_record = BrsDoctorDocument(
@@ -879,11 +901,19 @@ def doctor_delete_document(token: str, doc_id: int, db: Session = Depends(get_db
 # ─────────────────────────────────────────────
 
 @router.get("/doctors/{doctor_id}/agreement")
-def get_doctor_agreement(doctor_id: int, db: Session = Depends(get_db)):
-    """Get the signed agreement signature for a doctor"""
+def get_doctor_agreement(
+    doctor_id: int,
+    token: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user)
+):
+    """Get the signed agreement signature for a doctor — requires auth or doctor's own token"""
     doc = db.query(BrsDoctor).filter(BrsDoctor.id == doctor_id).first()
     if not doc:
         raise HTTPException(404, "Doctor not found")
+    # Allow either the doctor's own token OR an authenticated internal user
+    if not (token and token == doc.login_token) and not current_user:
+        raise HTTPException(403, "Unauthorized")
     if not doc.agreement_signature:
         raise HTTPException(404, "Agreement not signed yet")
     return {

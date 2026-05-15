@@ -129,7 +129,7 @@ export default function UserManagement() {
               <tbody className="divide-y">
                 {paginated.map(u => (
                   <tr key={u.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2.5 font-mono text-xs text-blue-600">{u.employee_id || '—'}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-[var(--color-primary)]">{u.employee_id || '—'}</td>
                     <td className="px-4 py-2.5 font-medium">
                       {[u.first_name, u.last_name].filter(Boolean).join(' ') || '—'}
                       {u.designation_title && (
@@ -140,7 +140,7 @@ export default function UserManagement() {
                     <td className="px-4 py-2.5 text-gray-500 text-xs">{divisionMap[u.division_id] || '—'}</td>
                     <td className="px-4 py-2.5 text-gray-500 text-xs">{u.manager_name || '—'}</td>
                     <td className="px-4 py-2.5">
-                      <span className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">{u.role}</span>
+                      <span className="text-xs px-2 py-0.5 bg-[var(--color-primary-50)] text-[var(--color-primary)] rounded-full">{u.role}</span>
                     </td>
                     <td className="px-4 py-2.5">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${u.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
@@ -150,7 +150,7 @@ export default function UserManagement() {
                     <td className="px-4 py-2.5">
                       <div className="flex gap-2">
                         <button
-                          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                          className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1"
                           onClick={() => openEditRole(u)}
                         >
                           <Edit2 size={12} /> Edit
@@ -188,7 +188,7 @@ export default function UserManagement() {
                   return (
                     <button
                       key={pg}
-                      className={`py-1 px-2.5 rounded text-xs ${pg === page ? 'bg-blue-600 text-white' : 'btn-secondary'}`}
+                      className={`py-1 px-2.5 rounded text-xs ${pg === page ? 'bg-[var(--color-primary)] text-white' : 'btn-secondary'}`}
                       onClick={() => setPage(pg)}
                     >
                       {pg}

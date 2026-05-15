@@ -36,7 +36,7 @@ export default function PromotionalList() {
             <tbody className="divide-y">
               {events.map(e => (
                 <tr key={e.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/promotional/${e.id}`)}>
-                  <td className="px-4 py-3 font-mono text-xs text-blue-600">{e.event_code}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{e.event_code}</td>
                   <td className="px-4 py-3 font-medium">{e.event_title}</td>
                   <td className="px-4 py-3 text-gray-500">{e.event_type || '—'}</td>
                   <td className="px-4 py-3 text-gray-500">{fmtDate(e.month_and_year)}</td>
@@ -44,7 +44,7 @@ export default function PromotionalList() {
                   <td className="px-4 py-3">{fmtCurrency(e.actual_spend)}</td>
                   <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
                   <td className="px-4 py-3"><span className={e.is_valid ? 'badge-active' : 'badge-rejected'}>{e.is_valid ? 'Valid' : 'Invalid'}</span></td>
-                  <td className="px-4 py-3"><button className="text-blue-600 text-xs hover:underline">View</button></td>
+                  <td className="px-4 py-3"><button className="text-[var(--color-primary)] text-xs hover:underline">View</button></td>
                 </tr>
               ))}
             </tbody>

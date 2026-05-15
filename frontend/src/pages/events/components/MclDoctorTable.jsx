@@ -41,7 +41,7 @@ export default function MclDoctorTable({ doctors, setDoctors, fmvParams }) {
                 <td className="px-2 py-1.5"><select className="input py-0 px-0.5 text-xs w-16" value={d.fmv_position_pts || ''} onChange={e => upd('fmv_position_pts', parseInt(e.target.value) || 0)}><option value="">-</option>{(fmvParams['Professional Position'] || []).map(o => <option key={o.id} value={o.points}>{o.option_code}({o.points})</option>)}</select></td>
                 <td className="px-2 py-1.5"><select className="input py-0 px-0.5 text-xs w-16" value={d.fmv_investigator_pts || ''} onChange={e => upd('fmv_investigator_pts', parseInt(e.target.value) || 0)}><option value="">-</option>{(fmvParams['Investigator Experience'] || []).map(o => <option key={o.id} value={o.points}>{o.option_code}({o.points})</option>)}</select></td>
                 <td className="px-2 py-1.5 font-bold text-center">{pts}</td>
-                <td className="px-2 py-1.5"><span className="px-1 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold">{cat}</span></td>
+                <td className="px-2 py-1.5"><span className="px-1 py-0.5 bg-[var(--color-primary-100)] text-[var(--color-primary)] rounded text-xs font-bold">{cat}</span></td>
                 <td className="px-2 py-1.5 whitespace-nowrap">{rate.toLocaleString('en-IN')}</td>
                 <td className="px-2 py-1.5 whitespace-nowrap font-medium">{cap.toLocaleString('en-IN')}</td>
                 <td className="px-2 py-1.5"><input type="number" className="input py-0 px-1 text-xs w-20" value={d.honorarium || ''} onChange={e => { if (parseFloat(e.target.value) > cap) { toast.error(`Max ₹${cap.toLocaleString('en-IN')}`); return } upd('honorarium', e.target.value) }} /></td>

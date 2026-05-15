@@ -81,7 +81,7 @@ export default function BrsDetail() {
             </button>
           )}
           {canApprove && <>
-            <button className="btn-primary bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1" onClick={() => approve.mutate('')} disabled={approve.isPending}>
+            <button className="btn-primary flex items-center gap-1" onClick={() => approve.mutate('')} disabled={approve.isPending}>
               <CheckCircle size={15} /> {approve.isPending ? 'Approving...' : 'Approve'}
             </button>
             <button className="btn-danger flex items-center gap-1" onClick={() => setRejectModal(true)} disabled={approve.isPending}>
@@ -164,7 +164,7 @@ export default function BrsDetail() {
                     <td className="px-3 py-2">
                       {(d.has_signature || d.survey_responses) && (
                         <button
-                          className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                          className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1"
                           onClick={async () => {
                             let agreementData = null
                             if (d.has_signature) {
@@ -274,7 +274,7 @@ ${docs.length > 0 ? docs.map(doc => {
           <div className="space-y-2">
             {brs.audit_trail.map((entry, i) => (
               <div key={i} className="flex items-start gap-3 text-sm">
-                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${i === 0 ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${i === 0 ? 'bg-[var(--color-primary-50)]0' : 'bg-gray-300'}`} />
                 <div>
                   <span className="font-medium">{entry.action}</span>
                   {entry.to_status && <> → <StatusBadge status={entry.to_status} /></>}

@@ -114,7 +114,7 @@ export default function DocumentTypesTab() {
             <tbody className="divide-y">
               {items.map(item => (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2.5 font-mono text-xs text-blue-600">{item.code || '—'}</td>
+                  <td className="px-4 py-2.5 font-mono text-xs text-[var(--color-primary)]">{item.code || '—'}</td>
                   <td className="px-4 py-2.5 font-medium">
                     {editId === item.id ? (
                       <input className="input py-1 text-sm w-full" value={editForm.name} onChange={e => setEditForm(f => ({...f, name: e.target.value}))} />
@@ -135,7 +135,7 @@ export default function DocumentTypesTab() {
                         <option value="post">Post-Event</option>
                       </select>
                     ) : (
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${item.stage === 'post' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${item.stage === 'post' ? 'bg-purple-50 text-purple-700' : 'bg-[var(--color-primary-50)] text-[var(--color-primary)]'}`}>
                         {item.stage === 'post' ? 'Post-Event' : 'Pre-Event'}
                       </span>
                     )}
@@ -162,7 +162,7 @@ export default function DocumentTypesTab() {
                       </div>
                     ) : (
                       <div className="flex gap-3 justify-end">
-                        <button className="text-xs text-blue-600 hover:underline flex items-center gap-1" onClick={() => startEdit(item)}>
+                        <button className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1" onClick={() => startEdit(item)}>
                           <Edit2 size={12} /> Edit
                         </button>
                         <button className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1" onClick={() => { if (confirm('Delete this document type?')) remove.mutate(item.id) }}>

@@ -136,7 +136,7 @@ export default function EventFormStep1({
         <button type="button" className="btn-secondary text-red-600 border-red-300" onClick={onCancel}>Cancel</button>
         <div className="flex gap-2">
           <button type="button" className="btn-secondary flex items-center gap-1" disabled={saving} onClick={handleSubmit(d => onSave(d, false))}><Save size={14} /> Save Draft</button>
-          <button type="submit" className="btn-primary bg-red-600 hover:bg-red-700" disabled={saving}>Next</button>
+          <button type="submit" className="btn-primary" disabled={saving}>Next</button>
         </div>
       </div>
     </form>

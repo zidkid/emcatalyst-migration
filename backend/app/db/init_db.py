@@ -2,13 +2,16 @@ from sqlalchemy.orm import Session
 from app.db.base import engine, Base
 from app.core.security import get_password_hash
 from app.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_tables():
     # Import all models so they register with Base.metadata
     import app.models  # noqa
     Base.metadata.create_all(bind=engine)
-    print("All tables created.")
+    logger.info("All tables created.")
 
 
 def seed_data(db: Session):
@@ -124,7 +127,7 @@ def seed_data(db: Session):
             db.add(Enumeration(category=cat, code=code, label=label, sort_order=order))
 
     db.commit()
-    print("Seed data loaded.")
+    logger.info("Seed data loaded.")
 
 
 if __name__ == "__main__":

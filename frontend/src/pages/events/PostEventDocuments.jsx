@@ -86,8 +86,8 @@ export default function PostEventDocuments() {
         />
       </div>
 
-      <div className="card mb-6 bg-blue-50 border-blue-200">
-        <p className="text-sm text-blue-800">
+      <div className="card mb-6 bg-[var(--color-primary-50)] border-[var(--color-primary-100)]">
+        <p className="text-sm text-[var(--color-primary-hover)]">
           The event has been pre-approved and the event end date has passed. Please upload the required post-event documents and submit for post-event approval.
         </p>
       </div>
@@ -148,7 +148,7 @@ export default function PostEventDocuments() {
           Cancel
         </button>
         <button
-          className="btn-primary bg-emerald-600 hover:bg-emerald-700"
+          className="btn-primary"
           onClick={handleUploadAll}
           disabled={uploadDoc.isPending || submitPostEvent.isPending}
         >

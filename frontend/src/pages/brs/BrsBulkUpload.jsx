@@ -76,7 +76,7 @@ export default function BrsBulkUpload() {
         </ol>
         <button
           onClick={handleDownloadTemplate}
-          className="mt-4 flex items-center gap-2 text-sm px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          className="btn-primary"
         >
           <Download size={16} /> Download Template
         </button>
@@ -96,13 +96,13 @@ export default function BrsBulkUpload() {
           />
           <label
             htmlFor="bulk-file-input"
-            className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium"
+            className="cursor-pointer text-[var(--color-primary)] hover:text-[var(--color-primary)] font-medium"
           >
             Click to select file
           </label>
           <p className="text-xs text-gray-400 mt-1">Accepts .xlsx or .xls files</p>
           {file && (
-            <div className="mt-3 inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm">
+            <div className="mt-3 inline-flex items-center gap-2 bg-[var(--color-primary-50)] text-[var(--color-primary)] px-3 py-1.5 rounded-lg text-sm">
               <FileSpreadsheet size={14} />
               {file.name}
             </div>
@@ -111,7 +111,7 @@ export default function BrsBulkUpload() {
         <button
           onClick={handleUpload}
           disabled={!file || uploading}
-          className="mt-4 flex items-center gap-2 text-sm px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          className="btn-primary"
         >
           <Upload size={16} />
           {uploading ? 'Uploading & Processing...' : 'Upload & Create BRS'}
@@ -149,7 +149,7 @@ export default function BrsBulkUpload() {
                         <td className="px-3 py-2">
                           <button
                             onClick={() => navigate(`/brs/${brs.id}`)}
-                            className="text-xs text-blue-600 hover:underline"
+                            className="text-xs text-[var(--color-primary)] hover:underline"
                           >
                             View →
                           </button>

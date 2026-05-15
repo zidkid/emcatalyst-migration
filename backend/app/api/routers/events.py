@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 import os, shutil, uuid
 from pydantic import BaseModel
@@ -221,11 +221,11 @@ def approve_l1(
     if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
         raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
 
-    from datetime import datetime
+    from datetime import datetime, timezone
     next_status = step.approved_status if step else EventStatus.PENDING_L2
     event.status = next_status
     event.l1_approver_id = current_user.id
-    event.l1_approved_at = datetime.utcnow()
+    event.l1_approved_at = datetime.now(timezone.utc)
     if remarks:
         event.compliance_remarks = remarks
     _add_event_audit(db, event.id, "L1 Approved", EventStatus.PENDING_L1, next_status, current_user.id, remarks or "")
@@ -253,11 +253,11 @@ def approve_l2(
     if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
         raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
 
-    from datetime import datetime
+    from datetime import datetime, timezone
     next_status = step.approved_status if step else EventStatus.PENDING_COMPLIANCE
     event.status = next_status
     event.l2_approver_id = current_user.id
-    event.l2_approved_at = datetime.utcnow()
+    event.l2_approved_at = datetime.now(timezone.utc)
     if remarks:
         event.compliance_remarks = remarks
     _add_event_audit(db, event.id, "L2 Approved", EventStatus.PENDING_L2, next_status, current_user.id, remarks or "")
@@ -285,10 +285,10 @@ def approve_compliance(
     if step and not can_user_approve_step(db, current_user, step, event.initiator_id):
         raise HTTPException(status_code=403, detail="You are not authorized to approve this step")
 
-    from datetime import datetime
+    from datetime import datetime, timezone
     next_status = step.approved_status if step else EventStatus.PRE_APPROVED
     event.status = next_status
-    event.compliance_approved_at = datetime.utcnow()
+    event.compliance_approved_at = datetime.now(timezone.utc)
     if remarks:
         event.compliance_remarks = remarks
     _add_event_audit(db, event.id, "Compliance Approved", EventStatus.PENDING_COMPLIANCE, next_status, current_user.id, remarks or "")
@@ -635,12 +635,19 @@ async def upload_document(
 ):
     if not db.query(Event).filter(Event.id == event_id).first():
         raise HTTPException(status_code=404, detail="Event not found")
+
+    # Validate file size (max 10MB)
+    MAX_SIZE_BYTES = 10 * 1024 * 1024
+    contents = await file.read()
+    if len(contents) > MAX_SIZE_BYTES:
+        raise HTTPException(status_code=400, detail="File must be under 10MB")
+
     file_ext = os.path.splitext(file.filename)[1]
     file_name = f"{uuid.uuid4()}{file_ext}"
     file_path = os.path.join(UPLOAD_DIR, str(event_id), file_name)
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
+        f.write(contents)
     doc = EventDocument(
         event_id=event_id,
         document_type=document_type,

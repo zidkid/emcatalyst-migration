@@ -87,7 +87,7 @@ export default function BrsList() {
             <tbody className="divide-y">
               {filtered.map(item => (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs text-blue-600">{item.brs_code}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{item.brs_code}</td>
                   <td className="px-4 py-3 font-medium">{item.title || '—'}</td>
                   <td className="px-4 py-3 text-xs text-gray-500">{item.survey_title || '—'}</td>
                   <td className="px-4 py-3 text-xs">{item.doctor_count || 0}</td>
@@ -96,7 +96,7 @@ export default function BrsList() {
                   <td className="px-4 py-3 text-xs text-gray-500">{fmtDate(item.created_at)}</td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <button className="text-blue-600 hover:underline text-xs" onClick={() => navigate(`/brs/${item.id}`)}>View</button>
+                      <button className="text-[var(--color-primary)] hover:underline text-xs" onClick={() => navigate(`/brs/${item.id}`)}>View</button>
                       {isAdmin && (
                         <button className="text-red-500 hover:text-red-700 text-xs" onClick={async () => {
                           if (!confirm(`Delete BRS ${item.brs_code}?`)) return

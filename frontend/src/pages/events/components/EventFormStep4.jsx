@@ -50,7 +50,7 @@ export default function EventFormStep4({
       )}
 
       {/* Summary */}
-      <div className="bg-blue-50 rounded-lg p-4 text-sm text-blue-800 space-y-1">
+      <div className="bg-[var(--color-primary-50)] rounded-lg p-4 text-sm text-[var(--color-primary-hover)] space-y-1">
         <p className="font-medium">Event Summary</p>
         <p>Type: {eventType || '—'} • {doctors.length} HCP(s) • {Object.keys(preDocUploads).length} doc(s) attached</p>
       </div>
@@ -65,7 +65,7 @@ export default function EventFormStep4({
           <button className="btn-secondary flex items-center gap-1" disabled={saving} onClick={onSaveDraft}>
             <Save size={14} /> Save Draft
           </button>
-          <button className="btn-primary bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1" disabled={saving} onClick={onSubmit}>
+          <button className="btn-primary flex items-center gap-1" disabled={saving} onClick={onSubmit}>
             {saving ? 'Submitting…' : '✓ Submit for Approval'}
           </button>
         </div>

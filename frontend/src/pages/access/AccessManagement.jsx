@@ -37,7 +37,7 @@ export default function AccessManagement() {
 
       <div className="flex gap-1 border-b mb-6">
         {[['divisions','Divisions'],['cost-centers','Cost Centers'],['functions','Functions']].map(([key, label]) => (
-          <button key={key} onClick={() => setActiveTab(key)} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === key ? 'border-emcure-blue text-emcure-blue' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>{label}</button>
+          <button key={key} onClick={() => setActiveTab(key)} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === key ? 'border-emcure-blue text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>{label}</button>
         ))}
       </div>
 
@@ -53,7 +53,7 @@ export default function AccessManagement() {
                 <tbody className="divide-y">{divisions.map(d => (
                   <tr key={d.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-gray-400">{d.id}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-blue-600">{d.code}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{d.code}</td>
                     <td className="px-4 py-3 font-medium">{d.name}</td>
                     <td className="px-4 py-3"><span className={d.is_active ? 'badge-active' : 'badge-rejected'}>{d.is_active ? 'Active' : 'Inactive'}</span></td>
                   </tr>
@@ -75,7 +75,7 @@ export default function AccessManagement() {
                 <thead className="bg-gray-50 border-b"><tr>{['CC ID','Name','Division','Status'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>)}</tr></thead>
                 <tbody className="divide-y">{costCenters.map(c => (
                   <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-blue-600">{c.cost_center_id}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{c.cost_center_id}</td>
                     <td className="px-4 py-3 font-medium">{c.name}</td>
                     <td className="px-4 py-3 text-gray-500">{c.division_id || '—'}</td>
                     <td className="px-4 py-3"><span className={c.is_active ? 'badge-active' : 'badge-rejected'}>{c.is_active ? 'Active' : 'Inactive'}</span></td>

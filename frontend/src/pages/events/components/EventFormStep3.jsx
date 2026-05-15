@@ -105,7 +105,7 @@ export default function EventFormStep3({
               <label className="label">Meal Cost</label>
               <input type="number" className="input" value={mealCost} onChange={e => setMealCost(e.target.value)} placeholder="0" />
             </div>
-            <button type="button" className="btn-primary bg-red-600 hover:bg-red-700 h-10" onClick={addMeal}>Add</button>
+            <button type="button" className="btn-primary h-10" onClick={addMeal}>Add</button>
           </div>
 
           {eventMeals.length > 0 && (
@@ -153,7 +153,7 @@ export default function EventFormStep3({
       <div className="card space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="font-bold">MCL HCP Doctor Details</h3>
-          <button type="button" className="btn-primary bg-red-600 hover:bg-red-700 flex items-center gap-1 text-sm" onClick={() => setDoctorSearchOpen(true)}><Plus size={14} /> Add Doctor</button>
+          <button type="button" className="btn-primary flex items-center gap-1 text-sm" onClick={() => setDoctorSearchOpen(true)}><Plus size={14} /> Add Doctor</button>
         </div>
         <p className="text-xs text-gray-500">Selection Procedure For MCL HCP</p>
         <MclDoctorTable doctors={doctors} setDoctors={setDoctors} fmvParams={fmvParams} />
@@ -166,7 +166,7 @@ export default function EventFormStep3({
         <button type="button" className="btn-secondary text-red-600 border-red-300" onClick={onBack}>Previous</button>
         <div className="flex gap-2">
           <button type="button" className="btn-secondary flex items-center gap-1" disabled={saving} onClick={() => onSave(getValues(), false)}><Save size={14} /> Save</button>
-          <button type="button" className="btn-primary bg-red-600 hover:bg-red-700" onClick={() => onSave(getValues(), true)}>Next</button>
+          <button type="button" className="btn-primary" onClick={() => onSave(getValues(), true)}>Next</button>
         </div>
       </div>
 

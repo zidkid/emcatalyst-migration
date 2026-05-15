@@ -77,7 +77,7 @@ function QuestionCard({ q, surveyId, onRefresh }) {
                 placeholder="Question text…"
               />
               {form.question_type === 'fill_in_blanks' && (
-                <p className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+                <p className="text-xs text-gray-500 bg-[var(--color-primary-50)] p-2 rounded">
                   Use ___ (three underscores) to mark blanks. Example: "I prescribe ___ mg of drug X for ___ days"
                 </p>
               )}
@@ -141,7 +141,7 @@ function QuestionCard({ q, surveyId, onRefresh }) {
         </div>
         {!editing && (
           <div className="flex gap-1 shrink-0">
-            <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600"
+            <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-[var(--color-primary)]"
               onClick={() => setEditing(true)}><Edit3 size={14} /></button>
             <button className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-500"
               onClick={() => { if (confirm('Delete this question?')) deleteMut.mutate() }}>
@@ -300,7 +300,7 @@ function SurveyDoctorManager({ surveyId, mappedDoctors, onRefresh }) {
               const isSelected = selected.find(d => d.id === doc.id)
               return (
                 <tr key={doc.id}
-                  className={`${alreadyMapped ? 'bg-green-50' : 'hover:bg-blue-50 cursor-pointer'}`}
+                  className={`${alreadyMapped ? 'bg-green-50' : 'hover:bg-[var(--color-primary-50)] cursor-pointer'}`}
                   onClick={() => !alreadyMapped && toggleSelect(doc)}
                 >
                   <td className="px-2 py-1.5 text-center">
@@ -309,7 +309,7 @@ function SurveyDoctorManager({ surveyId, mappedDoctors, onRefresh }) {
                       : <input type="checkbox" checked={!!isSelected} readOnly className="pointer-events-none" />
                     }
                   </td>
-                  <td className="px-2 py-1.5 font-mono text-blue-600">{doc.uid_number || '—'}</td>
+                  <td className="px-2 py-1.5 font-mono text-[var(--color-primary)]">{doc.uid_number || '—'}</td>
                   <td className="px-2 py-1.5 font-medium">{doc.full_name || `${doc.first_name || ''} ${doc.last_name || ''}`.trim()}</td>
                   <td className="px-2 py-1.5 text-gray-500">{doc.speciality || doc.qualification || '—'}</td>
                   <td className="px-2 py-1.5 text-gray-500">{doc.city || '—'}</td>
@@ -354,7 +354,7 @@ function SurveyDoctorManager({ surveyId, mappedDoctors, onRefresh }) {
               <tbody className="divide-y">
                 {mappedDoctors.map(d => (
                   <tr key={d.hcp_doctor_id}>
-                    <td className="px-3 py-1.5 font-mono text-blue-600">{d.uid_number}</td>
+                    <td className="px-3 py-1.5 font-mono text-[var(--color-primary)]">{d.uid_number}</td>
                     <td className="px-3 py-1.5 font-medium">{d.full_name}</td>
                     <td className="px-3 py-1.5 text-gray-500">{d.speciality || '—'}</td>
                     <td className="px-3 py-1.5 text-gray-500">{d.city || '—'}</td>
@@ -540,7 +540,7 @@ function SurveyEditor({ surveyId, onBack }) {
               </div>
             )}
             {newQ.question_type === 'fill_in_blanks' && (
-              <p className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+              <p className="text-xs text-gray-500 bg-[var(--color-primary-50)] p-2 rounded">
                 Use ___ (three underscores) to mark blanks. Example: "I prescribe ___ mg of drug X for ___ days"
               </p>
             )}
@@ -554,7 +554,7 @@ function SurveyEditor({ surveyId, onBack }) {
           </div>
         </div>
       ) : (
-        <button className="w-full border-2 border-dashed border-gray-300 rounded-lg py-4 text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 flex items-center justify-center gap-2 transition-colors"
+        <button className="w-full border-2 border-dashed border-gray-300 rounded-lg py-4 text-sm text-gray-500 hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] flex items-center justify-center gap-2 transition-colors"
           onClick={() => setAddingQuestion(true)}>
           <Plus size={16} /> Add Question
         </button>
@@ -673,8 +673,8 @@ export default function SurveyBuilder() {
 
       {isLoading ? <LoadingSpinner /> : surveys.length === 0 ? (
         <div className="card p-12 text-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FileText size={28} className="text-blue-400" />
+          <div className="w-16 h-16 bg-[var(--color-primary-50)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileText size={28} className="text-[var(--color-neutral-500)]" />
           </div>
           <h3 className="font-semibold text-gray-700 mb-2">No Survey Templates Yet</h3>
           <p className="text-sm text-gray-500 mb-6 max-w-xs mx-auto">

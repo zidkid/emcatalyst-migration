@@ -1,0 +1,10 @@
+.env
+.env.*
+scripts/db_backup.sql
+__pycache__/
+*.pyc
+venv/
+.venv/
+uploads/
+.git/
+*.md

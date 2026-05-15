@@ -100,7 +100,7 @@ export default function EventDetail() {
         <div className="flex items-center gap-3">
           {isDraft && isInitiator && <button className="btn-secondary flex items-center gap-1" onClick={() => navigate(`/events/${id}/edit`)}><Edit2 size={14} /> Edit</button>}
           {canApprove && <>
-            <button className="btn-primary bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1" onClick={() => approve.mutate('')}><CheckCircle size={15} /> Approve</button>
+            <button className="btn-primary flex items-center gap-1" onClick={() => approve.mutate('')}><CheckCircle size={15} /> Approve</button>
             <button className="btn-danger flex items-center gap-1" onClick={() => setRejectModal(true)}><XCircle size={15} /> Reject</button>
           </>}
           <StatusBadge status={event.status} />
@@ -117,7 +117,7 @@ export default function EventDetail() {
           </div>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
-          <div className={`h-3 rounded-full transition-all ${progress >= 100 ? 'bg-emerald-500' : progress > 50 ? 'bg-blue-500' : 'bg-amber-500'}`} style={{ width: `${progress}%` }} />
+          <div className={`h-3 rounded-full transition-all ${progress >= 100 ? 'bg-emerald-500' : progress > 50 ? 'bg-[var(--color-primary-50)]0' : 'bg-amber-500'}`} style={{ width: `${progress}%` }} />
         </div>
         <div className="flex justify-between mt-1">
           <span className="text-xs text-gray-400">Draft</span>
@@ -133,7 +133,7 @@ export default function EventDetail() {
               <div className="space-y-2">
                 {event.audit_trail.map((entry, i) => (
                   <div key={entry.id || i} className="flex items-start gap-3 text-sm">
-                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${i === 0 ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${i === 0 ? 'bg-[var(--color-primary-50)]0' : 'bg-gray-300'}`} />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{entry.action}</span>
@@ -268,7 +268,7 @@ export default function EventDetail() {
                 {event.doctors.map(d => (
                   <tr key={d.id} className="hover:bg-gray-50">
                     <td className="px-2 py-1.5 font-medium whitespace-nowrap">{d.doctor_name}</td>
-                    <td className="px-2 py-1.5"><span className={`text-xs px-1.5 py-0.5 rounded ${d.is_mcl !== false ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{d.is_mcl !== false ? 'MCL' : 'Non-MCL'}</span></td>
+                    <td className="px-2 py-1.5"><span className={`text-xs px-1.5 py-0.5 rounded ${d.is_mcl !== false ? 'bg-[var(--color-primary-100)] text-[var(--color-primary)]' : 'bg-amber-100 text-amber-700'}`}>{d.is_mcl !== false ? 'MCL' : 'Non-MCL'}</span></td>
                     <td className="px-2 py-1.5 font-mono">{d.pan_number || '—'}</td>
                     <td className="px-2 py-1.5">{d.email || '—'}</td>
                     <td className="px-2 py-1.5"><span className="font-bold">{d.fmv_category || '—'}</span></td>

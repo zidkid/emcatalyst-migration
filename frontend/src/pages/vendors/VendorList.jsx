@@ -45,7 +45,7 @@ export default function VendorList() {
             <tbody className="divide-y divide-gray-50">
               {vendors.map(v => (
                 <tr key={v.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/vendors/${v.id}`)}>
-                  <td className="px-4 py-3 font-mono text-xs text-blue-600">{v.lifnr}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{v.lifnr}</td>
                   <td className="px-4 py-3 font-medium">{v.name1}{v.name2 && <span className="text-gray-400"> / {v.name2}</span>}</td>
                   <td className="px-4 py-3 text-gray-500">{v.ort01}</td>
                   <td className="px-4 py-3 font-mono text-xs">{v.pan_no || v.j_1ipanno || '—'}</td>
@@ -54,7 +54,7 @@ export default function VendorList() {
                   <td className="px-4 py-3">
                     <span className={v.is_active ? 'badge-active' : 'badge-rejected'}>{v.is_active ? 'Active' : 'Inactive'}</span>
                   </td>
-                  <td className="px-4 py-3"><button className="text-blue-600 text-xs hover:underline">View</button></td>
+                  <td className="px-4 py-3"><button className="text-[var(--color-primary)] text-xs hover:underline">View</button></td>
                 </tr>
               ))}
             </tbody>

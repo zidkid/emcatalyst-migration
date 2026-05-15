@@ -40,13 +40,15 @@ export default function DoctorsTab() {
     }).then(r => r.data),
   })
 
-  const doctors = Array.isArray(data) ? data : []
+  const doctors = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []
+  const totalDoctors = data?.total || doctors.length
 
   const createDoctor = useMutation({
     mutationFn: () => {
       const payload = {}
       for (const [k, v] of Object.entries(addForm)) { if (v && k !== 'division_ids') payload[k] = v }
-      if (!payload.full_name) payload.full_name = `${payload.first_name || ''} ${payload.last_name || ''}`.trim()
+      if (!payload.full_name) payload.full_name = `${payload.first_name || ''} ${payload.middle_name || ''} ${payload.last_name || ''}`.trim().replace(/\s+/g, ' ')
+      if (!payload.full_name) payload.full_name = 'Unknown'
       if (addForm.division_ids.length > 0) payload.division_ids = addForm.division_ids.join(',')
       return masterApi.createHcpDoctor(payload)
     },
@@ -127,18 +129,18 @@ export default function DoctorsTab() {
 
       {/* Import Status */}
       {importStatus && importStatus.status === 'processing' && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm font-medium text-blue-800">Importing... {importStatus.processed || 0} / {importStatus.total || '?'} records</p>
+        <div className="mb-4 p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-100)] rounded-lg">
+          <p className="text-sm font-medium text-[var(--color-primary-hover)]">Importing... {importStatus.processed || 0} / {importStatus.total || '?'} records</p>
           <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
-            <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${importStatus.total ? (importStatus.processed / importStatus.total * 100) : 0}%` }} />
+            <div className="bg-[var(--color-primary)] h-2 rounded-full transition-all" style={{ width: `${importStatus.total ? (importStatus.processed / importStatus.total * 100) : 0}%` }} />
           </div>
         </div>
       )}
 
       {/* Add Doctor Form */}
       {showAdd && (
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
-          <p className="text-sm font-medium text-blue-800">Add New MCL Doctor</p>
+        <div className="mb-4 p-4 bg-[var(--color-primary-50)] border border-[var(--color-primary-100)] rounded-lg space-y-3">
+          <p className="text-sm font-medium text-[var(--color-primary-hover)]">Add New MCL Doctor</p>
           <div className="grid grid-cols-4 gap-3">
             <input className="input" placeholder="First Name *" value={addForm.first_name} onChange={e => setAddForm(p => ({...p, first_name: e.target.value}))} />
             <input className="input" placeholder="Middle Name" value={addForm.middle_name} onChange={e => setAddForm(p => ({...p, middle_name: e.target.value}))} />
@@ -196,7 +198,7 @@ export default function DoctorsTab() {
             <tbody className="divide-y">
               {doctors.map(d => (
                 <tr key={d.id} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 font-mono text-xs text-blue-600">{d.uid_number || '—'}</td>
+                  <td className="px-3 py-2 font-mono text-xs text-[var(--color-primary)]">{d.uid_number || '—'}</td>
                   <td className="px-3 py-2 font-medium">{d.full_name || [d.first_name, d.last_name].filter(Boolean).join(' ') || '—'}</td>
                   <td className="px-3 py-2 text-gray-500 text-xs">{d.speciality || d.qualification || '—'}</td>
                   <td className="px-3 py-2 text-gray-500 text-xs">{[d.city, d.state].filter(Boolean).join(', ') || '—'}</td>
@@ -205,7 +207,7 @@ export default function DoctorsTab() {
                   <td className="px-3 py-2 text-gray-500 text-xs">{d.doctor_type || '—'}</td>
                   <td className="px-3 py-2">
                     <div className="flex gap-2">
-                      <button className="text-xs text-blue-600 hover:underline" onClick={() => setSelectedDoc(d)}>
+                      <button className="text-xs text-[var(--color-primary)] hover:underline" onClick={() => setSelectedDoc(d)}>
                         <Edit2 size={12} />
                       </button>
                       <button className="text-xs text-red-500 hover:underline" onClick={(ev) => { ev.stopPropagation(); if (confirm('Delete this doctor?')) deleteDoctor.mutate(d.id) }}>
@@ -217,12 +219,12 @@ export default function DoctorsTab() {
               ))}
             </tbody>
           </table>
-          {doctors.length === PAGE_SIZE && (
+          {totalDoctors > PAGE_SIZE && (
             <div className="flex justify-between items-center px-4 py-3 border-t text-sm text-gray-500">
-              <span>Showing {(page - 1) * PAGE_SIZE + 1}–{(page - 1) * PAGE_SIZE + doctors.length}</span>
+              <span>Showing {(page - 1) * PAGE_SIZE + 1}–{(page - 1) * PAGE_SIZE + doctors.length} of {totalDoctors}</span>
               <div className="flex gap-2">
                 <button className="btn-secondary py-1 px-3 text-xs" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</button>
-                <button className="btn-secondary py-1 px-3 text-xs" onClick={() => setPage(p => p + 1)}>Next</button>
+                <button className="btn-secondary py-1 px-3 text-xs" disabled={(page * PAGE_SIZE) >= totalDoctors} onClick={() => setPage(p => p + 1)}>Next</button>
               </div>
             </div>
           )}

@@ -105,7 +105,7 @@ export default function Reports() {
             key={t}
             onClick={() => setActiveTab(i)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === i ? 'border-emcure-blue text-emcure-blue' : 'border-transparent text-gray-500 hover:text-gray-700'
+              activeTab === i ? 'border-emcure-blue text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >{t}</button>
         ))}
@@ -151,7 +151,7 @@ export default function Reports() {
                 </thead>
                 <tbody className="divide-y">{eventsData.map(e => (
                   <tr key={e.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-blue-600">{e.event_code}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{e.event_code}</td>
                     <td className="px-4 py-3 font-medium max-w-xs truncate">{e.event_title}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{e.event_type || '—'}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{fmtDate(e.event_date)}</td>
@@ -345,7 +345,7 @@ export default function Reports() {
                 </thead>
                 <tbody className="divide-y">{honorariumData.map((r, i) => (
                   <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-3 py-2.5 font-mono text-xs text-blue-600">{r.event_code}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-[var(--color-primary)]">{r.event_code}</td>
                     <td className="px-3 py-2.5 font-medium max-w-xs truncate text-xs">{r.event_title}</td>
                     <td className="px-3 py-2.5 text-gray-500 text-xs">{fmtDate(r.event_date)}</td>
                     <td className="px-3 py-2.5 font-medium text-xs">{r.doctor_name || '—'}</td>

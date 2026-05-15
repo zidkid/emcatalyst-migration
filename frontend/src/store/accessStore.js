@@ -15,15 +15,17 @@ const useAccessStore = create((set, get) => ({
       set({ accessiblePages: res.data.pages || [], loaded: true, loading: false })
     } catch (err) {
       console.error('Failed to fetch access:', err)
-      // On error, don't block the user — allow all pages
-      set({ accessiblePages: [], loaded: true, loading: false, error: true })
+      // On error, deny access — don't open all gates
+      set({ accessiblePages: ['dashboard'], loaded: true, loading: false, error: true })
     }
   },
 
   hasAccess: (pageKey) => {
     const { accessiblePages, loaded, error } = get()
-    // If access hasn't loaded yet or fetch failed, allow access (don't block)
-    if (!loaded || error) return true
+    // If not loaded yet, deny (caller should show loading state)
+    if (!loaded) return false
+    // On error, only allow dashboard
+    if (error) return pageKey === 'dashboard'
     return accessiblePages.includes(pageKey)
   },
 

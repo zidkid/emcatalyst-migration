@@ -8,7 +8,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 /* ── Small card for a single person ── */
 function PersonCard({ person, level = 0, highlight = false }) {
   const colors = [
-    'border-blue-500 bg-blue-50',
+    'border-blue-500 bg-[var(--color-primary-50)]',
     'border-indigo-400 bg-indigo-50',
     'border-purple-400 bg-purple-50',
     'border-pink-400 bg-pink-50',
@@ -52,7 +52,7 @@ function MyChain() {
         <div key={person.id} className="flex items-start gap-2">
           <div className="flex flex-col items-center pt-1">
             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white
-              ${i === 0 ? 'bg-blue-600' : i === 1 ? 'bg-indigo-500' : i === 2 ? 'bg-purple-500' : 'bg-gray-400'}`}>
+              ${i === 0 ? 'bg-[var(--color-primary)]' : i === 1 ? 'bg-[var(--color-info)]' : i === 2 ? 'bg-purple-500' : 'bg-gray-400'}`}>
               {i === 0 ? 'You' : `L${i}`}
             </div>
             {i < chain.length - 1 && <div className="w-0.5 h-4 bg-gray-200 mt-1" />}
@@ -80,7 +80,7 @@ function OrgNode({ node, depth = 0 }) {
         {hasChildren ? (
           <button
             onClick={() => setExpanded(e => !e)}
-            className="mt-2 shrink-0 w-5 h-5 rounded border border-gray-300 flex items-center justify-center hover:bg-blue-50 hover:border-blue-400 transition-colors"
+            className="mt-2 shrink-0 w-5 h-5 rounded border border-gray-300 flex items-center justify-center hover:bg-[var(--color-primary-50)] hover:border-[var(--color-primary)] transition-colors"
           >
             {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
           </button>
@@ -139,7 +139,7 @@ function EmployeeSearch() {
             {results.map(r => (
               <button
                 key={r.id}
-                className="w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm border-b border-gray-50 last:border-0"
+                className="w-full text-left px-4 py-2.5 hover:bg-[var(--color-primary-50)] text-sm border-b border-gray-50 last:border-0"
                 onClick={() => { setSelected(r); setShowResults(false); setQ(r.name) }}
               >
                 <span className="font-medium text-gray-800">{r.name}</span>
@@ -166,7 +166,7 @@ function EmployeeSearch() {
                 <div key={person.id} className="flex items-start gap-2">
                   <div className="flex flex-col items-center pt-1">
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white
-                      ${i === 0 ? 'bg-blue-600' : i === 1 ? 'bg-indigo-500' : i === 2 ? 'bg-purple-500' : 'bg-gray-400'}`}>
+                      ${i === 0 ? 'bg-[var(--color-primary)]' : i === 1 ? 'bg-[var(--color-info)]' : i === 2 ? 'bg-purple-500' : 'bg-gray-400'}`}>
                       {i === 0 ? 'Self' : `L${i}`}
                     </div>
                     {i < chain.length - 1 && <div className="w-0.5 h-4 bg-gray-200 mt-1" />}
@@ -219,7 +219,7 @@ function OrgTree() {
               {searchResults.map(r => (
                 <button
                   key={r.id}
-                  className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm"
+                  className="w-full text-left px-4 py-2 hover:bg-[var(--color-primary-50)] text-sm"
                   onClick={() => { setRootEmpId(r.employee_id); setSearchQ(r.name); setShowSearch(false) }}
                 >
                   <span className="font-medium">{r.name}</span>
@@ -267,33 +267,33 @@ export default function HierarchyView() {
         title="Employee Hierarchy"
         subtitle="View reporting chains, L1/L2 managers, and org chart across 841 employees"
         actions={
-          <div className="flex items-center gap-2 text-sm text-gray-500 bg-blue-50 px-4 py-2 rounded-lg">
-            <Users size={16} className="text-blue-500" />
+          <div className="flex items-center gap-2 text-sm text-gray-500 bg-[var(--color-primary-50)] px-4 py-2 rounded-lg">
+            <Users size={16} className="text-[var(--color-primary)]" />
             <span>758 / 841 employees linked</span>
           </div>
         }
       />
 
       {/* Info banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm">
-        <p className="font-semibold text-blue-800 mb-1">How BRS Approvals Work</p>
-        <div className="flex flex-wrap gap-6 text-blue-700">
+      <div className="bg-[var(--color-primary-50)] border border-[var(--color-primary-100)] rounded-xl p-4 mb-6 text-sm">
+        <p className="font-semibold text-[var(--color-primary-hover)] mb-1">How BRS Approvals Work</p>
+        <div className="flex flex-wrap gap-6 text-[var(--color-primary)]">
           <span className="flex items-center gap-2">
-            <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">You</span>
+            <span className="w-6 h-6 bg-[var(--color-primary)] text-white rounded-full flex items-center justify-center text-xs font-bold">You</span>
             Initiator (KAM / ABM)
           </span>
-          <ChevronRight size={16} className="text-blue-400 self-center" />
+          <ChevronRight size={16} className="text-[var(--color-neutral-500)] self-center" />
           <span className="flex items-center gap-2">
-            <span className="w-6 h-6 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs font-bold">L1</span>
+            <span className="w-6 h-6 bg-[var(--color-info)] text-white rounded-full flex items-center justify-center text-xs font-bold">L1</span>
             Direct Manager (Zonal Mgr)
           </span>
-          <ChevronRight size={16} className="text-blue-400 self-center" />
+          <ChevronRight size={16} className="text-[var(--color-neutral-500)] self-center" />
           <span className="flex items-center gap-2">
             <span className="w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">L2</span>
             Manager's Manager (BDM / Regional Mgr)
           </span>
         </div>
-        <p className="text-blue-600 text-xs mt-2">
+        <p className="text-[var(--color-primary)] text-xs mt-2">
           L1 and L2 approvers are <strong>automatically assigned</strong> when you submit a BRS application.
         </p>
       </div>
@@ -307,7 +307,7 @@ export default function HierarchyView() {
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors
-                ${tab === t.id ? 'bg-white shadow text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
+                ${tab === t.id ? 'bg-white shadow text-[var(--color-primary)]' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <Icon size={15} /> {t.label}
             </button>

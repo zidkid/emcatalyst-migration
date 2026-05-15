@@ -276,15 +276,20 @@ def get_subordinates_by_role(
     if not subordinate_ids:
         return []
 
-    # Filter subordinates who have the specified role assignment
+    # Filter subordinates who have the specified role (check both role_assignments table and user.role column)
+    from sqlalchemy import or_
     users_with_role = (
         db.query(User)
-        .join(UserRoleAssignment, UserRoleAssignment.user_id == User.id)
+        .outerjoin(UserRoleAssignment, UserRoleAssignment.user_id == User.id)
         .filter(
             User.id.in_(subordinate_ids),
-            UserRoleAssignment.role == role,
+            or_(
+                UserRoleAssignment.role == role,
+                User.role == role,
+            ),
             User.is_active == True,
         )
+        .distinct()
         .all()
     )
 

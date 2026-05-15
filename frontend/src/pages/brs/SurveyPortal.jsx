@@ -81,7 +81,7 @@ function SignaturePad({ onSave }) {
       </div>
       <div className="flex gap-2">
         <button className="btn-secondary text-sm" onClick={clear}>Clear</button>
-        <button className="btn-primary bg-emerald-600 hover:bg-emerald-700 text-sm" onClick={save}>✓ Confirm Signature</button>
+        <button className="btn-primary text-sm" onClick={save}>✓ Confirm Signature</button>
       </div>
     </div>
   )
@@ -249,7 +249,7 @@ export default function SurveyPortal() {
           ].map((s, i) => (
             <div key={s.key} className="flex items-center gap-2 flex-1">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step === s.key ? 'bg-blue-600 text-white' :
+                step === s.key ? 'bg-[var(--color-primary)] text-white' :
                 (s.key === 'details' && (step === 'agreement' || step === 'survey')) ||
                 (s.key === 'agreement' && step === 'survey') ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'
               }`}>
@@ -401,7 +401,7 @@ export default function SurveyPortal() {
                           {i > 0 && (
                             <input
                               type="text"
-                              className="inline-block w-32 mx-1 px-2 py-0.5 border-b-2 border-blue-400 bg-blue-50 text-center text-sm focus:outline-none focus:border-blue-600"
+                              className="inline-block w-32 mx-1 px-2 py-0.5 border-b-2 border-[var(--color-primary)] bg-[var(--color-primary-50)] text-center text-sm focus:outline-none focus:border-blue-600"
                               placeholder={`blank ${i}`}
                               onChange={e => {
                                 setResponses(r => {
@@ -422,7 +422,7 @@ export default function SurveyPortal() {
               ))}
             </div>
             <div className="flex justify-end">
-              <button className="btn-primary bg-emerald-600 hover:bg-emerald-700" onClick={() => {
+              <button className="btn-primary" onClick={() => {
                 // Validate required questions
                 const missing = survey.questions?.filter(q => {
                   if (!q.is_required) return false

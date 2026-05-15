@@ -39,17 +39,23 @@ def get_current_active_user(current_user: User = Depends(get_current_user)) -> U
     return current_user
 
 
+def _has_any_role(user: User, allowed_roles: set) -> bool:
+    """Check if user has any of the allowed roles (primary + additional assignments)."""
+    if user.is_superuser:
+        return True
+    if user.role in allowed_roles:
+        return True
+    user_roles = {ra.role for ra in (user.role_assignments or [])}
+    return bool(user_roles.intersection(allowed_roles))
+
+
 def require_admin(current_user: User = Depends(get_current_active_user)) -> User:
-    if current_user.role not in ("Administrator",) and not current_user.is_superuser:
+    if not _has_any_role(current_user, {"Administrator"}):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return current_user
 
 
 def require_finance(current_user: User = Depends(get_current_active_user)) -> User:
-    allowed = {"Administrator", "Finance User"}
-    if current_user.role not in allowed and not current_user.is_superuser:
-        # Also check additional role assignments
-        user_roles = {ra.role for ra in (current_user.role_assignments or [])}
-        if not user_roles.intersection(allowed):
-            raise HTTPException(status_code=403, detail="Finance role required")
+    if not _has_any_role(current_user, {"Administrator", "Finance User"}):
+        raise HTTPException(status_code=403, detail="Finance role required")
     return current_user

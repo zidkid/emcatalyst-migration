@@ -196,7 +196,7 @@ export default function BrsForm() {
           </div>
           <div className="flex justify-between pt-2">
             <button className="btn-secondary" onClick={() => navigate('/brs')}>Cancel</button>
-            <button className="btn-primary bg-red-600 hover:bg-red-700" onClick={() => setStep(1)}>Next <ChevronRight size={16} /></button>
+            <button className="btn-primary" onClick={() => setStep(1)}>Next <ChevronRight size={16} /></button>
           </div>
         </div>
       )}
@@ -250,7 +250,7 @@ export default function BrsForm() {
           </div>
           <div className="flex justify-between pt-2">
             <button className="btn-secondary" onClick={() => setStep(0)}><ChevronLeft size={16} /> Previous</button>
-            <button className="btn-primary bg-red-600 hover:bg-red-700" onClick={createBrs}>Create & Add Doctors <ChevronRight size={16} /></button>
+            <button className="btn-primary" onClick={createBrs}>Create & Add Doctors <ChevronRight size={16} /></button>
           </div>
         </div>
       )}
@@ -299,7 +299,7 @@ export default function BrsForm() {
 
           <div className="flex justify-between">
             <button className="btn-secondary" onClick={() => navigate('/brs')}>Cancel</button>
-            <button className="btn-primary bg-emerald-600 hover:bg-emerald-700" onClick={submitBrs}>
+            <button className="btn-primary" onClick={submitBrs}>
               ✓ Submit for Approval
             </button>
           </div>

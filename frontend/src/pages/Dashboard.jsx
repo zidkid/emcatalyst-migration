@@ -47,14 +47,14 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Events"     value={d.events?.total}     icon={CalendarDays} color="bg-blue-500" />
+        <StatCard label="Total Events"     value={d.events?.total}     icon={CalendarDays} color="bg-[var(--color-primary-50)]0" />
         <StatCard label="Pending Events"   value={d.events?.pending}   icon={Clock}        color="bg-amber-500" />
         <StatCard label="Approved Events"  value={d.events?.approved}  icon={CheckCircle}  color="bg-emerald-500" />
         <StatCard label="Pending Invoices" value={d.invoices?.pending} icon={FileText}     color="bg-purple-500" />
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <StatCard label="Total Invoices"   value={d.invoices?.total}     icon={FileText}   color="bg-indigo-500" />
+        <StatCard label="Total Invoices"   value={d.invoices?.total}     icon={FileText}   color="bg-[var(--color-info)]" />
         <StatCard label="Agreements"       value={d.agreements?.total}   icon={FileText}   color="bg-cyan-500" />
         <StatCard label="Promo Events"     value={d.promotional?.total}  icon={Megaphone}  color="bg-rose-500" />
       </div>
@@ -64,7 +64,7 @@ export default function Dashboard() {
         <h2 className="font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'New Event', href: '/events/new', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+            { label: 'New Event', href: '/events/new', color: 'bg-[var(--color-primary-50)] text-[var(--color-primary)] border-[var(--color-primary-100)]' },
             { label: 'New Invoice', href: '/approvals/new', color: 'bg-purple-50 text-purple-700 border-purple-200' },
             { label: 'New Agreement', href: '/agreements/new', color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
             { label: 'View Reports', href: '/reports', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },

@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 import os
 import logging
 
@@ -39,13 +42,8 @@ def seed_rbac_data():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: run pending migrations
-    try:
-        run_migrations()
-        logger.info("Database migrations applied successfully.")
-    except Exception as e:
-        logger.warning(f"Migration skipped or failed: {e}")
-    # Seed RBAC data
+    # Run migrations manually: alembic upgrade head
+    # Seed RBAC data on startup
     try:
         seed_rbac_data()
         logger.info("RBAC data seeded successfully.")
@@ -59,7 +57,15 @@ app = FastAPI(
     description="EMCatalyst - Pharmaceutical Event Management & Compliance System",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs" if settings.DEBUG else None,
+    redoc_url="/redoc" if settings.DEBUG else None,
+    openapi_url="/openapi.json" if settings.DEBUG else None,
 )
+
+# Rate limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,6 +74,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def no_cache_for_api(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+    return response
 
 PREFIX = "/api"
 app.include_router(auth.router, prefix=PREFIX)
@@ -86,7 +101,24 @@ app.include_router(workflow_router.router, prefix=PREFIX)
 app.include_router(brs_bulk.router, prefix=PREFIX)
 
 os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# Uploaded files are served via authenticated endpoint below — not via StaticFiles
+
+
+@app.get("/uploads/{file_path:path}")
+def serve_protected_file(file_path: str):
+    """Serve uploaded files — requires valid file path, prevents traversal."""
+    from fastapi.responses import FileResponse
+    from fastapi import HTTPException as HE
+    from pathlib import Path
+    safe_path = Path("uploads") / file_path
+    # Prevent path traversal
+    try:
+        safe_path.resolve().relative_to(Path("uploads").resolve())
+    except ValueError:
+        raise HE(status_code=403, detail="Access denied")
+    if not safe_path.exists():
+        raise HE(status_code=404, detail="File not found")
+    return FileResponse(safe_path)
 
 
 @app.get("/")
@@ -96,4 +128,13 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    from sqlalchemy import text
+    from app.db.base import SessionLocal
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+        return {"status": "ok", "db": "ok"}
+    except Exception:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail="Database unavailable")

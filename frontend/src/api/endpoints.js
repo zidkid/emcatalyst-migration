@@ -11,7 +11,7 @@ export const authApi = {
   me: () => api.get('/auth/me'),
   updateMe: (data) => api.put('/auth/me', data),
   changePassword: (old_password, new_password) =>
-    api.post('/auth/change-password', null, { params: { old_password, new_password } }),
+    api.post('/auth/change-password', { old_password, new_password }),
   listUsers: (params) => api.get('/auth/users', { params }),
   createUser: (data) => api.post('/auth/users', data),
   updateUser: (id, data) => api.put(`/auth/users/${id}`, data),
@@ -210,7 +210,7 @@ export const brsApi = {
   },
   deleteQuestion: (surveyId, questionId) => api.delete(`/brs/surveys/${surveyId}/questions/${questionId}`),
   // Doctor Portal (public)
-  doctorLogin: (login_id, password) => api.post('/brs/doctor-login', null, { params: { login_id, password } }),
+  doctorLogin: (login_id, password) => api.post('/brs/doctor-login', { login_id, password }),
   doctorPortalGet: (token) => api.get(`/brs/doctor-portal/${token}`),
   doctorUpdateDetails: (token, data) => api.post(`/brs/doctor-portal/${token}/update-details`, data),
   doctorSignAgreement: (token, signature) => api.post(`/brs/doctor-portal/${token}/sign-agreement`, null, { params: { signature } }),

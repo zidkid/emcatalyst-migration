@@ -339,7 +339,7 @@ def create_hcp_doctor(
     doc = HcpDoctor(
         full_name=full_name, first_name=first_name, last_name=last_name, middle_name=middle_name,
         division=division, territory_name=territory_name,
-        employee_code=employee_code, uid_number=uid_number, sbu_code=sbu_code,
+        employee_code=employee_code, uid_number=uid_number or None, sbu_code=sbu_code,
         qualification=qualification, speciality=speciality, email=email, pan_number=pan_number,
         city=city, state=state, town_name=town_name, mobile_number=mobile_number,
         doctor_type=doctor_type, gender=gender, birthday=birthday,
@@ -347,7 +347,13 @@ def create_hcp_doctor(
         hourly_rate=hourly_rate, max_capping=max_capping,
     )
     db.add(doc)
-    db.flush()
+    try:
+        db.flush()
+    except Exception as e:
+        db.rollback()
+        if "uid_number" in str(e).lower() or "unique" in str(e).lower():
+            raise HTTPException(status_code=400, detail="A doctor with this UID number already exists")
+        raise HTTPException(status_code=400, detail=str(e))
     # Add division associations
     if division_ids:
         for did in division_ids.split(','):

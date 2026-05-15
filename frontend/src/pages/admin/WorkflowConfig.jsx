@@ -121,7 +121,7 @@ export default function WorkflowConfig() {
   return (
     <div className="p-6">
       <div className="flex items-center gap-3 mb-6">
-        <GitBranch className="w-6 h-6 text-blue-600" />
+        <GitBranch className="w-6 h-6 text-[var(--color-primary)]" />
         <h1 className="text-2xl font-bold text-gray-900">Approval Workflows</h1>
       </div>
 
@@ -137,7 +137,7 @@ export default function WorkflowConfig() {
                   onClick={() => selectWorkflow(wf)}
                   className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
                     selectedWfId === wf.id
-                      ? 'bg-blue-50 text-blue-700 font-medium border border-blue-200'
+                      ? 'bg-[var(--color-primary-50)] text-[var(--color-primary)] font-medium border border-[var(--color-primary-100)]'
                       : 'hover:bg-gray-50 text-gray-700'
                   }`}
                 >
@@ -189,7 +189,7 @@ export default function WorkflowConfig() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-1 text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="btn-primary"
                 >
                   <Save className="w-4 h-4" />
                   {saving ? 'Saving...' : 'Save'}
@@ -218,7 +218,7 @@ export default function WorkflowConfig() {
                           className="text-gray-400 hover:text-gray-600 disabled:opacity-30 text-xs"
                         >▼</button>
                       </div>
-                      <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                      <span className="w-6 h-6 bg-[var(--color-primary)] text-white rounded-full flex items-center justify-center text-xs font-bold">
                         {index + 1}
                       </span>
                       <input

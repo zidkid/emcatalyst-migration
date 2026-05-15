@@ -108,7 +108,7 @@ export default function EventList() {
             <tbody className="divide-y divide-gray-50">
               {events.map(e => (
                 <tr key={e.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs text-blue-600">{e.event_code}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{e.event_code}</td>
                   <td className="px-4 py-3 font-medium max-w-xs truncate">{e.event_title}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{e.event_type || '—'}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{fmtDate(e.event_date)}</td>
@@ -117,10 +117,10 @@ export default function EventList() {
                   <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
-                      <button className="text-blue-600 hover:underline text-xs" onClick={() => navigate(`/events/${e.id}`)}>View</button>
+                      <button className="text-[var(--color-primary)] hover:underline text-xs" onClick={() => navigate(`/events/${e.id}`)}>View</button>
                       {e.status === 'Draft' && (
                         <>
-                          <button className="text-blue-600 hover:underline text-xs flex items-center gap-1" onClick={() => navigate(`/events/${e.id}/edit`)}>
+                          <button className="text-[var(--color-primary)] hover:underline text-xs flex items-center gap-1" onClick={() => navigate(`/events/${e.id}/edit`)}>
                             <Edit2 size={12} /> Edit
                           </button>
                           <button className="text-red-500 hover:underline text-xs flex items-center gap-1" onClick={() => { if (confirm('Delete this draft event?')) deleteEvent.mutate(e.id) }}>
@@ -150,7 +150,7 @@ export default function EventList() {
                 </button>
                 {Array.from({ length: Math.min(totalPages, 8) }, (_, i) => i + 1).map(pg => (
                   <button key={pg} onClick={() => setPage(pg)}
-                    className={`py-1 px-2.5 rounded text-xs ${pg===page ? 'bg-blue-600 text-white' : 'btn-secondary'}`}
+                    className={`py-1 px-2.5 rounded text-xs ${pg===page ? 'bg-[var(--color-primary)] text-white' : 'btn-secondary'}`}
                   >{pg}</button>
                 ))}
                 {totalPages > 8 && <span className="text-xs text-gray-400 self-center px-1">…{totalPages}</span>}

@@ -46,7 +46,7 @@ export default function AgreementList() {
             <tbody className="divide-y">
               {filtered.map(a => (
                 <tr key={a.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/agreements/${a.id}`)}>
-                  <td className="px-4 py-3 font-mono text-xs text-blue-600">{a.agreement_no}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{a.agreement_no}</td>
                   <td className="px-4 py-3 font-medium max-w-xs truncate">{a.title}</td>
                   <td className="px-4 py-3 text-gray-500">{a.agreement_type || '—'}</td>
                   <td className="px-4 py-3">{a.party_name || '—'}</td>
@@ -54,7 +54,7 @@ export default function AgreementList() {
                   <td className="px-4 py-3 text-gray-500">{fmtDate(a.end_date)}</td>
                   <td className="px-4 py-3">{fmtCurrency(a.value)}</td>
                   <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
-                  <td className="px-4 py-3"><button className="text-blue-600 text-xs hover:underline">View</button></td>
+                  <td className="px-4 py-3"><button className="text-[var(--color-primary)] text-xs hover:underline">View</button></td>
                 </tr>
               ))}
             </tbody>

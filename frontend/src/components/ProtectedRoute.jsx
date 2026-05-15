@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import useAccessStore from '../store/accessStore'
+import LoadingSpinner from './ui/LoadingSpinner'
 
 const PAGE_ROUTES = {
   dashboard: '/',
@@ -24,13 +25,24 @@ const PAGE_ROUTES = {
  * Wrap existing route elements with this component.
  */
 export default function ProtectedRoute({ pageKey, children }) {
-  const { accessiblePages, loaded, error } = useAccessStore()
+  const { accessiblePages, loaded, loading, error } = useAccessStore()
 
-  // While access is loading or errored, render children (don't block)
-  if (!loaded || error) return children
+  // Show loading spinner while RBAC is being fetched
+  if (!loaded && loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner />
+      </div>
+    )
+  }
 
-  if (!accessiblePages.includes(pageKey)) {
-    // Find the first accessible page to redirect to (use PAGE_ROUTES order as priority)
+  // On error, redirect to a limited-access state
+  if (error && pageKey !== 'dashboard') {
+    return <Navigate to="/" replace />
+  }
+
+  // If loaded but user doesn't have access
+  if (loaded && !accessiblePages.includes(pageKey)) {
     for (const pk of Object.keys(PAGE_ROUTES)) {
       if (accessiblePages.includes(pk)) {
         return <Navigate to={PAGE_ROUTES[pk]} replace />

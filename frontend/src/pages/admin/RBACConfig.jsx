@@ -140,7 +140,7 @@ export default function RBACConfig() {
   return (
     <div className="p-6">
       <div className="flex items-center gap-3 mb-6">
-        <Shield className="w-6 h-6 text-blue-600" />
+        <Shield className="w-6 h-6 text-[var(--color-primary)]" />
         <h1 className="text-2xl font-bold text-gray-900">Role-Based Access Control</h1>
       </div>
 
@@ -152,7 +152,7 @@ export default function RBACConfig() {
               <h2 className="font-semibold text-gray-700">Roles</h2>
               <button
                 onClick={() => setShowNewRole(!showNewRole)}
-                className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                className="btn-primary"
               >
                 + New
               </button>
@@ -176,7 +176,7 @@ export default function RBACConfig() {
                 />
                 <button
                   onClick={handleCreateRole}
-                  className="w-full text-xs bg-green-600 text-white py-1 rounded hover:bg-green-700"
+                  className="btn-primary"
                 >
                   Create
                 </button>
@@ -190,7 +190,7 @@ export default function RBACConfig() {
                   onClick={() => setSelectedRoleId(role.id)}
                   className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
                     selectedRoleId === role.id
-                      ? 'bg-blue-50 text-blue-700 font-medium border border-blue-200'
+                      ? 'bg-[var(--color-primary-50)] text-[var(--color-primary)] font-medium border border-[var(--color-primary-100)]'
                       : 'hover:bg-gray-50 text-gray-700'
                   }`}
                 >
@@ -212,7 +212,7 @@ export default function RBACConfig() {
             <div className="p-4 border-b flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <h2 className="font-semibold text-gray-700">
-                  Pages for: <span className="text-blue-600">{selectedRole?.name}</span>
+                  Pages for: <span className="text-[var(--color-primary)]">{selectedRole?.name}</span>
                 </h2>
                 {isAdmin && (
                   <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">
@@ -250,7 +250,7 @@ export default function RBACConfig() {
                 <button
                   onClick={handleSave}
                   disabled={saving || isAdmin}
-                  className="flex items-center gap-1 text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="btn-primary"
                 >
                   <Save className="w-4 h-4" />
                   {saving ? 'Saving...' : 'Save'}

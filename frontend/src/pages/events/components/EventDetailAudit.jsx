@@ -20,7 +20,7 @@ export default function EventDetailAudit({ event }) {
           {event.audit_trail.map((entry, i) => (
             <div key={entry.id || i} className="flex gap-4 pb-4 relative">
               {i < event.audit_trail.length - 1 && <div className="absolute left-[15px] top-8 bottom-0 w-px bg-gray-200" />}
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 z-10">
+              <div className="w-8 h-8 rounded-full bg-[var(--color-primary-100)] text-[var(--color-primary)] flex items-center justify-center shrink-0 z-10">
                 <Clock size={14} />
               </div>
               <div className="flex-1 min-w-0">

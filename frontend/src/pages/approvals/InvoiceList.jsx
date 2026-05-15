@@ -63,7 +63,7 @@ export default function InvoiceList() {
             <tbody className="divide-y divide-gray-50">
               {filtered.map(inv => (
                 <tr key={inv.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/approvals/${inv.id}`)}>
-                  <td className="px-4 py-3 font-mono text-xs text-blue-600">{inv.serial_no}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-primary)]">{inv.serial_no}</td>
                   <td className="px-4 py-3 font-medium max-w-xs truncate">{inv.vendor_name || inv.vendor_code}</td>
                   <td className="px-4 py-3 text-gray-500">{fmtDate(inv.document_date)}</td>
                   <td className="px-4 py-3">{fmtCurrency(inv.vendor_amount)}</td>
@@ -71,7 +71,7 @@ export default function InvoiceList() {
                   <td className="px-4 py-3 text-xs">{fmtCurrency(inv.tds_amount)}</td>
                   <td className="px-4 py-3 font-semibold">{fmtCurrency(inv.net_amount)}</td>
                   <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
-                  <td className="px-4 py-3"><button className="text-blue-600 text-xs hover:underline">View</button></td>
+                  <td className="px-4 py-3"><button className="text-[var(--color-primary)] text-xs hover:underline">View</button></td>
                 </tr>
               ))}
             </tbody>

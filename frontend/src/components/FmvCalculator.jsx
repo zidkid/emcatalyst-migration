@@ -102,9 +102,9 @@ export default function FmvCalculator({ doctor }) {
   const proposedAmount = hourlyRate > 0 ? Math.min(hours * hourlyRate, maxCapping || Infinity) : 0
 
   return (
-    <div className="border border-gray-200 rounded-xl p-5 bg-blue-50">
+    <div className="border border-gray-200 rounded-xl p-5 bg-[var(--color-primary-50)]">
       <div className="flex items-center gap-2 mb-4">
-        <Calculator size={18} className="text-blue-600" />
+        <Calculator size={18} className="text-[var(--color-primary)]" />
         <h4 className="font-semibold text-blue-900">FMV Calculator</h4>
         {doctor && (
           <span className="ml-auto text-xs text-gray-500">
@@ -168,7 +168,7 @@ export default function FmvCalculator({ doctor }) {
 
       {/* Result */}
       {doctor && hourlyRate > 0 && (
-        <div className="bg-white rounded-lg border-2 border-blue-200 p-4">
+        <div className="bg-white rounded-lg border-2 border-[var(--color-primary-100)] p-4">
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <p className="text-xs text-gray-500">Hours</p>
@@ -180,7 +180,7 @@ export default function FmvCalculator({ doctor }) {
             </div>
             <div>
               <p className="text-xs text-gray-500">Proposed Honorarium</p>
-              <p className="text-xl font-bold text-blue-700">{fmtCurrency(proposedAmount)}</p>
+              <p className="text-xl font-bold text-[var(--color-primary)]">{fmtCurrency(proposedAmount)}</p>
             </div>
           </div>
           {maxCapping > 0 && hours * hourlyRate > maxCapping && (

@@ -11,7 +11,7 @@ export default function EventDetailDocs({ event }) {
             {event.documents.map(d => (
               <tr key={d.id}>
                 <td className="px-3 py-2 font-medium">{d.document_type}</td>
-                <td className="px-3 py-2 text-blue-600">{d.document_name}</td>
+                <td className="px-3 py-2 text-[var(--color-primary)]">{d.document_name}</td>
                 <td className="px-3 py-2 text-xs text-gray-500">{fmtDate(d.uploaded_at)}</td>
               </tr>
             ))}

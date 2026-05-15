@@ -22,7 +22,7 @@ export default class ErrorBoundary extends Component {
               {this.state.error?.toString()}
             </pre>
             <button
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="btn-primary"
               onClick={() => {
                 localStorage.removeItem('token')
                 localStorage.removeItem('user')

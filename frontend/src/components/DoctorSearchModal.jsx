@@ -64,10 +64,10 @@ export default function DoctorSearchModal({ open, onClose, onSelect, surveyId })
             return (
             <button
               key={docId}
-              className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-start gap-3"
+              className="w-full text-left px-4 py-3 hover:bg-[var(--color-primary-50)] transition-colors flex items-start gap-3"
               onClick={() => { onSelect({ ...doc, id: docId }); onClose() }}
             >
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+              <div className="w-8 h-8 rounded-full bg-[var(--color-primary-100)] text-[var(--color-primary)] flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                 {(doc.full_name || doc.first_name || '?')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -76,11 +76,11 @@ export default function DoctorSearchModal({ open, onClose, onSelect, surveyId })
                   {doc.qualification && <span className="text-gray-500 font-normal"> ({doc.qualification})</span>}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {doc.uid_number && <span className="font-mono text-blue-600">{doc.uid_number}</span>}
+                  {doc.uid_number && <span className="font-mono text-[var(--color-primary)]">{doc.uid_number}</span>}
                   {doc.uid_number && ' • '}
                   {[doc.city, doc.state].filter(Boolean).join(', ')}
                 </p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-[var(--color-primary)]">
                   Rate: {fmtCurrency(doc.hourly_rate)}/hr
                   {doc.max_capping && ` • Cap: ${fmtCurrency(doc.max_capping)}`}
                 </p>

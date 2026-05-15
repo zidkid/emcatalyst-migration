@@ -113,7 +113,7 @@ export default function InvoiceForm() {
         </div>
 
         {/* Tax Summary */}
-        <div className="bg-blue-50 rounded-lg p-4">
+        <div className="bg-[var(--color-primary-50)] rounded-lg p-4">
           <p className="text-sm font-semibold text-blue-900 mb-2">Tax Calculation Preview</p>
           <div className="grid grid-cols-4 gap-3 text-sm">
             <div><p className="text-gray-500">Base Amount</p><p className="font-bold">₹{vendorAmount.toFixed(2)}</p></div>

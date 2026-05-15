@@ -32,7 +32,7 @@ export default function FmvParametersTab() {
                 <tbody className="divide-y">
                   {params[name].map(opt => (
                     <tr key={opt.id}>
-                      <td className="px-3 py-2 font-mono text-xs text-blue-600">{opt.option_code}</td>
+                      <td className="px-3 py-2 font-mono text-xs text-[var(--color-primary)]">{opt.option_code}</td>
                       <td className="px-3 py-2">{opt.option_label}</td>
                       <td className="px-3 py-2 font-bold">{opt.points}</td>
                     </tr>
@@ -43,7 +43,7 @@ export default function FmvParametersTab() {
           ))}
 
           {/* FMV Category Reference */}
-          <div className="card bg-blue-50">
+          <div className="card bg-[var(--color-primary-50)]">
             <h4 className="font-semibold text-sm mb-2">FMV Category Calculation</h4>
             <table className="w-full text-sm">
               <tbody>

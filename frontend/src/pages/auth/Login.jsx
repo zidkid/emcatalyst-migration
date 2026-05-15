@@ -74,15 +74,15 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emcure-blue to-blue-900 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--color-neutral-100)' }}>
+      <div className="bg-white rounded-2xl w-full max-w-md p-8" style={{ boxShadow: 'var(--shadow-md)', border: '1px solid var(--color-neutral-200)' }}>
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-emcure-red rounded-2xl mb-4 shadow-lg">
-            <span className="text-white font-bold text-xl">EM</span>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4" style={{ background: 'var(--color-primary-50)', border: '1px solid var(--color-primary-100)' }}>
+            <span style={{ color: 'var(--color-primary)', fontWeight: 800, fontSize: 18 }}>EM</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">EMCatalyst</h1>
-          <p className="text-gray-500 text-sm mt-1">Emcure Pharmaceuticals — Event Management</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-neutral-900)' }}>EMCatalyst</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-neutral-500)' }}>Emcure Pharmaceuticals — Event Management</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -94,7 +94,7 @@ export default function Login() {
               placeholder="Enter your Employee ID"
               {...register('employee_id', { required: 'Employee ID is required' })}
             />
-            {errors.employee_id && <p className="text-red-500 text-xs mt-1">{errors.employee_id.message}</p>}
+            {errors.employee_id && <p className="text-xs mt-1" style={{ color: 'var(--color-error)' }}>{errors.employee_id.message}</p>}
           </div>
 
           <div>
@@ -105,19 +105,19 @@ export default function Login() {
               placeholder="••••••••"
               {...register('password', { required: 'Password is required' })}
             />
-            {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+            {errors.password && <p className="text-xs mt-1" style={{ color: 'var(--color-error)' }}>{errors.password.message}</p>}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-emcure-blue text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition-colors disabled:opacity-60"
+            className="btn-primary w-full py-3"
           >
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs mt-6" style={{ color: 'var(--color-neutral-400)' }}>
           © {new Date().getFullYear()} Emcure Pharmaceuticals Ltd. All rights reserved.
         </p>
       </div>

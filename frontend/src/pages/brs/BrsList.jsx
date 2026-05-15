@@ -36,7 +36,7 @@ export default function BrsList() {
     <div className="p-8">
       <PageHeader
         title="BRS Module"
-        subtitle="Budget Request System"
+        subtitle="Bona Fide Research Survey"
         actions={
           <div className="flex gap-2">
             <button className="btn-secondary flex items-center gap-2" onClick={() => navigate('/brs/survey-builder')}>

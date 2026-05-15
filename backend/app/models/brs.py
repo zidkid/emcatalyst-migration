@@ -22,7 +22,7 @@ class BrsQuestionType(str, enum.Enum):
 
 
 class BrsApplication(Base):
-    """BRS (Budget Request System) - created by Marketing Head, approved by Division Head"""
+    """BRS (Bona Fide Research Survey) - created by Marketing Head, approved by Division Head"""
     __tablename__ = "brs_applications"
 
     id = Column(Integer, primary_key=True, index=True)

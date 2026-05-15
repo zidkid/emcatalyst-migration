@@ -119,7 +119,7 @@ export default function BrsForm() {
 
   return (
     <div className="p-8 max-w-5xl">
-      <PageHeader title="New BRS" subtitle="Create a Budget Request" />
+      <PageHeader title="New BRS" subtitle="Create a Bona Fide Research Survey" />
 
       {/* Stepper */}
       <div className="flex items-center mb-8">

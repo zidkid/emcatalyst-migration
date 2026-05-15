@@ -946,10 +946,11 @@ def list_all_hcp_doctors(
         ))
     if state:
         query = query.filter(HcpDoctor.state == state)
+    total = query.count()
     doctors = query.order_by(HcpDoctor.full_name).offset(skip).limit(limit).all()
     result = []
     for doc in doctors:
         d = HcpDoctorOut.model_validate(doc).model_dump()
         d["divisions"] = [{"id": div.id, "name": div.name} for div in doc.divisions]
         result.append(d)
-    return result
+    return {"items": result, "total": total}

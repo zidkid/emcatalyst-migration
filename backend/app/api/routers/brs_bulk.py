@@ -9,7 +9,7 @@ Key changes from manual BRS creation:
 - Uses doctor_uid to look up doctors from HcpDoctor table by uid_number
 - If doctor_uid not found in DB, that row is skipped with an error
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -239,6 +239,12 @@ async def upload_bulk_brs(
     )
     tm_map = {u.employee_id: u for u in tm_users if u.employee_id}
 
+    # Pre-fetch survey-doctor mappings for validation
+    from app.models.brs import SurveyDoctorMapping
+    all_survey_mappings = db.query(SurveyDoctorMapping).all()
+    # Build a set of (survey_id, hcp_doctor_id) for fast lookup
+    survey_doctor_set = {(m.survey_id, m.hcp_doctor_id) for m in all_survey_mappings}
+
     # Group rows by BRS (title + survey_title)
     brs_groups = {}
     for item in rows:
@@ -283,6 +289,20 @@ async def upload_bulk_brs(
         if not survey:
             errors.append({"row": doctors[0]["_row"], "error": f"Survey '{brs_data.get('survey_title')}' not found"})
             continue
+
+        # Validate doctors are mapped to this survey (if survey has mappings)
+        survey_has_mappings = any(s_id == survey.id for s_id, _ in survey_doctor_set)
+        if survey_has_mappings:
+            valid_doctors = []
+            for doc_entry in doctors:
+                hcp = doc_entry["hcp_doctor"]
+                if (survey.id, hcp.id) not in survey_doctor_set:
+                    errors.append({"row": doc_entry["_row"], "error": f"Doctor '{hcp.full_name or hcp.uid_number}' is not mapped to survey '{survey.title}'"})
+                else:
+                    valid_doctors.append(doc_entry)
+            doctors = valid_doctors
+            if not doctors:
+                continue
 
         # Resolve division
         division_id = current_user.division_id
@@ -468,11 +488,30 @@ def download_survey_template():
         for col, val in enumerate(row_data, 1):
             ws.cell(row=row_idx, column=col, value=val)
 
+    # Doctors sheet — for mapping doctors to the survey
+    ws_docs = wb.create_sheet("Doctors")
+    ws_docs.cell(row=1, column=1, value="survey_title").font = openpyxl.styles.Font(bold=True)
+    ws_docs.cell(row=1, column=2, value="doctor_uid").font = openpyxl.styles.Font(bold=True)
+    ws_docs.column_dimensions['A'].width = 30
+    ws_docs.column_dimensions['B'].width = 20
+    # Example doctor rows
+    ws_docs.cell(row=2, column=1, value="Cardiology Expert Survey")
+    ws_docs.cell(row=2, column=2, value="UID001")
+    ws_docs.cell(row=3, column=1, value="Cardiology Expert Survey")
+    ws_docs.cell(row=3, column=2, value="UID002")
+    ws_docs.cell(row=4, column=1, value="Cardiology Expert Survey")
+    ws_docs.cell(row=4, column=2, value="UID003")
+
     # Instructions sheet
     ws2 = wb.create_sheet("Instructions")
     instructions = [
         "SURVEY BULK IMPORT INSTRUCTIONS",
         "",
+        "This file has TWO sheets:",
+        "  1. 'Survey Import' — questions for the survey",
+        "  2. 'Doctors' — doctor UIDs to map to the survey (MANDATORY)",
+        "",
+        "SHEET 1: SURVEY IMPORT (Questions)",
         "1. Each row represents ONE QUESTION in a survey.",
         "2. All rows with the same 'survey_title' are grouped into one survey.",
         "3. Survey metadata (description, division, honorarium) is read from the first row of each group.",
@@ -488,24 +527,18 @@ def download_survey_template():
         "- single_select: Doctor picks ONE option from a list",
         "- multi_select: Doctor picks MULTIPLE options from a list",
         "- fill_in_blanks: Question with blanks (___) that the doctor fills in",
-        "  Example: 'I prescribe ___ mg of drug X for ___ days'",
-        "  The doctor will see input fields where each ___ appears.",
         "",
         "OPTIONS FIELD:",
         "- For single_select and multi_select: provide options separated by | (pipe)",
-        "  Example: Option A|Option B|Option C",
         "- For free_text and fill_in_blanks: leave blank",
         "",
-        "IS_REQUIRED:",
-        "- Yes or No (default: Yes)",
+        "IS_REQUIRED: Yes or No (default: Yes)",
         "",
-        "DIVISION_NAME:",
-        "- Must match an existing division name in the system",
-        "- Leave blank to not assign a division",
-        "",
-        "TOTAL_HONORARIUM_AMOUNT:",
-        "- Upper limit for honorarium per doctor (numeric, no currency symbol)",
-        "- Only read from the first row of each survey group",
+        "SHEET 2: DOCTORS (Mandatory)",
+        "- Column A: survey_title (must match the survey title in Sheet 1)",
+        "- Column B: doctor_uid (UID number from MCL)",
+        "- At least ONE doctor must be mapped per survey.",
+        "- Only mapped doctors will be available when creating BRS with this survey.",
     ]
     for i, line in enumerate(instructions, 1):
         ws2.cell(row=i, column=1, value=line)
@@ -529,10 +562,11 @@ async def upload_bulk_survey(
     current_user: User = Depends(get_current_user),
 ):
     """
-    Upload an Excel file to create surveys with questions.
-    Rows are grouped by survey_title. Each row = one question.
+    Upload an Excel file to create surveys with questions and doctor mappings.
+    Sheet 1: Questions (grouped by survey_title)
+    Sheet 2 (Doctors): doctor_uid mappings per survey (MANDATORY)
     """
-    from app.models.brs import BrsSurveyQuestion, BrsQuestionType
+    from app.models.brs import BrsSurveyQuestion, BrsQuestionType, SurveyDoctorMapping
 
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(400, "Only .xlsx or .xls files are accepted")
@@ -542,14 +576,71 @@ async def upload_bulk_survey(
     try:
         content = await file.read()
         wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
-        ws = wb.active
+        # Find the questions sheet
+        ws = None
+        for sheet_name in wb.sheetnames:
+            if 'survey' in sheet_name.lower():
+                ws = wb[sheet_name]
+                break
+        if ws is None:
+            for sheet_name in wb.sheetnames:
+                if sheet_name.lower() not in ('instructions', 'doctors'):
+                    ws = wb[sheet_name]
+                    break
+        if ws is None:
+            ws = wb.active
     except Exception as e:
         raise HTTPException(400, f"Failed to read Excel file: {str(e)}")
 
-    # Read headers
-    headers = []
+    # Read "Doctors" sheet (mandatory)
+    doctor_sheet = None
+    for sheet_name in wb.sheetnames:
+        if sheet_name.lower() == 'doctors':
+            doctor_sheet = wb[sheet_name]
+            break
+
+    # Parse doctor UIDs from Doctors sheet
+    doctor_uids_by_survey = {}  # {survey_title_lower: [uid1, uid2, ...]}
+    if doctor_sheet:
+        doc_headers = []
+        for cell in doctor_sheet[1]:
+            doc_headers.append(str(cell.value).strip().lower() if cell.value else "")
+        # Detect offset
+        doc_offset = 0
+        for h in doc_headers:
+            if h == "":
+                doc_offset += 1
+            else:
+                break
+        doc_headers = doc_headers[doc_offset:]
+        for row in doctor_sheet.iter_rows(min_row=2, values_only=True):
+            if not any(row):
+                continue
+            shifted = row[doc_offset:] if doc_offset else row
+            row_data = {}
+            for col_idx, value in enumerate(shifted):
+                if col_idx < len(doc_headers) and doc_headers[col_idx]:
+                    row_data[doc_headers[col_idx]] = value
+            s_title = str(row_data.get("survey_title", "")).strip().lower()
+            uid = str(row_data.get("doctor_uid", "")).strip()
+            if s_title and uid:
+                if s_title not in doctor_uids_by_survey:
+                    doctor_uids_by_survey[s_title] = []
+                doctor_uids_by_survey[s_title].append(uid)
+
+    # Read headers from questions sheet (detect and skip empty leading columns)
+    raw_headers = []
     for cell in ws[1]:
-        headers.append(str(cell.value).strip().lower() if cell.value else "")
+        raw_headers.append(str(cell.value).strip().lower() if cell.value else "")
+
+    # Detect column offset (empty leading columns)
+    col_offset = 0
+    for h in raw_headers:
+        if h == "":
+            col_offset += 1
+        else:
+            break
+    headers = raw_headers[col_offset:]
 
     if "survey_title" not in headers or "question_text" not in headers:
         raise HTTPException(400, "Excel must have 'survey_title' and 'question_text' columns")
@@ -563,8 +654,10 @@ async def upload_bulk_survey(
     for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
         if not any(row):
             continue
+        # Apply same column offset
+        shifted_row = row[col_offset:] if col_offset else row
         row_data = {}
-        for col_idx, value in enumerate(row):
+        for col_idx, value in enumerate(shifted_row):
             if col_idx < len(headers) and headers[col_idx]:
                 row_data[headers[col_idx]] = value
         if not row_data.get("survey_title"):
@@ -658,10 +751,37 @@ async def upload_bulk_survey(
             )
             db.add(question)
 
+        # Map doctors to survey (mandatory)
+        survey_key = str(meta["survey_title"]).strip().lower()
+        uids_for_survey = doctor_uids_by_survey.get(survey_key, [])
+        if not uids_for_survey:
+            errors.append({"row": questions[0]["_row"], "error": f"No doctors found in 'Doctors' sheet for survey '{meta['survey_title']}'. At least one doctor is required."})
+            db.rollback()
+            continue
+
+        doctors_mapped = 0
+        doctors_not_found = []
+        for uid in uids_for_survey:
+            doc = db.query(HcpDoctor).filter(HcpDoctor.uid_number == uid).first()
+            if not doc:
+                doctors_not_found.append(uid)
+                continue
+            db.add(SurveyDoctorMapping(survey_id=survey.id, hcp_doctor_id=doc.id))
+            doctors_mapped += 1
+
+        if doctors_mapped == 0:
+            errors.append({"row": questions[0]["_row"], "error": f"None of the doctor UIDs in 'Doctors' sheet were found in MCL for survey '{meta['survey_title']}'"})
+            db.rollback()
+            continue
+
+        if doctors_not_found:
+            errors.append({"row": questions[0]["_row"], "error": f"Some doctor UIDs not found: {', '.join(doctors_not_found[:5])}"})
+
         created.append({
             "id": survey.id,
             "title": survey.title,
             "question_count": len(questions),
+            "doctors_mapped": doctors_mapped,
         })
 
     db.commit()
@@ -672,3 +792,55 @@ async def upload_bulk_survey(
         "errors": errors,
         "total_rows_processed": len(rows),
     }
+
+
+
+@router.post("/survey-doctors-import")
+async def import_survey_doctors_excel(
+    survey_id: int = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Import doctor UIDs from an Excel/CSV file and map them to a survey."""
+    from app.models.brs import SurveyDoctorMapping, BrsSurvey
+
+    survey = db.query(BrsSurvey).filter(BrsSurvey.id == survey_id).first()
+    if not survey:
+        raise HTTPException(404, "Survey not found")
+
+    uids = []
+
+    if file.filename.endswith(('.xlsx', '.xls')):
+        import openpyxl
+        content = await file.read()
+        wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+        ws = wb.active
+        for row in ws.iter_rows(min_row=1, values_only=True):
+            for cell in row:
+                if cell and str(cell).strip() and str(cell).strip().lower() != 'doctor_uid':
+                    uids.append(str(cell).strip())
+    else:
+        content = await file.read()
+        text = content.decode('utf-8', errors='ignore')
+        uids = [s.strip() for s in text.split('\n') if s.strip() and s.strip().lower() != 'doctor_uid']
+
+    if not uids:
+        raise HTTPException(400, "No UIDs found in file")
+
+    added = 0
+    not_found = []
+    for uid in uids:
+        doc = db.query(HcpDoctor).filter(HcpDoctor.uid_number == uid).first()
+        if not doc:
+            not_found.append(uid)
+            continue
+        existing = db.query(SurveyDoctorMapping).filter(
+            SurveyDoctorMapping.survey_id == survey_id,
+            SurveyDoctorMapping.hcp_doctor_id == doc.id
+        ).first()
+        if not existing:
+            db.add(SurveyDoctorMapping(survey_id=survey_id, hcp_doctor_id=doc.id))
+            added += 1
+    db.commit()
+    return {"added": added, "not_found": not_found, "total": db.query(SurveyDoctorMapping).filter(SurveyDoctorMapping.survey_id == survey_id).count()}

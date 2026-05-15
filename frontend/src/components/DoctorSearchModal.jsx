@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { masterApi } from '../api/endpoints'
+import api from '../api/client'
 import Modal from './ui/Modal'
 import { Search, CheckCircle } from 'lucide-react'
 
@@ -9,12 +10,28 @@ function fmtCurrency(val) {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val)
 }
 
-export default function DoctorSearchModal({ open, onClose, onSelect }) {
+export default function DoctorSearchModal({ open, onClose, onSelect, surveyId }) {
   const [searchQ, setSearchQ] = useState('')
 
+  // If surveyId is provided, fetch only mapped doctors; otherwise search all MCL
   const { data: doctors = [], isFetching } = useQuery({
-    queryKey: ['hcp-doctors-search', searchQ],
-    queryFn: () => masterApi.hcpDoctors(searchQ || null, 100).then(r => r.data),
+    queryKey: surveyId ? ['survey-doctors', surveyId, searchQ] : ['hcp-doctors-search', searchQ],
+    queryFn: async () => {
+      if (surveyId) {
+        const res = await api.get(`/brs/surveys/${surveyId}/doctors`)
+        const all = res.data || []
+        if (!searchQ) return all
+        const q = searchQ.toLowerCase()
+        return all.filter(d =>
+          (d.full_name || '').toLowerCase().includes(q) ||
+          (d.uid_number || '').toLowerCase().includes(q) ||
+          (d.email || '').toLowerCase().includes(q) ||
+          (d.city || '').toLowerCase().includes(q) ||
+          (d.pan_number || '').toLowerCase().includes(q)
+        )
+      }
+      return masterApi.hcpDoctors(searchQ || null, 100).then(r => r.data)
+    },
     enabled: open,
   })
 
@@ -42,11 +59,13 @@ export default function DoctorSearchModal({ open, onClose, onSelect }) {
               {searchQ ? 'No doctors found' : 'Start typing to search'}
             </div>
           )}
-          {doctors.map(doc => (
+          {doctors.map(doc => {
+            const docId = doc.id || doc.hcp_doctor_id
+            return (
             <button
-              key={doc.id}
+              key={docId}
               className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-start gap-3"
-              onClick={() => { onSelect(doc); onClose() }}
+              onClick={() => { onSelect({ ...doc, id: docId }); onClose() }}
             >
               <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                 {(doc.full_name || doc.first_name || '?')[0].toUpperCase()}
@@ -68,7 +87,7 @@ export default function DoctorSearchModal({ open, onClose, onSelect }) {
               </div>
               <CheckCircle size={16} className="shrink-0 text-emerald-500 mt-1" />
             </button>
-          ))}
+          )})}
         </div>
       </div>
     </Modal>

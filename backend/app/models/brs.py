@@ -139,6 +139,21 @@ class BrsSurvey(Base):
     questions = relationship("BrsSurveyQuestion", back_populates="survey",
                              order_by="BrsSurveyQuestion.order_no",
                              cascade="all, delete-orphan")
+    doctor_mappings = relationship("SurveyDoctorMapping", back_populates="survey",
+                                   cascade="all, delete-orphan")
+
+
+class SurveyDoctorMapping(Base):
+    """Maps doctors (from MCL) to a survey — only these doctors can be added to BRS using this survey"""
+    __tablename__ = "survey_doctor_mappings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    survey_id = Column(Integer, ForeignKey("brs_surveys.id", ondelete="CASCADE"), nullable=False)
+    hcp_doctor_id = Column(Integer, ForeignKey("hcp_doctors.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    survey = relationship("BrsSurvey", back_populates="doctor_mappings")
+    doctor = relationship("HcpDoctor")
 
 
 class BrsSurveyQuestion(Base):

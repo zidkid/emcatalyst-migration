@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import {
   Plus, Trash2, GripVertical, Edit3, Save, X, ChevronDown,
-  ChevronUp, List, CheckSquare, AlignLeft, ToggleLeft, ArrowLeft, FileText, Upload, Download
+  ChevronUp, List, CheckSquare, AlignLeft, ToggleLeft, ArrowLeft, FileText, Upload, Download, Search
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { brsApi, accessApi } from '../../api/endpoints'
@@ -153,9 +153,233 @@ function QuestionCard({ q, surveyId, onRefresh }) {
   )
 }
 
+function SurveyDoctorManager({ surveyId, mappedDoctors, onRefresh }) {
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [allDoctors, setAllDoctors] = useState([])
+  const [totalDoctors, setTotalDoctors] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [selected, setSelected] = useState([])
+  const [importFile, setImportFile] = useState(null)
+  const [importing, setImporting] = useState(false)
+
+  const PAGE_SIZE = 20
+  const mappedIds = new Set(mappedDoctors.map(d => d.hcp_doctor_id))
+
+  // Fetch doctors with pagination
+  const fetchDoctors = async (q, pg) => {
+    setLoading(true)
+    try {
+      const res = await api.get('/master/hcp-doctors-all', { params: { q: q || undefined, skip: (pg - 1) * PAGE_SIZE, limit: PAGE_SIZE } })
+      setAllDoctors(res.data.items || [])
+      setTotalDoctors(res.data.total || 0)
+    } catch (e) { setAllDoctors([]) }
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchDoctors('', 1) }, [])
+
+  const handleSearch = (q) => {
+    setSearch(q)
+    setPage(1)
+    fetchDoctors(q, 1)
+  }
+
+  const handlePageChange = (pg) => {
+    setPage(pg)
+    fetchDoctors(search, pg)
+  }
+
+  const toggleSelect = (doc) => {
+    setSelected(prev => prev.find(d => d.id === doc.id) ? prev.filter(d => d.id !== doc.id) : [...prev, doc])
+  }
+
+  const selectAll = () => {
+    const unMapped = allDoctors.filter(d => !mappedIds.has(d.id))
+    setSelected(prev => {
+      const existingIds = new Set(prev.map(d => d.id))
+      const newOnes = unMapped.filter(d => !existingIds.has(d.id))
+      return [...prev, ...newOnes]
+    })
+  }
+
+  const addSelected = async () => {
+    if (!selected.length) return
+    try {
+      await api.post(`/brs/surveys/${surveyId}/doctors`, selected.map(d => d.id))
+      toast.success(`Added ${selected.length} doctor(s)`)
+      setSelected([])
+      onRefresh()
+    } catch (e) { toast.error(e.response?.data?.detail || 'Error') }
+  }
+
+  const handleImport = async () => {
+    if (!importFile) return
+    setImporting(true)
+    try {
+      let uids = []
+      if (importFile.name.endsWith('.xlsx') || importFile.name.endsWith('.xls')) {
+        // For Excel files, send to backend to parse
+        const formData = new FormData()
+        formData.append('file', importFile)
+        formData.append('survey_id', surveyId)
+        const res = await api.post(`/brs/bulk/survey-doctors-import`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+        toast.success(`Added ${res.data.added} doctor(s).${res.data.not_found?.length ? ` Not found: ${res.data.not_found.length}` : ''}`)
+        setImportFile(null)
+        onRefresh()
+        setImporting(false)
+        return
+      }
+      // For CSV/TXT files, parse on frontend
+      const text = await importFile.text()
+      uids = text.split(/[\n,\r]/).map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'doctor_uid')
+      if (!uids.length) { toast.error('No UIDs found in file'); setImporting(false); return }
+      const res = await api.post(`/brs/surveys/${surveyId}/doctors/import`, uids)
+      toast.success(`Added ${res.data.added} doctor(s).${res.data.not_found?.length ? ` Not found: ${res.data.not_found.length}` : ''}`)
+      setImportFile(null)
+      onRefresh()
+    } catch (e) { toast.error(e.response?.data?.detail || 'Import failed') }
+    setImporting(false)
+  }
+
+  const totalPages = Math.ceil(totalDoctors / PAGE_SIZE)
+
+  return (
+    <div className="space-y-3 border-t pt-3">
+      {/* Actions bar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={14} className="absolute left-2.5 top-2 text-gray-400" />
+          <input
+            className="input pl-8 text-sm"
+            placeholder="Search by name, UID, city, speciality..."
+            value={search}
+            onChange={e => handleSearch(e.target.value)}
+          />
+        </div>
+        {selected.length > 0 && (
+          <button className="btn-primary text-xs py-1.5 px-3" onClick={addSelected}>
+            Add {selected.length} Selected
+          </button>
+        )}
+        <div className="flex items-center gap-2">
+          <label className="btn-secondary text-xs cursor-pointer flex items-center gap-1">
+            <Upload size={12} /> Import UIDs
+            <input type="file" className="hidden" accept=".csv,.txt,.xlsx" onChange={e => setImportFile(e.target.files[0])} />
+          </label>
+          {importFile && (
+            <button className="btn-primary text-xs py-1 px-2" onClick={handleImport} disabled={importing}>
+              {importing ? '...' : `Upload ${importFile.name}`}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* MCL Doctor list with checkboxes */}
+      <div className="border rounded-lg overflow-auto max-h-72">
+        <table className="w-full text-xs">
+          <thead className="bg-gray-50 sticky top-0">
+            <tr>
+              <th className="px-2 py-2 w-8">
+                <input type="checkbox" onChange={selectAll} title="Select all on page" />
+              </th>
+              <th className="px-2 py-2 text-left">UID</th>
+              <th className="px-2 py-2 text-left">Name</th>
+              <th className="px-2 py-2 text-left">Speciality</th>
+              <th className="px-2 py-2 text-left">City</th>
+              <th className="px-2 py-2 text-left">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {loading ? (
+              <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">Loading...</td></tr>
+            ) : allDoctors.length === 0 ? (
+              <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-400">No doctors found</td></tr>
+            ) : allDoctors.map(doc => {
+              const alreadyMapped = mappedIds.has(doc.id)
+              const isSelected = selected.find(d => d.id === doc.id)
+              return (
+                <tr key={doc.id}
+                  className={`${alreadyMapped ? 'bg-green-50' : 'hover:bg-blue-50 cursor-pointer'}`}
+                  onClick={() => !alreadyMapped && toggleSelect(doc)}
+                >
+                  <td className="px-2 py-1.5 text-center">
+                    {alreadyMapped
+                      ? <span className="text-green-500 text-sm">✓</span>
+                      : <input type="checkbox" checked={!!isSelected} readOnly className="pointer-events-none" />
+                    }
+                  </td>
+                  <td className="px-2 py-1.5 font-mono text-blue-600">{doc.uid_number || '—'}</td>
+                  <td className="px-2 py-1.5 font-medium">{doc.full_name || `${doc.first_name || ''} ${doc.last_name || ''}`.trim()}</td>
+                  <td className="px-2 py-1.5 text-gray-500">{doc.speciality || doc.qualification || '—'}</td>
+                  <td className="px-2 py-1.5 text-gray-500">{doc.city || '—'}</td>
+                  <td className="px-2 py-1.5">
+                    {alreadyMapped ? <span className="text-xs text-green-600 font-medium">Mapped</span> : ''}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-gray-400">
+            Page {page} of {totalPages} ({totalDoctors} doctors)
+          </p>
+          <div className="flex gap-1">
+            <button className="btn-secondary text-xs py-1 px-2" disabled={page === 1} onClick={() => handlePageChange(page - 1)}>Prev</button>
+            <button className="btn-secondary text-xs py-1 px-2" disabled={page >= totalPages} onClick={() => handlePageChange(page + 1)}>Next</button>
+          </div>
+        </div>
+      )}
+
+      {/* Currently mapped doctors */}
+      {mappedDoctors.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-gray-600 mb-1">Currently Mapped ({mappedDoctors.length})</p>
+          <div className="border rounded-lg overflow-auto max-h-48">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left">UID</th>
+                  <th className="px-3 py-2 text-left">Name</th>
+                  <th className="px-3 py-2 text-left">Speciality</th>
+                  <th className="px-3 py-2 text-left">City</th>
+                  <th className="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {mappedDoctors.map(d => (
+                  <tr key={d.hcp_doctor_id}>
+                    <td className="px-3 py-1.5 font-mono text-blue-600">{d.uid_number}</td>
+                    <td className="px-3 py-1.5 font-medium">{d.full_name}</td>
+                    <td className="px-3 py-1.5 text-gray-500">{d.speciality || '—'}</td>
+                    <td className="px-3 py-1.5 text-gray-500">{d.city || '—'}</td>
+                    <td className="px-3 py-1.5">
+                      <button className="text-red-400 hover:text-red-600" onClick={async (e) => {
+                        e.stopPropagation()
+                        await api.delete(`/brs/surveys/${surveyId}/doctors/${d.hcp_doctor_id}`)
+                        onRefresh()
+                      }}>✕</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function SurveyEditor({ surveyId, onBack }) {
   const qc = useQueryClient()
   const [addingQuestion, setAddingQuestion] = useState(false)
+  const [showDoctorManager, setShowDoctorManager] = useState(false)
   const [newQ, setNewQ] = useState({
     question_text: '', question_type: 'free_text',
     is_required: true, min_duration_seconds: 0,
@@ -165,6 +389,11 @@ function SurveyEditor({ surveyId, onBack }) {
   const { data: survey, isLoading } = useQuery({
     queryKey: ['brs-survey', surveyId],
     queryFn: () => brsApi.getSurvey(surveyId).then(r => r.data),
+  })
+
+  const { data: mappedDoctors = [], refetch: refetchDoctors } = useQuery({
+    queryKey: ['survey-doctors', surveyId],
+    queryFn: () => api.get(`/brs/surveys/${surveyId}/doctors`).then(r => r.data),
   })
 
   const [editingMeta, setEditingMeta] = useState(false)
@@ -243,6 +472,22 @@ function SurveyEditor({ surveyId, onBack }) {
               <Edit3 size={14} /> Edit
             </button>
           </div>
+        )}
+      </div>
+
+      {/* Mapped Doctors */}
+      <div className="card p-5 mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h4 className="font-semibold text-sm text-gray-700">Mapped Doctors</h4>
+            <p className="text-xs text-gray-400">{mappedDoctors.length} doctor(s) mapped to this survey</p>
+          </div>
+          <button className="btn-secondary text-xs" onClick={() => setShowDoctorManager(!showDoctorManager)}>
+            {showDoctorManager ? 'Hide' : 'Manage Doctors'}
+          </button>
+        </div>
+        {showDoctorManager && (
+          <SurveyDoctorManager surveyId={surveyId} mappedDoctors={mappedDoctors} onRefresh={refetchDoctors} />
         )}
       </div>
 
@@ -453,9 +698,11 @@ export default function SurveyBuilder() {
               {s.description && <p className="text-xs text-gray-500 mb-3">{s.description}</p>}
               <div className="flex items-center gap-3 text-xs text-gray-500 mb-4">
                 <span>{s.question_count} questions</span>
+                <span>{s.doctor_count || 0} doctors</span>
                 {s.total_honorarium_amount > 0 && (
                   <span>Limit: ₹{s.total_honorarium_amount.toLocaleString('en-IN')}</span>
                 )}
+                {!s.doctor_count && <span className="text-red-500 font-medium">⚠ No doctors mapped</span>}
               </div>
               <div className="flex gap-2">
                 <button className="btn-primary text-xs flex-1 flex items-center justify-center gap-1"

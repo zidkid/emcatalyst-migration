@@ -29,8 +29,14 @@ export default function BrsForm() {
   const { data: therapeutics = [] } = useQuery({ queryKey: ['therapeutics'], queryFn: () => masterApi.therapeutics().then(r => r.data) })
   const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: () => masterApi.brands().then(r => r.data) })
   const { data: territoryManagers = [] } = useQuery({
-    queryKey: ['territory-managers'],
-    queryFn: () => accessApi.subordinatesByRole('Territory Manager').then(r => r.data),
+    queryKey: ['field-execution-users'],
+    queryFn: async () => {
+      const [tmRes, zmRes] = await Promise.all([
+        accessApi.subordinatesByRole('Territory Manager'),
+        accessApi.subordinatesByRole('Zonal Manager'),
+      ])
+      return [...(tmRes.data || []), ...(zmRes.data || [])]
+    },
   })
 
   // Load existing BRS in edit mode
@@ -213,11 +219,19 @@ export default function BrsForm() {
             </div>
             <div>
               <label className="label">Start Date *</label>
-              <input type="date" className="input" value={form.start_date} onChange={e => updateField('start_date', e.target.value)} />
+              <input type="date" className="input" value={form.start_date} onChange={e => {
+                updateField('start_date', e.target.value)
+                // Auto-set end date to 60 days from start
+                if (e.target.value) {
+                  const start = new Date(e.target.value)
+                  start.setDate(start.getDate() + 60)
+                  updateField('end_date', start.toISOString().split('T')[0])
+                }
+              }} />
             </div>
             <div>
-              <label className="label">End Date *</label>
-              <input type="date" className="input" value={form.end_date} onChange={e => updateField('end_date', e.target.value)} />
+              <label className="label">End Date (Start + 60 days)</label>
+              <input type="date" className="input bg-gray-50" value={form.end_date} disabled />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -290,7 +304,7 @@ export default function BrsForm() {
             </button>
           </div>
 
-          <DoctorSearchModal open={doctorSearchOpen} onClose={() => setDoctorSearchOpen(false)} onSelect={addDoctorFromMcl} />
+          <DoctorSearchModal open={doctorSearchOpen} onClose={() => setDoctorSearchOpen(false)} onSelect={addDoctorFromMcl} surveyId={form.survey_id} />
         </div>
       )}
     </div>

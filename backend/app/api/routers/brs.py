@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from typing import Optional, List
@@ -110,6 +110,7 @@ def list_surveys(db: Session = Depends(get_db), current_user: User = Depends(get
             "division_id": s.division_id,
             "is_active": s.is_active,
             "question_count": len(s.questions),
+            "doctor_count": len(s.doctor_mappings) if s.doctor_mappings else 0,
             "created_at": s.created_at.isoformat() if s.created_at else None,
         }
         for s in surveys
@@ -200,6 +201,93 @@ def delete_survey(survey_id: int, db: Session = Depends(get_db), current_user: U
     db.delete(s)
     db.commit()
     return {"message": "Survey deleted"}
+
+
+# Survey Doctor Mappings
+@router.get("/surveys/{survey_id}/doctors")
+def list_survey_doctors(survey_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """List all doctors mapped to this survey."""
+    from app.models.brs import SurveyDoctorMapping
+    from app.models.master import HcpDoctor
+    mappings = db.query(SurveyDoctorMapping).filter(SurveyDoctorMapping.survey_id == survey_id).all()
+    result = []
+    for m in mappings:
+        doc = db.query(HcpDoctor).filter(HcpDoctor.id == m.hcp_doctor_id).first()
+        if doc:
+            result.append({
+                "mapping_id": m.id,
+                "hcp_doctor_id": doc.id,
+                "uid_number": doc.uid_number,
+                "full_name": doc.full_name or f"{doc.first_name or ''} {doc.last_name or ''}".strip(),
+                "speciality": doc.speciality,
+                "email": doc.email,
+                "mobile_number": doc.mobile_number,
+                "pan_number": doc.pan_number,
+                "city": doc.city,
+            })
+    return result
+
+
+@router.post("/surveys/{survey_id}/doctors")
+def add_survey_doctors(survey_id: int, doctor_ids: List[int] = Body(...), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Map doctors to a survey (bulk add by hcp_doctor_id list)."""
+    from app.models.brs import SurveyDoctorMapping
+    s = db.query(BrsSurvey).filter(BrsSurvey.id == survey_id).first()
+    if not s:
+        raise HTTPException(404, "Survey not found")
+    added = 0
+    for doc_id in doctor_ids:
+        existing = db.query(SurveyDoctorMapping).filter(
+            SurveyDoctorMapping.survey_id == survey_id,
+            SurveyDoctorMapping.hcp_doctor_id == doc_id
+        ).first()
+        if not existing:
+            db.add(SurveyDoctorMapping(survey_id=survey_id, hcp_doctor_id=doc_id))
+            added += 1
+    db.commit()
+    return {"added": added, "total": db.query(SurveyDoctorMapping).filter(SurveyDoctorMapping.survey_id == survey_id).count()}
+
+
+@router.delete("/surveys/{survey_id}/doctors/{doctor_id}")
+def remove_survey_doctor(survey_id: int, doctor_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Remove a doctor mapping from a survey."""
+    from app.models.brs import SurveyDoctorMapping
+    m = db.query(SurveyDoctorMapping).filter(
+        SurveyDoctorMapping.survey_id == survey_id,
+        SurveyDoctorMapping.hcp_doctor_id == doctor_id
+    ).first()
+    if not m:
+        raise HTTPException(404, "Mapping not found")
+    db.delete(m)
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/surveys/{survey_id}/doctors/import")
+def import_survey_doctors_by_uid(survey_id: int, uids: List[str] = Body(...), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Map doctors to a survey by UID numbers (bulk)."""
+    from app.models.brs import SurveyDoctorMapping
+    from app.models.master import HcpDoctor
+    s = db.query(BrsSurvey).filter(BrsSurvey.id == survey_id).first()
+    if not s:
+        raise HTTPException(404, "Survey not found")
+    added = 0
+    not_found = []
+    for uid in uids:
+        uid = uid.strip()
+        doc = db.query(HcpDoctor).filter(HcpDoctor.uid_number == uid).first()
+        if not doc:
+            not_found.append(uid)
+            continue
+        existing = db.query(SurveyDoctorMapping).filter(
+            SurveyDoctorMapping.survey_id == survey_id,
+            SurveyDoctorMapping.hcp_doctor_id == doc.id
+        ).first()
+        if not existing:
+            db.add(SurveyDoctorMapping(survey_id=survey_id, hcp_doctor_id=doc.id))
+            added += 1
+    db.commit()
+    return {"added": added, "not_found": not_found, "total": db.query(SurveyDoctorMapping).filter(SurveyDoctorMapping.survey_id == survey_id).count()}
 
 
 # Survey Questions

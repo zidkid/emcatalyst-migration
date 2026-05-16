@@ -9,7 +9,7 @@ import os
 import logging
 
 from app.core.config import settings
-from app.api.routers import auth, events, access, master, brs, import_mcl
+from app.api.routers import auth, events, access, master, brs, import_mcl, reports
 from app.api.routers import rbac as rbac_router
 from app.api.routers import workflows as workflow_router
 from app.api.routers import brs_bulk
@@ -94,6 +94,7 @@ app.include_router(import_mcl.router, prefix=PREFIX)
 app.include_router(rbac_router.router, prefix=PREFIX)
 app.include_router(workflow_router.router, prefix=PREFIX)
 app.include_router(brs_bulk.router, prefix=PREFIX)
+app.include_router(reports.router, prefix=PREFIX)
 
 os.makedirs("uploads", exist_ok=True)
 # Uploaded files are served via authenticated endpoint below — not via StaticFiles

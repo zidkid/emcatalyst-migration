@@ -1,9 +1,12 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import {
   LayoutDashboard, CalendarDays, Users,
   LogOut, Database, ClipboardList,
-  GitBranch, Settings, Workflow, KeyRound
+  GitBranch, Settings, Workflow, KeyRound,
+  ChevronDown, Building2, Network, UserRound,
+  Pill, Stethoscope, FileText, UtensilsCrossed,
+  Calculator, Wallet, BarChart3, FileSpreadsheet
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useAuthStore from '../../store/authStore'
@@ -27,7 +30,32 @@ const navGroups = [
   {
     label: 'Data',
     items: [
-      { label: 'Masters', path: '/masters', icon: Database, pageKey: 'masters' },
+      {
+        label: 'Masters',
+        icon: Database,
+        pageKey: 'masters',
+        submenu: [
+          { label: 'Entity', path: '/masters/entities', icon: Building2, pageKey: 'masters_entities' },
+          { label: 'Division', path: '/masters/divisions', icon: Network, pageKey: 'masters_divisions' },
+          { label: 'Doctor', path: '/masters/doctors', icon: UserRound, pageKey: 'masters_doctors' },
+          { label: 'Brand', path: '/masters/brands', icon: Pill, pageKey: 'masters_brands' },
+          { label: 'Therapeutical', path: '/masters/therapeutics', icon: Stethoscope, pageKey: 'masters_therapeutics' },
+          { label: 'Document Type', path: '/masters/document-types', icon: FileText, pageKey: 'masters_document_types' },
+          { label: 'Meal', path: '/masters/meals', icon: UtensilsCrossed, pageKey: 'masters_meals' },
+          { label: 'FMV Parameter', path: '/masters/fmv-parameters', icon: Calculator, pageKey: 'masters_fmv_parameters' },
+          { label: 'Budget', path: '/masters/budget', icon: Wallet, pageKey: 'masters_budget' },
+        ]
+      },
+      {
+        label: 'Reports',
+        icon: BarChart3,
+        pageKey: 'reports',
+        submenu: [
+          { label: 'Event Report', path: '/reports/events', icon: FileSpreadsheet, pageKey: 'reports_events' },
+          { label: 'CME Event Report', path: '/reports/cme-events', icon: FileSpreadsheet, pageKey: 'reports_cme_events' },
+          { label: 'FMV Parameter Report', path: '/reports/fmv-parameters', icon: FileSpreadsheet, pageKey: 'reports_fmv_parameters' },
+        ]
+      },
     ]
   },
   {
@@ -45,9 +73,17 @@ export default function Sidebar() {
   const { user, logout } = useAuthStore()
   const { accessiblePages, loaded } = useAccessStore()
   const navigate = useNavigate()
+  const location = useLocation()
   const [showChangePw, setShowChangePw] = useState(false)
   const [pwForm, setPwForm] = useState({ old_password: '', new_password: '', confirm_password: '' })
   const [pwLoading, setPwLoading] = useState(false)
+  const [expandedMenus, setExpandedMenus] = useState(() => {
+    // Auto-expand menus based on current path
+    const expanded = {}
+    if (location.pathname.startsWith('/masters')) expanded['Masters'] = true
+    if (location.pathname.startsWith('/reports')) expanded['Reports'] = true
+    return expanded
+  })
 
   const handleLogout = () => {
     logout()
@@ -98,7 +134,13 @@ export default function Sidebar() {
       {/* Nav — scrollable inner */}
       <nav className="flex-1 overflow-y-auto overflow-x-visible py-4 px-3">
         {navGroups.map((group) => {
-          const visibleItems = group.items.filter(i => hasAccess(i.pageKey))
+          const visibleItems = group.items.filter(i => {
+            if (i.submenu) {
+              // Show parent if user has access to any submenu item
+              return i.submenu.some(sub => hasAccess(sub.pageKey))
+            }
+            return hasAccess(i.pageKey)
+          })
           if (visibleItems.length === 0) return null
           return (
             <div key={group.label} className="mb-4">
@@ -114,28 +156,85 @@ export default function Sidebar() {
               >
                 {group.label}
               </p>
-              {visibleItems.map(({ label, path, icon: Icon, pageKey }) => (
-                <NavLink
-                  key={path}
-                  to={path}
-                  end={path === '/'}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium mb-0.5 transition-all duration-150 ${
+              {visibleItems.map(({ label, path, icon: Icon, pageKey, submenu }) => {
+                if (submenu) {
+                  const basePath = submenu[0]?.path?.split('/').slice(0, 2).join('/') || ''
+                  const isExpanded = expandedMenus[label] !== undefined ? expandedMenus[label] : location.pathname.startsWith(basePath)
+                  const isActiveParent = location.pathname.startsWith(basePath)
+                  return (
+                    <div key={label}>
+                      <button
+                        onClick={() => setExpandedMenus(prev => ({ ...prev, [label]: !isExpanded }))}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium mb-0.5 transition-all duration-150 ${
+                          isActiveParent && !isExpanded
+                            ? 'text-white'
+                            : 'hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary)]'
+                        }`}
+                        style={
+                          isActiveParent && !isExpanded
+                            ? { background: 'var(--color-primary)', color: '#fff' }
+                            : { color: 'var(--color-neutral-600)' }
+                        }
+                      >
+                        <Icon size={16} />
+                        <span className="flex-1 text-left">{label}</span>
+                        <ChevronDown
+                          size={14}
+                          className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+                      {isExpanded && (
+                        <div className="ml-3 pl-3 border-l border-gray-200 mt-1 mb-2">
+                          {submenu.filter(sub => hasAccess(sub.pageKey)).map(({ label: subLabel, path: subPath, icon: SubIcon }) => (
+                            <NavLink
+                              key={subPath}
+                              to={subPath}
+                              className={({ isActive }) =>
+                                `flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[12px] font-medium mb-0.5 transition-all duration-150 ${
+                                  isActive
+                                    ? 'text-white'
+                                    : 'hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary)]'
+                                }`
+                              }
+                              style={({ isActive }) =>
+                                isActive
+                                  ? { background: 'var(--color-primary)', color: '#fff' }
+                                  : { color: 'var(--color-neutral-600)' }
+                              }
+                            >
+                              <SubIcon size={14} />
+                              <span>{subLabel}</span>
+                            </NavLink>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+
+                return (
+                  <NavLink
+                    key={path}
+                    to={path}
+                    end={path === '/'}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium mb-0.5 transition-all duration-150 ${
+                        isActive
+                          ? 'text-white'
+                          : 'hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary)]'
+                      }`
+                    }
+                    style={({ isActive }) =>
                       isActive
-                        ? 'text-white'
-                        : 'hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary)]'
-                    }`
-                  }
-                  style={({ isActive }) =>
-                    isActive
-                      ? { background: 'var(--color-primary)', color: '#fff' }
-                      : { color: 'var(--color-neutral-600)' }
-                  }
-                >
-                  <Icon size={16} />
-                  <span>{label}</span>
-                </NavLink>
-              ))}
+                        ? { background: 'var(--color-primary)', color: '#fff' }
+                        : { color: 'var(--color-neutral-600)' }
+                    }
+                  >
+                    <Icon size={16} />
+                    <span>{label}</span>
+                  </NavLink>
+                )
+              })}
             </div>
           )
         })}

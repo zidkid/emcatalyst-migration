@@ -818,9 +818,16 @@ def list_doctors(event_id: int, db: Session = Depends(get_db), current_user: Use
 
 @router.post("/{event_id}/doctors", response_model=EventDoctorOut)
 def add_doctor(event_id: int, data: EventDoctorCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
-    if not db.query(Event).filter(Event.id == event_id).first():
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    doctor = EventDoctor(**data.model_dump(), event_id=event_id)
+
+    # Generate sub_application_code: event_code + A, B, C...
+    existing_count = db.query(EventDoctor).filter(EventDoctor.event_id == event_id).count()
+    letter = chr(65 + existing_count)  # A=65, B=66, etc.
+    sub_code = f"{event.event_code}{letter}" if event.event_code else f"EVT{event_id}{letter}"
+
+    doctor = EventDoctor(**data.model_dump(), event_id=event_id, sub_application_code=sub_code)
     db.add(doctor)
     db.commit()
     db.refresh(doctor)
@@ -1061,3 +1068,351 @@ def delete_agreement(
     db.delete(ag)
     db.commit()
     return {"message": "Deleted"}
+
+
+
+@router.post("/{event_id}/generate-agreement/{doctor_id}")
+async def generate_agreement(
+    event_id: int,
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Generate agreement PDF for a specific HCP in an event."""
+    from app.services.agreement_pdf import generate_agreement_pdf
+
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    doc = db.query(EventDoctor).filter(EventDoctor.id == doctor_id, EventDoctor.event_id == event_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Doctor not found in this event")
+
+    # Check if doctor has costs (agreement required)
+    has_cost = any([
+        float(doc.honorarium or 0) > 0,
+        float(doc.cab_cost or 0) > 0,
+        float(doc.flight_cost or 0) > 0,
+        float(doc.accommodation_cost or 0) > 0,
+    ])
+    if not has_cost:
+        raise HTTPException(status_code=400, detail="Agreement not required for this HCP (no costs)")
+
+    # Get entity name from division
+    entity_name = "Emcure"
+    if event.division_id:
+        from app.models.user import Division, Entity
+        div = db.query(Division).filter(Division.id == event.division_id).first()
+        if div and div.entity_id:
+            entity = db.query(Entity).filter(Entity.id == div.entity_id).first()
+            if entity:
+                entity_name = entity.name
+
+    # Use sub_application_code as agreement code
+    agreement_code = doc.sub_application_code or (f"{event.event_code}A" if event.event_code else f"AGR{event.id:06d}")
+
+    # Generate PDF
+    from datetime import datetime as dt
+    pdf_bytes = generate_agreement_pdf(
+        agreement_code=agreement_code,
+        date_str=dt.now().strftime("%m/%d/%Y"),
+        hcp_name=doc.doctor_name,
+        hcp_address="",
+        hcp_qualification=doc.specialization or doc.qualification or "",
+        hcp_pan=doc.pan_number or "",
+        event_title=event.event_title or "",
+        event_topic=event.topic or event.event_title or "",
+        event_date=event.event_date.strftime("%d-%m-%Y") if event.event_date else "",
+        event_venue=event.venue or "",
+        honorarium_amount=float(doc.honorarium or 0),
+        entity_name=entity_name,
+    )
+
+    # Save PDF to uploads
+    upload_dir = os.path.join("uploads", "agreements", str(event_id))
+    os.makedirs(upload_dir, exist_ok=True)
+    filename = f"agreement_{doctor_id}_{agreement_code}.pdf"
+    file_path = os.path.join(upload_dir, filename)
+    with open(file_path, "wb") as f:
+        f.write(pdf_bytes)
+
+    # Create or update agreement record — status stays Not Initiated until emSigner confirms
+    from app.models.event import EventAgreement
+    existing = db.query(EventAgreement).filter(
+        EventAgreement.event_id == event_id,
+        EventAgreement.event_doctor_id == doctor_id,
+    ).first()
+    if existing:
+        existing.file_path = file_path
+        existing.agreement_date = dt.now()
+    else:
+        agreement = EventAgreement(
+            event_id=event_id,
+            event_doctor_id=doctor_id,
+            status="Not Initiated",
+            file_path=file_path,
+            agreement_date=dt.now(),
+            is_downloadable=True,
+        )
+        db.add(agreement)
+    db.commit()
+
+    # Log the agreement generation and send to emSigner
+    import json
+    from app.models.event import AgreementApiLog
+    from app.services.emsigner_service import send_document_for_signing
+
+    db.add(AgreementApiLog(
+        event_id=event_id, doctor_id=doctor_id, action="Generate Agreement PDF",
+        request_payload=json.dumps({"doctor_name": doc.doctor_name, "entity": entity_name, "agreement_code": agreement_code}),
+        response_payload=json.dumps({"file_path": file_path}),
+        status="Success", performed_by_id=current_user.id,
+    ))
+    db.commit()
+
+    # Send to emSigner for digital signing
+    doc_name = f"{agreement_code}_{doc.doctor_name}.pdf"
+    doctor_email = doc.email
+
+    if doctor_email:
+        emsigner_result = await send_document_for_signing(
+            event_code=agreement_code,
+            doctor_email=doctor_email,
+            pdf_bytes=pdf_bytes,
+            document_name=doc_name,
+        )
+
+        # Log the emSigner API call with actual request/response
+        db.add(AgreementApiLog(
+            event_id=event_id, doctor_id=doctor_id, action="Send to emSigner",
+            request_payload=json.dumps(emsigner_result.get("request", {}), default=str),
+            response_payload=json.dumps(emsigner_result.get("response", {}), default=str),
+            status="Success" if emsigner_result.get("success") else "Failed",
+            performed_by_id=current_user.id,
+        ))
+
+        # Update workflow_id and status to Pending only if successful
+        if emsigner_result.get("success") and emsigner_result.get("workflow_id"):
+            agr = db.query(EventAgreement).filter(
+                EventAgreement.event_id == event_id,
+                EventAgreement.event_doctor_id == doctor_id,
+            ).first()
+            if agr:
+                agr.workflow_id = emsigner_result["workflow_id"]
+                agr.status = "Pending"
+
+        db.commit()
+
+    return {
+        "ok": True,
+        "file_path": file_path,
+        "filename": filename,
+        "message": f"Agreement generated for {doc.doctor_name}",
+    }
+
+
+@router.get("/{event_id}/agreements-status")
+def get_event_agreements_status(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get agreement status for all HCPs in an event."""
+    from app.models.event import EventAgreement
+
+    event = db.query(Event).filter(Event.id == event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    # Fetch all existing agreements for this event
+    agreements = db.query(EventAgreement).filter(EventAgreement.event_id == event_id).all()
+    agreement_map = {a.event_doctor_id: a for a in agreements}
+
+    results = []
+    for doc in event.doctors:
+        has_cost = any([
+            float(doc.honorarium or 0) > 0,
+            float(doc.cab_cost or 0) > 0,
+            float(doc.flight_cost or 0) > 0,
+            float(doc.accommodation_cost or 0) > 0,
+        ])
+
+        existing_agreement = agreement_map.get(doc.id)
+
+        if not has_cost:
+            status = "Not Required"
+            agreement_date = None
+            file_path = None
+        elif existing_agreement:
+            status = existing_agreement.status or "Pending"
+            agreement_date = existing_agreement.agreement_date.isoformat() if existing_agreement.agreement_date else None
+            file_path = existing_agreement.file_path
+        else:
+            status = "Not Initiated"
+            agreement_date = None
+            file_path = None
+
+        results.append({
+            "doctor_id": doc.id,
+            "doctor_name": doc.doctor_name,
+            "sub_application_code": doc.sub_application_code,
+            "email": doc.email,
+            "pan_number": doc.pan_number,
+            "honorarium": float(doc.honorarium or 0),
+            "total_cost": float(doc.honorarium or 0) + float(doc.cab_cost or 0) + float(doc.flight_cost or 0) + float(doc.accommodation_cost or 0),
+            "agreement_date": agreement_date,
+            "status": status,
+            "file_path": file_path,
+        })
+
+    return {"event_code": event.event_code, "event_title": event.event_title, "status": event.status, "agreements": results}
+
+
+@router.post("/{event_id}/agreements/sync-status")
+async def sync_agreement_statuses(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Check emSigner status for all pending agreements and update DB."""
+    from app.models.event import EventAgreement
+    from app.services.emsigner_service import get_signing_status
+
+    agreements = db.query(EventAgreement).filter(
+        EventAgreement.event_id == event_id,
+        EventAgreement.status == "Pending",
+        EventAgreement.workflow_id.isnot(None),
+    ).all()
+
+    updated = 0
+    for agr in agreements:
+        result = await get_signing_status(agr.workflow_id)
+        # Log the status check
+        import json
+        from app.models.event import AgreementApiLog
+        db.add(AgreementApiLog(
+            event_id=event_id, doctor_id=agr.event_doctor_id, action="Check Status",
+            request_payload=json.dumps({"workflow_id": agr.workflow_id}),
+            response_payload=json.dumps(result) if result else json.dumps({"error": "No response"}),
+            status="Success" if result else "Failed", performed_by_id=current_user.id,
+        ))
+        if result and result.get("status") == "Signed":
+            agr.status = "Signed"
+            updated += 1
+
+    if updated > 0:
+        db.commit()
+    else:
+        db.commit()  # Commit the log entries
+
+    return {"ok": True, "checked": len(agreements), "updated": updated}
+
+
+@router.get("/{event_id}/agreements/api-logs")
+def get_agreement_api_logs(
+    event_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Admin only: Get API call logs for agreements."""
+    if current_user.role != "Administrator" and not current_user.is_superuser:
+        raise HTTPException(403, "Only administrators can view API logs")
+    from app.models.event import AgreementApiLog
+    logs = db.query(AgreementApiLog).filter(AgreementApiLog.event_id == event_id).order_by(AgreementApiLog.created_at.desc()).all()
+    return [{
+        "id": l.id,
+        "doctor_id": l.doctor_id,
+        "action": l.action,
+        "request_payload": l.request_payload,
+        "response_payload": l.response_payload,
+        "status": l.status,
+        "performed_by": f"{l.performed_by.first_name} {l.performed_by.last_name}" if l.performed_by else "System",
+        "created_at": l.created_at.isoformat() if l.created_at else None,
+    } for l in logs]
+
+
+@router.get("/{event_id}/agreements/{doctor_id}/download")
+async def download_agreement(
+    event_id: int,
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Download agreement PDF — signed version if available, otherwise unsigned."""
+    from app.models.event import EventAgreement
+    from app.services.emsigner_service import download_signed_document
+    from fastapi.responses import Response
+
+    agr = db.query(EventAgreement).filter(
+        EventAgreement.event_id == event_id,
+        EventAgreement.event_doctor_id == doctor_id,
+    ).first()
+    if not agr:
+        raise HTTPException(404, "Agreement not found")
+
+    # If signed and has workflow_id, try to download from emSigner
+    if agr.status == "Signed" and agr.workflow_id:
+        signed_pdf = await download_signed_document(agr.workflow_id)
+        if signed_pdf:
+            return Response(
+                content=signed_pdf,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f"attachment; filename=signed_agreement_{doctor_id}.pdf"},
+            )
+
+    # Fallback: serve the unsigned PDF from local storage
+    if agr.file_path:
+        import os
+        from fastapi.responses import FileResponse
+        from pathlib import Path
+        safe_path = Path(agr.file_path)
+        if safe_path.exists():
+            return FileResponse(safe_path, filename=f"agreement_{doctor_id}.pdf")
+
+    raise HTTPException(404, "Agreement file not found")
+
+
+@router.get("/{event_id}/agreements/{doctor_id}/document-logs")
+async def get_agreement_document_logs(
+    event_id: int,
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get document logs from emSigner for a specific agreement."""
+    from app.models.event import EventAgreement
+    import httpx
+    from app.core.config import settings
+
+    agr = db.query(EventAgreement).filter(
+        EventAgreement.event_id == event_id,
+        EventAgreement.event_doctor_id == doctor_id,
+    ).first()
+    if not agr or not agr.workflow_id:
+        raise HTTPException(404, "Agreement or workflow not found")
+
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=15) as client:
+            response = await client.get(
+                f"{settings.EMSIGNER_BASE_URL}GetDocumentLogs",
+                params={"workflowId": agr.workflow_id},
+            )
+            try:
+                data = response.json()
+            except Exception:
+                # Try XML
+                try:
+                    import xml.etree.ElementTree as ET
+                    root = ET.fromstring(response.text)
+                    data = []
+                    for item in root:
+                        entry = {}
+                        for field in item:
+                            entry[field.tag] = field.text
+                        data.append(entry)
+                except Exception:
+                    data = []
+            return data
+    except Exception as e:
+        raise HTTPException(500, f"Failed to fetch document logs: {str(e)}")

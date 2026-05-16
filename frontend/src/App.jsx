@@ -16,11 +16,24 @@ import EventList from './pages/events/EventList'
 import EventForm from './pages/events/EventForm'
 import EventDetail from './pages/events/EventDetail'
 import PostEventDocuments from './pages/events/PostEventDocuments'
+import EventAgreements from './pages/events/EventAgreements'
 
 import UserManagement from './pages/users/UserManagement'
 import HierarchyView from './pages/users/HierarchyView'
 
 import Masters from './pages/masters/Masters'
+import MasterEntities from './pages/masters/MasterEntities'
+import MasterDivisions from './pages/masters/MasterDivisions'
+import MasterDoctors from './pages/masters/MasterDoctors'
+import MasterBrands from './pages/masters/MasterBrands'
+import MasterTherapeutics from './pages/masters/MasterTherapeutics'
+import MasterDocumentTypes from './pages/masters/MasterDocumentTypes'
+import MasterMeals from './pages/masters/MasterMeals'
+import MasterFmvParameters from './pages/masters/MasterFmvParameters'
+import MasterBudget from './pages/masters/MasterBudget'
+import EventReport from './pages/reports/EventReport'
+import CmeEventReport from './pages/reports/CmeEventReport'
+import FmvParameterReport from './pages/reports/FmvParameterReport'
 import BrsList from './pages/brs/BrsList'
 import BrsForm from './pages/brs/BrsForm'
 import BrsDetail from './pages/brs/BrsDetail'
@@ -112,12 +125,25 @@ export default function App() {
                 <Route path="events/:id/edit" element={<ProtectedRoute pageKey="events_edit"><EventForm /></ProtectedRoute>} />
                 <Route path="events/:id" element={<ProtectedRoute pageKey="events_detail"><EventDetail /></ProtectedRoute>} />
                 <Route path="events/:id/post-documents" element={<ProtectedRoute pageKey="events_post_docs"><PostEventDocuments /></ProtectedRoute>} />
+                <Route path="events/:id/agreements" element={<ProtectedRoute pageKey="events_detail"><EventAgreements /></ProtectedRoute>} />
 
 
                 <Route path="users" element={<ProtectedRoute pageKey="users"><UserManagement /></ProtectedRoute>} />
                 <Route path="hierarchy" element={<ProtectedRoute pageKey="hierarchy"><HierarchyView /></ProtectedRoute>} />
 
                 <Route path="masters" element={<ProtectedRoute pageKey="masters"><Masters /></ProtectedRoute>} />
+                <Route path="masters/entities" element={<ProtectedRoute pageKey="masters_entities"><MasterEntities /></ProtectedRoute>} />
+                <Route path="masters/divisions" element={<ProtectedRoute pageKey="masters_divisions"><MasterDivisions /></ProtectedRoute>} />
+                <Route path="masters/doctors" element={<ProtectedRoute pageKey="masters_doctors"><MasterDoctors /></ProtectedRoute>} />
+                <Route path="masters/brands" element={<ProtectedRoute pageKey="masters_brands"><MasterBrands /></ProtectedRoute>} />
+                <Route path="masters/therapeutics" element={<ProtectedRoute pageKey="masters_therapeutics"><MasterTherapeutics /></ProtectedRoute>} />
+                <Route path="masters/document-types" element={<ProtectedRoute pageKey="masters_document_types"><MasterDocumentTypes /></ProtectedRoute>} />
+                <Route path="masters/meals" element={<ProtectedRoute pageKey="masters_meals"><MasterMeals /></ProtectedRoute>} />
+                <Route path="masters/fmv-parameters" element={<ProtectedRoute pageKey="masters_fmv_parameters"><MasterFmvParameters /></ProtectedRoute>} />
+                <Route path="masters/budget" element={<ProtectedRoute pageKey="masters_budget"><MasterBudget /></ProtectedRoute>} />
+                <Route path="reports/events" element={<ProtectedRoute pageKey="reports_events"><EventReport /></ProtectedRoute>} />
+                <Route path="reports/cme-events" element={<ProtectedRoute pageKey="reports_cme_events"><CmeEventReport /></ProtectedRoute>} />
+                <Route path="reports/fmv-parameters" element={<ProtectedRoute pageKey="reports_fmv_parameters"><FmvParameterReport /></ProtectedRoute>} />
                 <Route path="brs" element={<ProtectedRoute pageKey="brs_list"><BrsList /></ProtectedRoute>} />
                 <Route path="brs/new" element={<ProtectedRoute pageKey="brs_create"><BrsForm /></ProtectedRoute>} />
                 <Route path="brs/bulk-upload" element={<ProtectedRoute pageKey="brs_bulk_upload"><BrsBulkUpload /></ProtectedRoute>} />

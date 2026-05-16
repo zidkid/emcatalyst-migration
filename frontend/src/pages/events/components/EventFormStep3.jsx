@@ -232,6 +232,21 @@ export default function EventFormStep3({
               }
             }
 
+            // Validate mandatory fields when costs are present
+            const doctorsWithCosts = doctors.filter(d =>
+              parseFloat(d.honorarium) || parseFloat(d.cab_cost) || parseFloat(d.flight_cost) || parseFloat(d.accommodation_cost)
+            )
+            for (const d of doctorsWithCosts) {
+              const missing = []
+              if (!d.email) missing.push('Email')
+              if (!d.pan_number) missing.push('PAN')
+              if (!d.name_as_per_pan && !d.doctor_name) missing.push('Name as per PAN')
+              if (missing.length > 0) {
+                toast.error(`${d.doctor_name}: ${missing.join(', ')} required when cost is entered`)
+                return
+              }
+            }
+
             onSave(getValues(), true)
           }}>Next</button>
         </div>

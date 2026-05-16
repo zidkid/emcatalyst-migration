@@ -305,7 +305,7 @@ export default function EventDetail() {
             <table className="text-xs w-full" style={{minWidth: '1200px'}}>
               <thead className="bg-gray-100 border-b">
                 <tr>
-                  {['Name','Type','PAN','Email','FMV Cat','Pts','Rate','Derived','Honorarium','Cab','Flight','Accom','Remark'].map(h => (
+                  {['Sub Code','Name','Type','PAN','Email','FMV Cat','Pts','Rate','Derived','Honorarium','Cab','Flight','Accom','Remark'].map(h => (
                     <th key={h} className="px-2 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -313,6 +313,7 @@ export default function EventDetail() {
               <tbody className="divide-y">
                 {event.doctors.map(d => (
                   <tr key={d.id} className="hover:bg-gray-50">
+                    <td className="px-2 py-1.5 font-mono text-xs text-[var(--color-primary)]">{d.sub_application_code || '—'}</td>
                     <td className="px-2 py-1.5 font-medium whitespace-nowrap">{d.doctor_name}</td>
                     <td className="px-2 py-1.5"><span className={`text-xs px-1.5 py-0.5 rounded ${d.is_mcl !== false ? 'bg-[var(--color-primary-100)] text-[var(--color-primary)]' : 'bg-amber-100 text-amber-700'}`}>{d.is_mcl !== false ? 'MCL' : 'Non-MCL'}</span></td>
                     <td className="px-2 py-1.5 font-mono">{d.pan_number || '—'}</td>

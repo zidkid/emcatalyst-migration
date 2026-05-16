@@ -126,6 +126,7 @@ class EventDoctor(Base):
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     hcp_doctor_id = Column(Integer, ForeignKey("hcp_doctors.id"), nullable=True)  # FK to MCL
+    sub_application_code = Column(String(50), nullable=True)
     is_mcl = Column(Boolean, default=True)
     doctor_name = Column(String(300), nullable=False)
     name_as_per_pan = Column(String(300))
@@ -265,12 +266,15 @@ class EventAgreement(Base):
     mendix_id = Column(String(30), unique=True, nullable=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     doctor_id = Column(Integer, ForeignKey("hcp_doctors.id"), nullable=True)
+    event_doctor_id = Column(Integer, ForeignKey("event_doctors.id"), nullable=True)
     non_mcl_name = Column(String(300))
     non_mcl_pan = Column(String(20))
     non_mcl_email = Column(String(200))
     is_hcp_doctor = Column(Boolean, default=True)
     agreement_date = Column(DateTime)
     status = Column(String(50), default="Pending")
+    file_path = Column(String(500), nullable=True)
+    workflow_id = Column(String(50), nullable=True)  # emSigner workflow ID
     cancellation_remark = Column(Text)
     is_downloadable = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -306,4 +310,20 @@ class EventAuditTrail(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     event = relationship("Event", back_populates="audit_trail")
+    performed_by = relationship("User")
+
+
+class AgreementApiLog(Base):
+    __tablename__ = "agreement_api_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(Integer, ForeignKey("events.id"), nullable=True)
+    doctor_id = Column(Integer, nullable=True)
+    action = Column(String(100), nullable=False)  # "Generate", "Send to emSigner", "Check Status", "Download"
+    request_payload = Column(Text, nullable=True)
+    response_payload = Column(Text, nullable=True)
+    status = Column(String(50), nullable=True)  # "Success", "Failed"
+    performed_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
     performed_by = relationship("User")

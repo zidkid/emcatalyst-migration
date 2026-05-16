@@ -27,6 +27,18 @@ DEFAULT_PAGES = [
     {"page_key": "brs_survey_builder", "page_label": "Survey Builder", "page_path": "/brs/survey-builder", "nav_group": "BRS"},
     {"page_key": "brs_bulk_upload", "page_label": "Bulk BRS Upload", "page_path": "/brs/bulk-upload", "nav_group": "BRS"},
     {"page_key": "masters", "page_label": "Masters", "page_path": "/masters", "nav_group": "Masters"},
+    {"page_key": "masters_entities", "page_label": "Entities", "page_path": "/masters/entities", "nav_group": "Masters"},
+    {"page_key": "masters_divisions", "page_label": "Divisions", "page_path": "/masters/divisions", "nav_group": "Masters"},
+    {"page_key": "masters_doctors", "page_label": "Doctors", "page_path": "/masters/doctors", "nav_group": "Masters"},
+    {"page_key": "masters_brands", "page_label": "Brands", "page_path": "/masters/brands", "nav_group": "Masters"},
+    {"page_key": "masters_therapeutics", "page_label": "Therapeutics", "page_path": "/masters/therapeutics", "nav_group": "Masters"},
+    {"page_key": "masters_document_types", "page_label": "Document Types", "page_path": "/masters/document-types", "nav_group": "Masters"},
+    {"page_key": "masters_meals", "page_label": "Meals", "page_path": "/masters/meals", "nav_group": "Masters"},
+    {"page_key": "masters_fmv_parameters", "page_label": "FMV Parameters", "page_path": "/masters/fmv-parameters", "nav_group": "Masters"},
+    {"page_key": "masters_budget", "page_label": "Budget", "page_path": "/masters/budget", "nav_group": "Masters"},
+    {"page_key": "reports_events", "page_label": "Event Report", "page_path": "/reports/events", "nav_group": "Reports"},
+    {"page_key": "reports_cme_events", "page_label": "CME Event Report", "page_path": "/reports/cme-events", "nav_group": "Reports"},
+    {"page_key": "reports_fmv_parameters", "page_label": "FMV Parameter Report", "page_path": "/reports/fmv-parameters", "nav_group": "Reports"},
     {"page_key": "users", "page_label": "Users", "page_path": "/users", "nav_group": "Admin"},
     {"page_key": "hierarchy", "page_label": "Hierarchy", "page_path": "/hierarchy", "nav_group": "Admin"},
     {"page_key": "admin_rbac", "page_label": "RBAC Config", "page_path": "/admin/rbac", "nav_group": "Admin"},
@@ -44,11 +56,17 @@ def seed_roles(db: Session) -> None:
 
 
 def seed_pages(db: Session) -> None:
-    """Seed all app pages if they don't exist."""
+    """Seed all app pages — insert missing ones and update existing ones."""
     for page_data in DEFAULT_PAGES:
         existing = db.query(Page).filter(Page.page_key == page_data["page_key"]).first()
         if not existing:
             db.add(Page(**page_data))
+        else:
+            # Update label, path, nav_group if they changed
+            existing.page_label = page_data["page_label"]
+            existing.page_path = page_data["page_path"]
+            existing.nav_group = page_data["nav_group"]
+            existing.is_active = True
     db.commit()
 
 
@@ -66,6 +84,45 @@ def seed_admin_full_access(db: Session) -> None:
         )
         if not existing:
             db.add(RolePageAccess(role_id=admin_role.id, page_id=page.id, can_access=True))
+        else:
+            existing.can_access = True
+    db.commit()
+
+
+def migrate_masters_access(db: Session) -> None:
+    """Grant new master sub-pages to any role that had access to the old 'masters' page."""
+    old_masters_page = db.query(Page).filter(Page.page_key == "masters").first()
+    if not old_masters_page:
+        return
+
+    # Find all roles that have access to the old masters page
+    access_entries = (
+        db.query(RolePageAccess)
+        .filter(RolePageAccess.page_id == old_masters_page.id, RolePageAccess.can_access == True)
+        .all()
+    )
+    role_ids_with_access = [entry.role_id for entry in access_entries]
+
+    if not role_ids_with_access:
+        return
+
+    # Get all new master sub-pages
+    master_sub_pages = (
+        db.query(Page)
+        .filter(Page.page_key.like("masters_%"))
+        .all()
+    )
+
+    # Grant access to each role that had the old masters access
+    for role_id in role_ids_with_access:
+        for page in master_sub_pages:
+            existing = (
+                db.query(RolePageAccess)
+                .filter(RolePageAccess.role_id == role_id, RolePageAccess.page_id == page.id)
+                .first()
+            )
+            if not existing:
+                db.add(RolePageAccess(role_id=role_id, page_id=page.id, can_access=True))
     db.commit()
 
 
@@ -74,6 +131,7 @@ def seed_rbac(db: Session) -> None:
     seed_roles(db)
     seed_pages(db)
     seed_admin_full_access(db)
+    migrate_masters_access(db)
 
 
 def get_user_accessible_pages(db: Session, user: User) -> list[str]:

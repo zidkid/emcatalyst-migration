@@ -66,6 +66,12 @@ export const eventsApi = {
   removeMeal: (eventId, mealId) => api.delete(`/events/${eventId}/meals/${mealId}`),
   uploadDocument: (eventId, formData) =>
     api.post(`/events/${eventId}/documents`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  agreementsStatus: (eventId) => api.get(`/events/${eventId}/agreements-status`),
+  generateAgreement: (eventId, doctorId) => api.post(`/events/${eventId}/generate-agreement/${doctorId}`),
+  syncAgreementStatuses: (eventId) => api.post(`/events/${eventId}/agreements/sync-status`),
+  agreementApiLogs: (eventId) => api.get(`/events/${eventId}/agreements/api-logs`),
+  downloadAgreement: (eventId, doctorId) => api.get(`/events/${eventId}/agreements/${doctorId}/download`, { responseType: 'blob' }),
+  agreementDocLogs: (eventId, doctorId) => api.get(`/events/${eventId}/agreements/${doctorId}/document-logs`),
 }
 
 
@@ -217,4 +223,11 @@ export const eventAgreementsApi = {
   updateStatus: (eventId, agreementId, status, remark) =>
     api.put(`/events/${eventId}/agreements/${agreementId}/status`, null, { params: { status, remark } }),
   delete: (eventId, agreementId) => api.delete(`/events/${eventId}/agreements/${agreementId}`),
+}
+
+// Reports
+export const reportsApi = {
+  eventReport: (params) => api.get('/reports/events', { params }),
+  cmeEventReport: (params) => api.get('/reports/cme-events', { params }),
+  fmvParameterReport: (params) => api.get('/reports/fmv-parameters', { params }),
 }

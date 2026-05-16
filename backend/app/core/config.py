@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     AZURE_TENANT_ID: str = ""
     AZURE_REDIRECT_URI: str = ""  # Will default to {FRONTEND_URL}/auth/microsoft/callback
 
+    # Embedded Sign (emSigner) API
+    EMSIGNER_BASE_URL: str = "https://emsn-dev-emudra-dev.apps.emart.oneemcure.local/rest/embededsign/v1/"
+    EMSIGNER_SENDER_NAME: str = "Sumith Gangadharan"
+    EMSIGNER_SENDER_EMAIL: str = "sumith.gangadharan@emcure.com"
+    EMSIGNER_TEMPLATE_ID: int = 1
+
     class Config:
         env_file = ".env"
 

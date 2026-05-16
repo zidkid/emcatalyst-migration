@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, CalendarDays, ChevronLeft, ChevronRight, Edit2, Trash2, Calendar } from 'lucide-react'
+import { Plus, Search, CalendarDays, ChevronLeft, ChevronRight, Edit2, Trash2, Calendar, FileSignature, MoreVertical, Eye } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { eventsApi, masterApi } from '../../api/endpoints'
 import { fmtDate, fmtCurrency } from '../../utils/helpers'
@@ -23,6 +23,7 @@ export default function EventList() {
   const [changeDateEvent, setChangeDateEvent] = useState(null)
   const [newDate, setNewDate] = useState('')
   const [newEndDate, setNewEndDate] = useState('')
+  const [openMenuId, setOpenMenuId] = useState(null)
 
   const { data: allEvents = [], isLoading } = useQuery({
     queryKey: ['events', statusFilter],
@@ -71,7 +72,7 @@ export default function EventList() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-8" onClick={() => openMenuId && setOpenMenuId(null)}>
       <PageHeader
         title="Events"
         subtitle="Manage medical events, CMEs, conferences and workshops"
@@ -133,30 +134,37 @@ export default function EventList() {
                   <td className="px-4 py-3 text-gray-500 text-xs">{divisionMap[e.division_id] || e.city || '—'}</td>
                   <td className="px-4 py-3 text-xs">{fmtCurrency(e.budget_amount)}</td>
                   <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button className="text-[var(--color-primary)] hover:underline text-xs" onClick={() => navigate(`/events/${e.id}`)}>View</button>
-                      {e.status === 'Draft' && (
-                        <>
-                          <button className="text-[var(--color-primary)] hover:underline text-xs flex items-center gap-1" onClick={() => navigate(`/events/${e.id}/edit`)}>
+                  <td className="px-4 py-3 relative">
+                    <button className="p-1 rounded hover:bg-gray-100" onClick={(ev) => { ev.stopPropagation(); setOpenMenuId(openMenuId === e.id ? null : e.id) }}>
+                      <MoreVertical size={16} className="text-gray-500" />
+                    </button>
+                    {openMenuId === e.id && (
+                      <div className="absolute right-4 top-10 z-50 bg-white border rounded-lg shadow-lg py-1 min-w-[150px]" onClick={() => setOpenMenuId(null)}>
+                        <button className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2" onClick={() => navigate(`/events/${e.id}`)}>
+                          <Eye size={12} /> View
+                        </button>
+                        {e.status === 'Draft' && (
+                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2" onClick={() => navigate(`/events/${e.id}/edit`)}>
                             <Edit2 size={12} /> Edit
                           </button>
-                          <button className="text-red-500 hover:underline text-xs flex items-center gap-1" onClick={() => { if (confirm('Delete this draft event?')) deleteEvent.mutate(e.id) }}>
+                        )}
+                        {(e.status === 'Pre-Approved' || e.status === 'Post L1' || e.status === 'Post L2' || e.status === 'Post Compliance' || e.status === 'Completed') && (user?.role === 'Administrator' || user?.id === e.initiator_id) && (
+                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 text-purple-600" onClick={() => navigate(`/events/${e.id}/agreements`)}>
+                            <FileSignature size={12} /> Agreement
+                          </button>
+                        )}
+                        {user?.role === 'Administrator' && (
+                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 text-amber-600" onClick={() => { setChangeDateEvent(e); setNewDate(e.event_date?.slice(0, 10) || ''); setNewEndDate(e.event_end_date?.slice(0, 10) || '') }}>
+                            <Calendar size={12} /> Change Date
+                          </button>
+                        )}
+                        {(e.status === 'Draft' || user?.role === 'Administrator') && (
+                          <button className="w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center gap-2 text-red-500" onClick={() => { if (confirm(`Delete event ${e.event_code}?`)) deleteEvent.mutate(e.id) }}>
                             <Trash2 size={12} /> Delete
                           </button>
-                        </>
-                      )}
-                      {e.status !== 'Draft' && user?.role === 'Administrator' && (
-                        <button className="text-red-500 hover:underline text-xs flex items-center gap-1" onClick={() => { if (confirm(`Delete event ${e.event_code}? This cannot be undone.`)) deleteEvent.mutate(e.id) }}>
-                          <Trash2 size={12} /> Delete
-                        </button>
-                      )}
-                      {user?.role === 'Administrator' && (
-                        <button className="text-amber-600 hover:underline text-xs flex items-center gap-1" onClick={() => { setChangeDateEvent(e); setNewDate(e.event_date?.slice(0, 10) || ''); setNewEndDate(e.event_end_date?.slice(0, 10) || '') }}>
-                          <Calendar size={12} /> Change Date
-                        </button>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

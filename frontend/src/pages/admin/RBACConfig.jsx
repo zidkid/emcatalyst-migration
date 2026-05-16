@@ -121,6 +121,49 @@ export default function RBACConfig() {
     )
   }, [pages, search])
 
+  // Group pages by nav_group
+  const groupedPages = useMemo(() => {
+    const groups = {}
+    const groupOrder = ['General', 'Events', 'BRS', 'Masters', 'Reports', 'Admin']
+    filteredPages.forEach((page) => {
+      const group = page.nav_group || 'Other'
+      if (!groups[group]) groups[group] = []
+      groups[group].push(page)
+    })
+    // Sort groups by predefined order
+    const sorted = []
+    groupOrder.forEach((g) => {
+      if (groups[g]) sorted.push({ name: g, pages: groups[g] })
+    })
+    // Add any remaining groups not in the predefined order
+    Object.keys(groups).forEach((g) => {
+      if (!groupOrder.includes(g)) sorted.push({ name: g, pages: groups[g] })
+    })
+    return sorted
+  }, [filteredPages])
+
+  // Toggle all pages in a group
+  const toggleGroup = (groupPages, value) => {
+    const roleId = selectedRoleId
+    setAccessMatrix((prev) => {
+      const updated = [...prev]
+      groupPages.forEach((page) => {
+        const idx = updated.findIndex((e) => e.role_id === roleId && e.page_id === page.id)
+        if (idx >= 0) {
+          updated[idx] = { ...updated[idx], can_access: value }
+        } else {
+          updated.push({ role_id: roleId, page_id: page.id, can_access: value })
+        }
+      })
+      return updated
+    })
+  }
+
+  // Check if all pages in a group have access
+  const isGroupAllChecked = (groupPages) => {
+    return groupPages.every((p) => getAccess(selectedRoleId, p.id))
+  }
+
   // Count access per role
   const accessCount = (roleId) => {
     return accessMatrix.filter((e) => e.role_id === roleId && e.can_access).length
@@ -314,48 +357,66 @@ export default function RBACConfig() {
             </div>
 
             <div className="overflow-auto max-h-[calc(100vh-280px)]">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 sticky top-0">
-                  <tr>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">Page</th>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">Route</th>
-                    <th className="text-left px-4 py-2 font-medium text-gray-600">Group</th>
-                    <th className="text-center px-4 py-2 font-medium text-gray-600">Access</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPages.map((page) => {
-                    const hasPageAccess = getAccess(selectedRoleId, page.id)
-                    return (
-                      <tr key={page.id} className="border-t hover:bg-gray-50">
-                        <td className="px-4 py-2">
-                          <div className="font-medium text-gray-800">{page.page_label}</div>
-                          <div className="text-xs text-gray-400">{page.page_key}</div>
-                        </td>
-                        <td className="px-4 py-2 text-gray-600 font-mono text-xs">{page.page_path}</td>
-                        <td className="px-4 py-2">
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                            {page.nav_group || '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          <button
-                            onClick={() => !isAdmin && toggleAccess(page.id)}
-                            disabled={isAdmin}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                              hasPageAccess
-                                ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                                : 'bg-red-100 text-red-500 hover:bg-red-200'
-                            } ${isAdmin ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                          >
-                            {hasPageAccess ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+              {groupedPages.map((group) => {
+                const allChecked = isGroupAllChecked(group.pages)
+                return (
+                  <div key={group.name} className="border-b last:border-b-0">
+                    {/* Group header */}
+                    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 sticky top-0 z-10">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                          {group.name}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          ({group.pages.length} {group.pages.length === 1 ? 'page' : 'pages'})
+                        </span>
+                      </div>
+                      {!isAdmin && (
+                        <button
+                          onClick={() => toggleGroup(group.pages, !allChecked)}
+                          className={`text-xs px-2 py-1 rounded border transition-colors ${
+                            allChecked
+                              ? 'border-red-200 text-red-600 hover:bg-red-50'
+                              : 'border-green-200 text-green-600 hover:bg-green-50'
+                          }`}
+                        >
+                          {allChecked ? 'Revoke All' : 'Grant All'}
+                        </button>
+                      )}
+                    </div>
+                    {/* Group pages */}
+                    <table className="w-full text-sm">
+                      <tbody>
+                        {group.pages.map((page) => {
+                          const hasPageAccess = getAccess(selectedRoleId, page.id)
+                          return (
+                            <tr key={page.id} className="border-t hover:bg-gray-50">
+                              <td className="px-4 py-2.5 w-[40%]">
+                                <div className="font-medium text-gray-800">{page.page_label}</div>
+                                <div className="text-xs text-gray-400">{page.page_key}</div>
+                              </td>
+                              <td className="px-4 py-2.5 text-gray-600 font-mono text-xs w-[35%]">{page.page_path}</td>
+                              <td className="px-4 py-2.5 text-center w-[25%]">
+                                <button
+                                  onClick={() => !isAdmin && toggleAccess(page.id)}
+                                  disabled={isAdmin}
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors mx-auto ${
+                                    hasPageAccess
+                                      ? 'bg-green-100 text-green-600 hover:bg-green-200'
+                                      : 'bg-red-100 text-red-500 hover:bg-red-200'
+                                  } ${isAdmin ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                >
+                                  {hasPageAccess ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

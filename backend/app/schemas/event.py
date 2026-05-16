@@ -49,6 +49,7 @@ class EventDoctorCreate(EventDoctorBase):
 class EventDoctorOut(EventDoctorBase):
     id: int
     event_id: int
+    sub_application_code: Optional[str] = None
     is_mcl: Optional[bool] = True
     created_at: datetime
 

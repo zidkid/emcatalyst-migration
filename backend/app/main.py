@@ -35,9 +35,11 @@ def seed_rbac_data():
     from app.services.workflow_service import seed_workflows
     from app.services.vendor_seed import seed_withholding_taxes
     from app.services.gl_account_seed import seed_gl_accounts
+    from app.db.init_db import seed_data
 
     db = SessionLocal()
     try:
+        seed_data(db)
         seed_rbac(db)
         seed_workflows(db)
         seed_withholding_taxes(db)

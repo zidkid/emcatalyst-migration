@@ -13,7 +13,8 @@ from app.models.master import (
 )
 from app.models.brs import (
     BrsApplication, BrsSurvey, BrsSurveyQuestion,
-    BrsAuditTrail, BrsDoctor, BrsStatus, BrsQuestionType
+    BrsAuditTrail, BrsDoctor, BrsStatus, BrsQuestionType,
+    BrsApplicationDocument
 )
 from app.models.rbac import Role, Page, RolePageAccess
 from app.models.workflow import ApprovalWorkflow, ApprovalWorkflowStep

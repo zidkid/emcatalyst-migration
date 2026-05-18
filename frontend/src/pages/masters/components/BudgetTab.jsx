@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, X, History } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { masterApi } from '../../../api/endpoints'
 import useAuthStore from '../../../store/authStore'
+import useAccessStore from '../../../store/accessStore'
 import LoadingSpinner from '../../../components/ui/LoadingSpinner'
 
 const BUDGET_TYPES = ['Sponsorship/Event Cost', 'Speaker Cost']
@@ -32,6 +33,9 @@ export default function BudgetTab() {
   const qc = useQueryClient()
   const { user } = useAuthStore()
   const isAdmin = user?.role === 'Administrator' || user?.is_superuser
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('masters_budget_add')
+  const canEdit = accessiblePages.includes('masters_budget_edit')
 
   const [showForm, setShowForm] = useState(false)
   const [editItem, setEditItem] = useState(null)
@@ -113,9 +117,9 @@ export default function BudgetTab() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <p className="text-sm text-gray-500">{items.length} budget entries</p>
-        <button className="btn-primary flex items-center gap-2 text-sm" onClick={openAdd}>
+        {canAdd && <button className="btn-primary flex items-center gap-2 text-sm" onClick={openAdd}>
           <Plus size={14} /> Add Budget
-        </button>
+        </button>}
       </div>
 
       {showForm && (
@@ -191,8 +195,8 @@ export default function BudgetTab() {
                   <td className="px-4 py-2.5 text-right">
                     <div className="flex gap-2 justify-end">
                       <button className="text-gray-500 hover:text-gray-700" title="View History" onClick={() => setAuditBudgetId(item.id)}><History size={14} /></button>
-                      <button className="text-blue-500 hover:text-blue-700" onClick={() => openEdit(item)}><Edit2 size={14} /></button>
-                      {isAdmin && <button className="text-red-400 hover:text-red-600" onClick={() => { if (confirm('Delete this budget?')) remove.mutate(item.id) }}><Trash2 size={14} /></button>}
+                      {canEdit && <button className="text-blue-500 hover:text-blue-700" onClick={() => openEdit(item)}><Edit2 size={14} /></button>}
+                      {canEdit && isAdmin && <button className="text-red-400 hover:text-red-600" onClick={() => { if (confirm('Delete this budget?')) remove.mutate(item.id) }}><Trash2 size={14} /></button>}
                     </div>
                   </td>
                 </tr>

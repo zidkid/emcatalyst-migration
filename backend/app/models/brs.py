@@ -63,6 +63,7 @@ class BrsApplication(Base):
     approved_by = relationship("User", foreign_keys=[approved_by_id])
     doctors = relationship("BrsDoctor", back_populates="brs_application", cascade="all, delete-orphan")
     audit_trail = relationship("BrsAuditTrail", back_populates="application", order_by="BrsAuditTrail.created_at", cascade="all, delete-orphan")
+    application_documents = relationship("BrsApplicationDocument", back_populates="application", cascade="all, delete-orphan")
 
 
 class BrsDoctor(Base):
@@ -190,3 +191,19 @@ class BrsAuditTrail(Base):
 
     application = relationship("BrsApplication", back_populates="audit_trail")
     performed_by = relationship("User")
+
+
+class BrsApplicationDocument(Base):
+    """Documents uploaded by the initiator after BRS is completed"""
+    __tablename__ = "brs_application_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    brs_application_id = Column(Integer, ForeignKey("brs_applications.id", ondelete="CASCADE"), nullable=False)
+    document_name = Column(String(300), nullable=False)
+    file_path = Column(String(500), nullable=False)
+    mime_type = Column(String(100))
+    uploaded_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    application = relationship("BrsApplication", back_populates="application_documents")
+    uploaded_by = relationship("User")

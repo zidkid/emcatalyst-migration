@@ -26,6 +26,11 @@ export default function BrsList() {
     queryFn: () => brsApi.list({ status: statusFilter || undefined }).then(r => r.data),
   })
 
+  const { data: kpis } = useQuery({
+    queryKey: ['brs-dashboard'],
+    queryFn: () => brsApi.dashboard().then(r => r.data),
+  })
+
   const items = data?.items || []
   const filtered = items.filter(i => !search || i.title?.toLowerCase().includes(search.toLowerCase()) || i.brs_code?.toLowerCase().includes(search.toLowerCase()))
 
@@ -55,6 +60,25 @@ export default function BrsList() {
           </div>
         }
       />
+
+      {/* KPI Cards */}
+      {kpis && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          {[
+            { label: 'Total', value: kpis.total, color: 'bg-gray-50 text-gray-700' },
+            { label: 'Draft', value: kpis.draft, color: 'bg-slate-50 text-slate-700' },
+            { label: 'Submitted', value: kpis.submitted, color: 'bg-amber-50 text-amber-700' },
+            { label: 'Approved', value: kpis.approved, color: 'bg-blue-50 text-blue-700' },
+            { label: 'Doctor Pending', value: kpis.doctor_pending, color: 'bg-purple-50 text-purple-700' },
+            { label: 'Completed', value: kpis.completed, color: 'bg-emerald-50 text-emerald-700' },
+          ].map(k => (
+            <div key={k.label} className={`rounded-lg p-3 ${k.color} border`}>
+              <p className="text-[11px] font-medium uppercase tracking-wide opacity-70">{k.label}</p>
+              <p className="text-xl font-bold mt-0.5">{k.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="flex gap-3 mb-6">
         <div className="relative flex-1 max-w-sm">

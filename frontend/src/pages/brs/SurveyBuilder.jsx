@@ -541,7 +541,7 @@ function SurveyEditor({ surveyId, onBack }) {
             )}
           </div>
           <div className="border rounded-lg p-4">
-            <p className="text-xs font-medium text-gray-700 mb-2">Ethical Team Approval <span className="text-red-500">*</span></p>
+            <p className="text-xs font-medium text-gray-700 mb-2">Ethics Committee Approval <span className="text-red-500">*</span></p>
             {survey?.ethical_approval_file ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-emerald-600 font-medium">✓ Uploaded</span>

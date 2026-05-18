@@ -7,7 +7,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Pagination from '../../components/ui/Pagination'
 import usePagination from '../../hooks/usePagination'
 
-export default function SimpleVendorList({ title, subtitle, queryKey, fetchFn, createFn, updateFn, deleteFn, fieldName = 'name', fieldLabel = 'Name' }) {
+export default function SimpleVendorList({ title, subtitle, queryKey, fetchFn, createFn, updateFn, deleteFn, fieldName = 'name', fieldLabel = 'Name', canAdd = true, canEdit = true }) {
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
   const [editId, setEditId] = useState(null)
@@ -40,7 +40,7 @@ export default function SimpleVendorList({ title, subtitle, queryKey, fetchFn, c
   return (
     <div className="p-8">
       <PageHeader title={title} subtitle={subtitle}
-        actions={<button onClick={() => { setValue(''); setShowAdd(true) }} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
+        actions={canAdd && <button onClick={() => { setValue(''); setShowAdd(true) }} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
       />
 
       {(showAdd || editId) && (
@@ -74,8 +74,8 @@ export default function SimpleVendorList({ title, subtitle, queryKey, fetchFn, c
                   <td className="px-4 py-2 font-medium text-gray-800">{item[fieldName]}</td>
                   <td className="px-4 py-2 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => { setEditId(item.id); setValue(item[fieldName]); setShowAdd(false) }} className="p-1 text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>
-                      <button onClick={() => { if (confirm('Remove this item?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                      {canEdit && <button onClick={() => { setEditId(item.id); setValue(item[fieldName]); setShowAdd(false) }} className="p-1 text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>}
+                      {canEdit && <button onClick={() => { if (confirm('Remove this item?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>}
                     </div>
                   </td>
                 </tr>

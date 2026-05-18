@@ -7,9 +7,13 @@ import PageHeader from '../../components/ui/PageHeader'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Pagination from '../../components/ui/Pagination'
 import usePagination from '../../hooks/usePagination'
+import useAccessStore from '../../store/accessStore'
 
 export default function VendorHsnSacCodes() {
   const qc = useQueryClient()
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('vendor_hsn_sac_codes_add')
+  const canEdit = accessiblePages.includes('vendor_hsn_sac_codes_edit')
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState(null)
   const [form, setForm] = useState({ code: '', description: '' })
@@ -41,7 +45,7 @@ export default function VendorHsnSacCodes() {
   return (
     <div className="p-8">
       <PageHeader title="HSN/SAC Codes" subtitle="Manage HSN or SAC codes"
-        actions={<button onClick={() => { setForm({ code: '', description: '' }); setEditId(null); setShowForm(true) }} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
+        actions={canAdd && <button onClick={() => { setForm({ code: '', description: '' }); setEditId(null); setShowForm(true) }} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
       />
 
       {showForm && (
@@ -76,8 +80,8 @@ export default function VendorHsnSacCodes() {
                   <td className="px-4 py-2 text-gray-600">{item.description || '-'}</td>
                   <td className="px-4 py-2 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => { setForm({ code: item.code, description: item.description || '' }); setEditId(item.id); setShowForm(true) }} className="p-1 text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>
-                      <button onClick={() => { if (confirm('Remove?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                      {canEdit && <button onClick={() => { setForm({ code: item.code, description: item.description || '' }); setEditId(item.id); setShowForm(true) }} className="p-1 text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>}
+                      {canEdit && <button onClick={() => { if (confirm('Remove?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>}
                     </div>
                   </td>
                 </tr>

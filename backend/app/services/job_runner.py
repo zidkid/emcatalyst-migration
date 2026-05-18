@@ -51,9 +51,9 @@ def create_job(db: Session, job_type: str, user_id: int = None, total: int = 0) 
     return job
 
 
-def run_job(task_fn, job_id: int):
+def run_job(task_fn, job_id: int, *args):
     """Run a task function in a background thread."""
-    thread = threading.Thread(target=task_fn, args=(job_id,), daemon=True)
+    thread = threading.Thread(target=task_fn, args=(job_id, *args), daemon=True)
     thread.start()
 
 

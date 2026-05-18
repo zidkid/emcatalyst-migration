@@ -6,6 +6,7 @@ const JOB_TYPE_LABELS = {
   vendor_import: 'Import Vendors',
   mcl_import: 'Import MCL Doctors',
   brs_bulk: 'Bulk BRS Upload',
+  user_import: 'Import Users from AD',
 }
 
 export default function JobNotificationPanel() {

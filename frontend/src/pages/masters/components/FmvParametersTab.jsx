@@ -1,8 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { masterApi } from '../../../api/endpoints'
 import LoadingSpinner from '../../../components/ui/LoadingSpinner'
+import useAccessStore from '../../../store/accessStore'
 
 export default function FmvParametersTab() {
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('masters_fmv_parameters_add')
+  const canEdit = accessiblePages.includes('masters_fmv_parameters_edit')
+
   const { data: params = {}, isLoading } = useQuery({
     queryKey: ['fmv-parameters'],
     queryFn: () => masterApi.fmvParameters().then(r => r.data),

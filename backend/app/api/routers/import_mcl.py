@@ -187,16 +187,17 @@ def _insert_chunk(db: Session, records: list):
 
 @router.post("/mcl")
 async def import_mcl_excel(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     """
     Import MCL doctors from Excel file.
-    Handles 400K+ rows using background processing.
+    Handles 400K+ rows using background job processing.
     Upserts based on UID Number.
     """
+    from app.services.job_runner import create_job, run_job
+
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(400, "Only .xlsx or .xls files are allowed")
 
@@ -207,18 +208,94 @@ async def import_mcl_excel(
         content = await file.read()
         f.write(content)
 
-    # Generate import ID
-    import_id = f"import_{os.urandom(4).hex()}"
+    # Create a background job
+    job = create_job(db, job_type="mcl_import", user_id=current_user.id)
 
-    # Process in background
-    background_tasks.add_task(process_excel_file, temp_path, import_id)
+    # Run in background thread
+    run_job(_mcl_import_task, job.id, temp_path)
 
     return {
-        "import_id": import_id,
-        "message": "Import started in background. Check status with GET /import/status/{import_id}",
+        "job_id": job.id,
+        "message": "Import started — check the progress panel",
         "file_name": file.filename,
         "file_size_mb": round(len(content) / (1024 * 1024), 2),
     }
+
+
+def _mcl_import_task(job_id: int, file_path: str):
+    """Background task: process MCL Excel and upsert doctors."""
+    import openpyxl
+    from app.services.job_runner import update_job_progress, complete_job, fail_job
+
+    db = SessionLocal()
+    try:
+        update_job_progress(db, job_id, progress=0, total=0, message="Opening Excel file...")
+
+        wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+        ws = wb.active
+
+        # Get headers from first row
+        headers = []
+        for row in ws.iter_rows(min_row=1, max_row=1, values_only=True):
+            headers = [str(h).strip() if h else '' for h in row]
+            break
+
+        # Map headers to DB columns
+        col_mapping = {}
+        for i, header in enumerate(headers):
+            if header in COLUMN_MAP:
+                col_mapping[i] = COLUMN_MAP[header]
+
+        if not col_mapping:
+            fail_job(db, job_id, "No matching columns found in Excel")
+            wb.close()
+            return
+
+        total_rows = ws.max_row - 1 if ws.max_row else 0
+        update_job_progress(db, job_id, progress=0, total=total_rows, message=f"Processing {total_rows} rows...")
+
+        CHUNK_SIZE = 1000
+        chunk = []
+        processed = 0
+
+        for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True)):
+            record = {}
+            for col_idx, db_col in col_mapping.items():
+                if col_idx < len(row):
+                    val = row[col_idx]
+                    if val is not None:
+                        record[db_col] = str(val).strip()
+
+            if not record.get('first_name') and not record.get('last_name'):
+                continue
+
+            parts = [record.get('first_name', ''), record.get('middle_name', ''), record.get('last_name', '')]
+            record['full_name'] = ' '.join(p for p in parts if p and p != '.')
+            record['is_active'] = True
+            chunk.append(record)
+
+            if len(chunk) >= CHUNK_SIZE:
+                _insert_chunk(db, chunk)
+                processed += len(chunk)
+                update_job_progress(db, job_id, progress=processed, total=total_rows, message=f"Processed {processed} / {total_rows} records")
+                chunk = []
+
+        if chunk:
+            _insert_chunk(db, chunk)
+            processed += len(chunk)
+
+        wb.close()
+        complete_job(db, job_id, result={"created": processed, "total": total_rows})
+
+    except Exception as e:
+        logger.error(f"MCL import error: {e}")
+        fail_job(db, job_id, str(e))
+    finally:
+        db.close()
+        try:
+            os.unlink(file_path)
+        except:
+            pass
 
 
 @router.get("/status/{import_id}")

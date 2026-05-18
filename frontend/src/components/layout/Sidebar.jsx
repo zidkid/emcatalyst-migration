@@ -16,12 +16,6 @@ import { authApi } from '../../api/endpoints'
 
 const navGroups = [
   {
-    label: 'General',
-    items: [
-      { label: 'Dashboard', path: '/', icon: LayoutDashboard, pageKey: 'dashboard' },
-    ]
-  },
-  {
     label: 'Operations',
     items: [
       { label: 'Events', path: '/events', icon: CalendarDays, pageKey: 'events_list' },
@@ -287,7 +281,7 @@ export default function Sidebar() {
         <button
           onClick={() => setShowChangePw(true)}
           className="w-full flex items-center gap-2 text-[13px] py-1.5 px-2 rounded-lg transition-all duration-150 mb-1"
-          style={{ color: 'var(--color-neutral-600)' }}
+          style={{ color: 'var(--color-neutral-600)', display: user?.validate_with_ad ? 'none' : 'flex' }}
           onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-primary-50)'; e.currentTarget.style.color = 'var(--color-primary)' }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-neutral-600)' }}
         >

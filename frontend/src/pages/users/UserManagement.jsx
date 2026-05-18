@@ -9,11 +9,19 @@ import PageHeader from '../../components/ui/PageHeader'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import EmptyState from '../../components/ui/EmptyState'
 import Modal from '../../components/ui/Modal'
+import useAuthStore from '../../store/authStore'
+import useAccessStore from '../../store/accessStore'
+import useJobStore from '../../store/jobStore'
 
 const PAGE_SIZE = 50
 
 export default function UserManagement() {
   const qc = useQueryClient()
+  const { user: currentUser } = useAuthStore()
+  const { accessiblePages } = useAccessStore()
+  const isAdmin = currentUser?.role === 'Administrator'
+  const canImport = isAdmin || accessiblePages.includes('users_import')
+  const canEdit = isAdmin || accessiblePages.includes('users_edit')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [newUserModal, setNewUserModal] = useState(false)
@@ -25,10 +33,14 @@ export default function UserManagement() {
   const [editEmployeeId, setEditEmployeeId] = useState('')
   const [editEmail, setEditEmail] = useState('')
   const [editDivisions, setEditDivisions] = useState([])
+  const [editValidateAd, setEditValidateAd] = useState(false)
   const [managerSearch, setManagerSearch] = useState('')
   const [resetPwUser, setResetPwUser] = useState(null)
   const [resetPwValue, setResetPwValue] = useState('')
   const [resetPwLoading, setResetPwLoading] = useState(false)
+  const [importModal, setImportModal] = useState(false)
+  const [importIds, setImportIds] = useState('')
+  const [importLoading, setImportLoading] = useState(false)
   const { register, handleSubmit, reset } = useForm()
 
   const { data: users = [], isLoading } = useQuery({
@@ -83,6 +95,7 @@ export default function UserManagement() {
     setEditEmployeeId(u.employee_id || '')
     setEditEmail(u.email || '')
     setEditDivisions(u.divisions || [])
+    setEditValidateAd(u.validate_with_ad || false)
     setEditRoleModal(true)
   }
 
@@ -95,9 +108,18 @@ export default function UserManagement() {
         title="User Management"
         subtitle={`${users.length} users · ${divisions.length} divisions`}
         actions={
-          <button className="btn-primary flex items-center gap-2" onClick={() => setNewUserModal(true)}>
-            <Plus size={16} /> New User
-          </button>
+          <div className="flex gap-2">
+            {canImport && (
+              <button className="btn-secondary flex items-center gap-2" onClick={() => setImportModal(true)}>
+                <Users size={16} /> Import Users
+              </button>
+            )}
+            {isAdmin && (
+              <button className="btn-primary flex items-center gap-2" onClick={() => setNewUserModal(true)}>
+                <Plus size={16} /> New User
+              </button>
+            )}
+          </div>
         }
       />
 
@@ -120,8 +142,8 @@ export default function UserManagement() {
         <EmptyState icon={Users} title="No users found" />
       ) : (
         <>
-          <div className="card p-0 overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="card p-0 overflow-x-auto">
+            <table className="w-full text-sm min-w-[900px]">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   {['Emp ID', 'Name', 'Email', 'Division', 'Manager', 'Role', 'Status', ''].map(h => (
@@ -152,25 +174,31 @@ export default function UserManagement() {
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex gap-2">
-                        <button
-                          className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1"
-                          onClick={() => openEditRole(u)}
-                        >
-                          <Edit2 size={12} /> Edit
-                        </button>
-                        <button
-                          className="text-xs text-amber-600 hover:underline flex items-center gap-1"
-                          onClick={() => { setResetPwUser(u); setResetPwValue('') }}
-                          title="Reset Password"
-                        >
-                          <KeyRound size={12} /> Password
-                        </button>
-                        <button
-                          className="text-xs text-gray-400 hover:text-gray-700 hover:underline"
-                          onClick={() => updateUser.mutate({ id: u.id, data: { is_active: !u.is_active } })}
-                        >
-                          {u.is_active ? 'Disable' : 'Enable'}
-                        </button>
+                        {canEdit && (
+                          <button
+                            className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1"
+                            onClick={() => openEditRole(u)}
+                          >
+                            <Edit2 size={12} /> Edit
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button
+                            className="text-xs text-amber-600 hover:underline flex items-center gap-1"
+                            onClick={() => { setResetPwUser(u); setResetPwValue('') }}
+                            title="Reset Password"
+                          >
+                            <KeyRound size={12} /> Password
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button
+                            className="text-xs text-gray-400 hover:text-gray-700 hover:underline"
+                            onClick={() => updateUser.mutate({ id: u.id, data: { is_active: !u.is_active } })}
+                          >
+                            {u.is_active ? 'Disable' : 'Enable'}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -242,13 +270,13 @@ export default function UserManagement() {
             <div>
               <label className="label">Primary Role</label>
               <select className="input" value={editRole} onChange={e => setEditRole(e.target.value)}>
-                {ALL_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                {ALL_ROLES.filter(r => isAdmin || r !== 'Administrator').map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
             <div>
               <label className="label">Additional Roles (RBAC)</label>
               <div className="grid grid-cols-3 gap-2 p-3 border rounded-lg max-h-40 overflow-y-auto">
-                {ALL_ROLES.map(r => (
+                {ALL_ROLES.filter(r => isAdmin || r !== 'Administrator').map(r => (
                   <label key={r} className="flex items-center gap-2 text-xs cursor-pointer">
                     <input
                       type="checkbox"
@@ -310,6 +338,18 @@ export default function UserManagement() {
                 <option value="false">Inactive</option>
               </select>
             </div>
+            <div>
+              <label className="label flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editValidateAd}
+                  onChange={e => setEditValidateAd(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                Validate with AD
+              </label>
+              <p className="text-xs text-gray-400 mt-1">If enabled, login will authenticate against Active Directory instead of local password.</p>
+            </div>
             <div className="flex justify-end gap-2">
               <button className="btn-secondary" onClick={() => setEditRoleModal(false)}>Cancel</button>
               <button
@@ -324,6 +364,7 @@ export default function UserManagement() {
                       email: editEmail || undefined,
                       manager_id: editManagerId ? parseInt(editManagerId) : null,
                       is_active: document.getElementById('active-select').value === 'true',
+                      validate_with_ad: editValidateAd,
                     }
                   })
                   // Sync additional roles
@@ -395,7 +436,7 @@ export default function UserManagement() {
             <div>
               <label className="label">Role</label>
               <select className="input" {...register('role')}>
-                {ALL_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                {ALL_ROLES.filter(r => isAdmin || r !== 'Administrator').map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
             <div>
@@ -476,6 +517,48 @@ export default function UserManagement() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Import Users Modal */}
+      <Modal open={importModal} onClose={() => setImportModal(false)} title="Import Users from AD">
+        <div className="space-y-4">
+          <div>
+            <label className="label">Employee IDs (comma separated)</label>
+            <textarea
+              className="input w-full min-h-[80px]"
+              style={{ resize: 'vertical' }}
+              value={importIds}
+              onChange={e => setImportIds(e.target.value)}
+              placeholder="e.g. 93300116, 93300040, 93300025"
+            />
+            <p className="text-xs text-gray-400 mt-1">Enter employee IDs separated by commas. Max 50 at a time. Default password: Emcure@123</p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button className="btn-secondary" onClick={() => { setImportModal(false); setImportIds('') }}>Cancel</button>
+            <button
+              className="btn-primary"
+              disabled={importLoading || !importIds.trim()}
+              onClick={async () => {
+                setImportLoading(true)
+                try {
+                  const res = await authApi.importUsers(importIds.trim())
+                  const { job_id } = res.data
+                  useJobStore.getState().addJob(job_id)
+                  toast.success('Import started — check the progress panel')
+                  qc.invalidateQueries(['users'])
+                  setImportModal(false)
+                  setImportIds('')
+                } catch (e) {
+                  toast.error(e.response?.data?.detail || 'Import failed')
+                } finally {
+                  setImportLoading(false)
+                }
+              }}
+            >
+              {importLoading ? 'Importing…' : 'Import'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   )

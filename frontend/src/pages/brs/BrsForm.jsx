@@ -30,13 +30,7 @@ export default function BrsForm() {
   const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: () => masterApi.brands().then(r => r.data) })
   const { data: territoryManagers = [] } = useQuery({
     queryKey: ['field-execution-users'],
-    queryFn: async () => {
-      const [tmRes, zmRes] = await Promise.all([
-        accessApi.subordinatesByRole('Territory Manager'),
-        accessApi.subordinatesByRole('Zonal Manager'),
-      ])
-      return [...(tmRes.data || []), ...(zmRes.data || [])]
-    },
+    queryFn: () => accessApi.allSubordinates().then(r => r.data || []),
   })
 
   // Load existing BRS in edit mode
@@ -230,10 +224,10 @@ export default function BrsForm() {
             <div>
               <label className="label">On Field Execution By *</label>
               <select className="input" value={form.on_field_execution_by} onChange={e => updateField('on_field_execution_by', e.target.value)}>
-                <option value="">Select Territory Manager</option>
+                <option value="">Select User</option>
                 {territoryManagers.map(tm => (
                   <option key={tm.id} value={tm.employee_id}>
-                    {tm.name} {tm.employee_id ? `(${tm.employee_id})` : ''} {tm.territory_name ? `– ${tm.territory_name}` : ''}
+                    {tm.name} {tm.employee_id ? `(${tm.employee_id})` : ''} {tm.designation ? `– ${tm.designation}` : ''}
                   </option>
                 ))}
               </select>

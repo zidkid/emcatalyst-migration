@@ -299,3 +299,45 @@ def get_subordinates_by_role(
         }
         for u in users_with_role
     ]
+
+
+@router.get("/hierarchy/all-subordinates")
+def get_all_subordinates(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get all subordinates (recursive) of the current user regardless of role.
+    Traverses the full hierarchy tree downward from the current user.
+    """
+    def get_all_subordinate_ids(user_id: int, visited: set) -> set:
+        if user_id in visited:
+            return set()
+        visited.add(user_id)
+        direct_reports = db.query(User).filter(User.manager_id == user_id, User.is_active == True).all()
+        ids = set()
+        for report in direct_reports:
+            ids.add(report.id)
+            ids.update(get_all_subordinate_ids(report.id, visited))
+        return ids
+
+    subordinate_ids = get_all_subordinate_ids(current_user.id, set())
+
+    if not subordinate_ids:
+        return []
+
+    users = db.query(User).filter(User.id.in_(subordinate_ids), User.is_active == True).order_by(User.first_name).all()
+
+    return [
+        {
+            "id": u.id,
+            "employee_id": u.employee_id,
+            "name": f"{u.first_name or ''} {u.last_name or ''}".strip(),
+            "designation": u.designation_title,
+            "email": u.email,
+            "role": u.role,
+            "territory_name": getattr(u, 'territory_name', None),
+            "location": u.office_city or getattr(u, 'location', None),
+        }
+        for u in users
+    ]

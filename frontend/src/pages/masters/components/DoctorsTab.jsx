@@ -7,12 +7,17 @@ import api from '../../../api/client'
 import LoadingSpinner from '../../../components/ui/LoadingSpinner'
 import Modal from '../../../components/ui/Modal'
 import useAuthStore from '../../../store/authStore'
+import useAccessStore from '../../../store/accessStore'
+import useJobStore from '../../../store/jobStore'
 
 const PAGE_SIZE = 50
 
 export default function DoctorsTab() {
   const { user } = useAuthStore()
   const isAdmin = user?.role === 'Administrator' || user?.is_superuser
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('masters_doctors_add')
+  const canEdit = accessiblePages.includes('masters_doctors_edit')
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [stateFilter, setStateFilter] = useState('')
@@ -20,7 +25,6 @@ export default function DoctorsTab() {
   const [selectedDoc, setSelectedDoc] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [importing, setImporting] = useState(false)
-  const [importStatus, setImportStatus] = useState(null)
   const [addForm, setAddForm] = useState({ full_name: '', first_name: '', last_name: '', middle_name: '', division_ids: [], uid_number: '', qualification: '', speciality: '', email: '', pan_number: '', city: '', state: '', town_name: '', mobile_number: '', doctor_type: '', gender: '', area_of_practice: '', hourly_rate: '', max_capping: '' })
 
   const { data: states = [] } = useQuery({
@@ -86,10 +90,10 @@ export default function DoctorsTab() {
           <option value="">All States</option>
           {states.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
         </select>
-        <button className="btn-primary flex items-center gap-2 text-sm" onClick={() => setShowAdd(true)}>
+        {canAdd && <button className="btn-primary flex items-center gap-2 text-sm" onClick={() => setShowAdd(true)}>
           <Plus size={14} /> Add Doctor
-        </button>
-        <label className="btn-secondary flex items-center gap-2 text-sm cursor-pointer">
+        </button>}
+        {canAdd && <label className="btn-secondary flex items-center gap-2 text-sm cursor-pointer">
           <Upload size={14} /> Import Excel
           <input type="file" className="hidden" accept=".xlsx,.xls"
             onClick={e => { e.target.value = null }}
@@ -97,48 +101,22 @@ export default function DoctorsTab() {
               const file = e.target.files[0]
               if (!file) return
               setImporting(true)
-              setImportStatus(null)
               const formData = new FormData()
               formData.append('file', file)
               try {
                 const res = await api.post('/import/mcl', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-                const importId = res.data.import_id
-                toast.success(`Import started: ${res.data.file_name} (${res.data.file_size_mb} MB)`)
-                // Poll status
-                const poll = setInterval(async () => {
-                  try {
-                    const status = await api.get(`/import/status/${importId}`)
-                    setImportStatus(status.data)
-                    if (status.data.status === 'completed' || status.data.status === 'error') {
-                      clearInterval(poll)
-                      setImporting(false)
-                      if (status.data.status === 'completed') {
-                        toast.success(`Import complete: ${status.data.processed} records`)
-                        qc.invalidateQueries(['doctors-all'])
-                      } else {
-                        toast.error(`Import failed: ${status.data.message}`)
-                      }
-                    }
-                  } catch (err) { clearInterval(poll); setImporting(false) }
-                }, 2000)
+                const { job_id } = res.data
+                useJobStore.getState().addJob(job_id)
+                toast.success(`Import started: ${res.data.file_name} (${res.data.file_size_mb} MB) — check the progress panel`)
               } catch (err) {
                 toast.error(err.response?.data?.detail || 'Import failed')
+              } finally {
                 setImporting(false)
               }
             }}
           />
-        </label>
+        </label>}
       </div>
-
-      {/* Import Status */}
-      {importStatus && importStatus.status === 'processing' && (
-        <div className="mb-4 p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-100)] rounded-lg">
-          <p className="text-sm font-medium text-[var(--color-primary-hover)]">Importing... {importStatus.processed || 0} / {importStatus.total || '?'} records</p>
-          <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
-            <div className="bg-[var(--color-primary)] h-2 rounded-full transition-all" style={{ width: `${importStatus.total ? (importStatus.processed / importStatus.total * 100) : 0}%` }} />
-          </div>
-        </div>
-      )}
 
       {/* Add Doctor Form */}
       {showAdd && (
@@ -210,10 +188,10 @@ export default function DoctorsTab() {
                   <td className="px-3 py-2 text-gray-500 text-xs">{d.doctor_type || '—'}</td>
                   <td className="px-3 py-2">
                     <div className="flex gap-2">
-                      <button className="text-xs text-[var(--color-primary)] hover:underline" onClick={() => setSelectedDoc(d)}>
+                      {canEdit && <button className="text-xs text-[var(--color-primary)] hover:underline" onClick={() => setSelectedDoc(d)}>
                         <Edit2 size={12} />
-                      </button>
-                      {isAdmin && <button className="text-xs text-red-500 hover:underline" onClick={(ev) => { ev.stopPropagation(); if (confirm('Delete this doctor?')) deleteDoctor.mutate(d.id) }}>
+                      </button>}
+                      {canEdit && isAdmin && <button className="text-xs text-red-500 hover:underline" onClick={(ev) => { ev.stopPropagation(); if (confirm('Delete this doctor?')) deleteDoctor.mutate(d.id) }}>
                         <Trash2 size={12} />
                       </button>}
                     </div>

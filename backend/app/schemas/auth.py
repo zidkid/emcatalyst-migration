@@ -39,6 +39,7 @@ class UserOut(BaseModel):
     gender: Optional[str] = None
     office_mobile_no: Optional[str] = None
     mendix_id: Optional[str] = None
+    validate_with_ad: bool = False
 
     class Config:
         from_attributes = True
@@ -74,3 +75,4 @@ class UserUpdate(BaseModel):
     zone: Optional[str] = None
     email: Optional[str] = None
     employee_id: Optional[str] = None
+    validate_with_ad: Optional[bool] = None

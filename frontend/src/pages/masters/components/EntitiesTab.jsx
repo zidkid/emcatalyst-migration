@@ -5,10 +5,14 @@ import toast from 'react-hot-toast'
 import { masterApi } from '../../../api/endpoints'
 import LoadingSpinner from '../../../components/ui/LoadingSpinner'
 import useAuthStore from '../../../store/authStore'
+import useAccessStore from '../../../store/accessStore'
 
 export default function EntitiesTab() {
   const { user } = useAuthStore()
   const isAdmin = user?.role === 'Administrator' || user?.is_superuser
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('masters_entities_add')
+  const canEdit = accessiblePages.includes('masters_entities_edit')
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
   const [editId, setEditId] = useState(null)
@@ -70,9 +74,9 @@ export default function EntitiesTab() {
     <div>
       <div className="flex gap-3 items-center mb-4">
         <p className="text-sm text-gray-500 flex-1">{entities.length} entities</p>
-        <button className="btn-primary flex items-center gap-2 text-sm" onClick={() => { setShowAdd(true); setEditId(null); setForm({ entity_code: '', name: '' }) }}>
+        {canAdd && <button className="btn-primary flex items-center gap-2 text-sm" onClick={() => { setShowAdd(true); setEditId(null); setForm({ entity_code: '', name: '' }) }}>
           <Plus size={14} /> Add Entity
-        </button>
+        </button>}
       </div>
 
       {(showAdd || editId) && (
@@ -112,13 +116,13 @@ export default function EntitiesTab() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-right flex gap-2 justify-end">
-                    <button className="text-xs text-blue-500 hover:text-blue-700" onClick={() => startEdit(e)}>
+                    {canEdit && <button className="text-xs text-blue-500 hover:text-blue-700" onClick={() => startEdit(e)}>
                       <Pencil size={14} />
-                    </button>
-                    <button className="text-xs text-gray-400 hover:text-gray-700" onClick={() => toggle.mutate(e)}>
+                    </button>}
+                    {canEdit && <button className="text-xs text-gray-400 hover:text-gray-700" onClick={() => toggle.mutate(e)}>
                       {e.is_active ? 'Disable' : 'Enable'}
-                    </button>
-                    {isAdmin && <button className="text-xs text-red-400 hover:text-red-600" onClick={() => {
+                    </button>}
+                    {canEdit && isAdmin && <button className="text-xs text-red-400 hover:text-red-600" onClick={() => {
                       if (confirm('Delete this entity?')) remove.mutate(e.id)
                     }}>
                       <Trash2 size={14} />

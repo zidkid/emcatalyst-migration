@@ -29,11 +29,13 @@ export const authApi = {
   getUserDivisions: (id) => api.get(`/auth/users/${id}/divisions`),
   assignUserDivision: (id, division_id) => api.post(`/auth/users/${id}/divisions`, null, { params: { division_id } }),
   removeUserDivision: (id, division_id) => api.delete(`/auth/users/${id}/divisions/${division_id}`),
+  importUsers: (employee_ids) => api.post('/auth/users/import', { employee_ids }),
 }
 
 // Events
 export const eventsApi = {
   list: (params) => api.get('/events/', { params }),
+  dashboard: () => api.get('/events/dashboard'),
   canCreate: () => api.get('/events/permissions/can-create'),
   workflowSteps: () => api.get('/events/permissions/workflow-steps'),
   checkBudget: (division_id, event_date) => api.get('/events/permissions/check-budget', { params: { division_id, event_date } }),
@@ -89,6 +91,7 @@ export const accessApi = {
   hierarchyTree: (rootEmployeeId, depth = 3) => api.get('/access/hierarchy/tree', { params: { root_employee_id: rootEmployeeId, depth } }),
   searchEmployees: (q, limit = 20) => api.get('/access/hierarchy/search', { params: { q, limit } }),
   subordinatesByRole: (role) => api.get('/access/hierarchy/subordinates-by-role', { params: { role } }),
+  allSubordinates: () => api.get('/access/hierarchy/all-subordinates'),
 }
 
 
@@ -214,6 +217,14 @@ export const brsApi = {
   doctorUploadDocument: (token, formData) => api.post(`/brs/doctor-portal/${token}/upload-document`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   doctorListDocuments: (token) => api.get(`/brs/doctor-portal/${token}/documents`),
   doctorDeleteDocument: (token, docId) => api.delete(`/brs/doctor-portal/${token}/documents/${docId}`),
+  // Application Documents (initiator uploads after completion)
+  listAppDocuments: (appId) => api.get(`/brs/${appId}/documents`),
+  uploadAppDocument: (appId, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post(`/brs/${appId}/documents`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  deleteAppDocument: (appId, docId) => api.delete(`/brs/${appId}/documents/${docId}`),
 }
 
 // Event Agreements (nested under events)

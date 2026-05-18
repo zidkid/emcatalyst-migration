@@ -5,10 +5,14 @@ import toast from 'react-hot-toast'
 import { masterApi } from '../../../api/endpoints'
 import LoadingSpinner from '../../../components/ui/LoadingSpinner'
 import useAuthStore from '../../../store/authStore'
+import useAccessStore from '../../../store/accessStore'
 
 export default function DivisionsTab() {
   const { user } = useAuthStore()
   const isAdmin = user?.role === 'Administrator' || user?.is_superuser
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('masters_divisions_add')
+  const canEdit = accessiblePages.includes('masters_divisions_edit')
   const qc = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [editId, setEditId] = useState(null)
@@ -118,9 +122,9 @@ export default function DivisionsTab() {
     <div>
       <div className="flex gap-3 items-center mb-4">
         <p className="text-sm text-gray-500 flex-1">{divisions.length} divisions</p>
-        <button className="btn-primary flex items-center gap-2 text-sm" onClick={openAdd}>
+        {canAdd && <button className="btn-primary flex items-center gap-2 text-sm" onClick={openAdd}>
           <Plus size={14} /> Add Division
-        </button>
+        </button>}
       </div>
 
       {isLoading ? <LoadingSpinner /> : (
@@ -153,13 +157,13 @@ export default function DivisionsTab() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-right flex gap-2 justify-end">
-                    <button className="text-xs text-blue-500 hover:text-blue-700" onClick={() => openEdit(d)}>
+                    {canEdit && <button className="text-xs text-blue-500 hover:text-blue-700" onClick={() => openEdit(d)}>
                       <Pencil size={14} />
-                    </button>
-                    <button className="text-xs text-gray-400 hover:text-gray-700" onClick={() => toggle.mutate(d)}>
+                    </button>}
+                    {canEdit && <button className="text-xs text-gray-400 hover:text-gray-700" onClick={() => toggle.mutate(d)}>
                       {d.is_active ? 'Disable' : 'Enable'}
-                    </button>
-                    {isAdmin && <button className="text-xs text-red-400 hover:text-red-600" onClick={() => {
+                    </button>}
+                    {canEdit && isAdmin && <button className="text-xs text-red-400 hover:text-red-600" onClick={() => {
                       if (confirm('Delete this division?')) remove.mutate(d.id)
                     }}>
                       <Trash2 size={14} />

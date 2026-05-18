@@ -22,15 +22,57 @@ limiter = Limiter(key_func=get_remote_address)
 
 @router.post("/login")
 @limiter.limit("10/minute")
-def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.employee_id == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect Employee ID or password",
         )
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Account is disabled")
+
+    # Validate credentials
+    if user.validate_with_ad:
+        # Validate against AD API
+        ad_url = f"{settings.AD_BASE_URL}validatecredentials"
+        try:
+            async with httpx.AsyncClient(timeout=15.0, verify=False) as client:
+                resp = await client.post(ad_url, files={
+                    "EmployeeId": (None, form_data.username),
+                    "Password": (None, form_data.password),
+                })
+                if resp.status_code != 200:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Incorrect Employee ID or password",
+                    )
+                ad_result = resp.json()
+                # Check if AD returned a valid response
+                if not ad_result or ad_result.get("error"):
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Incorrect Employee ID or password",
+                    )
+        except httpx.ReadTimeout:
+            # AD API times out on wrong password
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect Employee ID or password",
+            )
+        except httpx.RequestError:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="AD authentication service unavailable. Please try again later.",
+            )
+    else:
+        # Validate against local password
+        if not verify_password(form_data.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect Employee ID or password",
+            )
+
     token = create_access_token(data={"sub": user.employee_id})
     user_data = UserOut.model_validate(user).model_dump()
     user_data["roles"] = [ra.role for ra in user.role_assignments] if user.role_assignments else []
@@ -122,6 +164,13 @@ def forgot_password(
     if not user or not user.email:
         return {"message": "If an account with that Employee ID exists, a reset link has been sent to the registered email."}
 
+    # If user validates with AD, they cannot reset password here
+    if user.validate_with_ad:
+        raise HTTPException(
+            status_code=400,
+            detail="Your account is managed by Active Directory. Please use your organization's password reset process or contact IT support."
+        )
+
     # Create a short-lived token (30 minutes)
     reset_token = create_access_token(
         data={"sub": user.employee_id, "purpose": "password_reset"},
@@ -201,7 +250,7 @@ def list_users(
     skip: int = 0,
     limit: int = 2000,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(get_current_active_user)
 ):
     users = db.query(User).order_by(User.first_name, User.last_name).offset(skip).limit(limit).all()
     result = []
@@ -335,6 +384,145 @@ def remove_user_division(user_id: int, division_id: int, db: Session = Depends(g
     db.delete(da)
     db.commit()
     return {"ok": True}
+
+
+# ─── Import Users from AD API ─────────────────────────────────────────────────
+
+class ImportUsersRequest(BaseModel):
+    employee_ids: str  # comma-separated employee IDs
+
+
+@router.post("/users/import")
+def import_users_from_ad(
+    data: ImportUsersRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Import users from Active Directory API by employee IDs. Runs as a background job."""
+    from app.services.job_runner import create_job, run_job
+
+    ids = [eid.strip() for eid in data.employee_ids.split(",") if eid.strip()]
+    if not ids:
+        raise HTTPException(status_code=400, detail="No employee IDs provided")
+    if len(ids) > 50:
+        raise HTTPException(status_code=400, detail="Maximum 50 employee IDs at a time")
+
+    job = create_job(db, job_type="user_import", user_id=current_user.id, total=len(ids))
+    run_job(_user_import_task, job.id, ",".join(ids))
+
+    return {"job_id": job.id, "message": "Import started"}
+
+
+def _user_import_task(job_id: int, employee_ids_str: str):
+    """Background task: fetch users from AD API and upsert into DB."""
+    import httpx as _httpx
+
+    from app.db.base import SessionLocal
+    from app.services.job_runner import update_job_progress, complete_job, fail_job
+    from app.models.user import Division
+
+    db = SessionLocal()
+    try:
+        ids = [eid.strip() for eid in employee_ids_str.split(",") if eid.strip()]
+        update_job_progress(db, job_id, progress=0, total=len(ids), message="Calling AD API...")
+
+        # Call external AD API (multipart/form-data)
+        ad_url = f"{settings.AD_BASE_URL}getselectedemployees"
+        try:
+            with _httpx.Client(timeout=30.0, verify=False) as client:
+                resp = client.post(ad_url, files={"EmployeeIDs": (None, employee_ids_str)})
+                if resp.status_code != 200:
+                    fail_job(db, job_id, f"AD API returned status {resp.status_code}")
+                    return
+                ad_data = resp.json()
+        except Exception as e:
+            fail_job(db, job_id, f"Failed to reach AD API: {str(e)}")
+            return
+
+        employee_data = ad_data.get("employeeData", [])
+        if not employee_data:
+            fail_job(db, job_id, "No employees found for the given IDs")
+            return
+
+        update_job_progress(db, job_id, progress=0, total=len(employee_data), message=f"Processing {len(employee_data)} employees...")
+
+        # Build division lookup
+        all_divisions = db.query(Division).all()
+        div_map = {d.name.lower(): d.id for d in all_divisions}
+
+        created = []
+        updated = []
+        errors = []
+        default_password = get_password_hash("Emcure@123")
+        manager_assignments = []
+
+        for idx, emp in enumerate(employee_data):
+            emp_id = emp.get("employee_id", "").strip()
+            if not emp_id:
+                continue
+
+            split_dept = emp.get("split_department", "").strip()
+            division_id = div_map.get(split_dept.lower()) if split_dept else None
+            is_active = emp.get("employee_status", "").strip().lower() == "active"
+
+            mgr_emp_id = emp.get("direct_manager_employee_id", "").strip()
+            if mgr_emp_id:
+                manager_assignments.append((emp_id, mgr_emp_id))
+
+            try:
+                existing = db.query(User).filter(User.employee_id == emp_id).first()
+                if existing:
+                    existing.first_name = emp.get("first_name") or existing.first_name
+                    existing.last_name = emp.get("last_name") or existing.last_name
+                    existing.middle_name = emp.get("middle_name") or existing.middle_name
+                    existing.email = emp.get("company_email_id") or existing.email
+                    existing.designation_title = emp.get("designation_title") or existing.designation_title
+                    existing.department = emp.get("department") or existing.department
+                    existing.is_active = is_active
+                    if division_id:
+                        existing.division_id = division_id
+                    updated.append(emp_id)
+                else:
+                    new_user = User(
+                        employee_id=emp_id,
+                        email=emp.get("company_email_id") or f"{emp_id}@emcure.com",
+                        hashed_password=default_password,
+                        first_name=emp.get("first_name", ""),
+                        middle_name=emp.get("middle_name", ""),
+                        last_name=emp.get("last_name", ""),
+                        role="User",
+                        division_id=division_id,
+                        designation_title=emp.get("designation_title", ""),
+                        department=emp.get("department", ""),
+                        is_active=is_active,
+                        validate_with_ad=True,
+                    )
+                    db.add(new_user)
+                    db.flush()
+                    created.append(emp_id)
+            except Exception as e:
+                errors.append({"employee_id": emp_id, "error": str(e)})
+
+            update_job_progress(db, job_id, progress=idx + 1, total=len(employee_data),
+                                message=f"Processed {idx + 1}/{len(employee_data)} ({len(created)} created, {len(updated)} updated)")
+
+        # Second pass: assign managers
+        for user_emp_id, mgr_emp_id in manager_assignments:
+            try:
+                user_obj = db.query(User).filter(User.employee_id == user_emp_id).first()
+                mgr_obj = db.query(User).filter(User.employee_id == mgr_emp_id).first()
+                if user_obj and mgr_obj:
+                    user_obj.manager_id = mgr_obj.id
+            except Exception:
+                pass
+
+        db.commit()
+        complete_job(db, job_id, result={"created": len(created), "updated": len(updated), "errors": len(errors)})
+
+    except Exception as e:
+        fail_job(db, job_id, str(e))
+    finally:
+        db.close()
 
 
 # ─── Microsoft SSO (Azure AD) ─────────────────────────────────────────────────

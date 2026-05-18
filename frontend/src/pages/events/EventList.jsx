@@ -52,6 +52,11 @@ export default function EventList() {
     queryFn: () => eventsApi.canCreate().then(r => r.data),
   })
 
+  const { data: kpis } = useQuery({
+    queryKey: ['events-dashboard'],
+    queryFn: () => eventsApi.dashboard().then(r => r.data),
+  })
+
   const canCreate = canCreateData?.can_create !== false
 
   const divisionMap = Object.fromEntries(divisions.map(d => [d.id, d.name]))
@@ -84,6 +89,25 @@ export default function EventList() {
           )
         }
       />
+
+      {/* KPI Cards */}
+      {kpis && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          {[
+            { label: 'Total', value: kpis.total, color: 'bg-gray-50 text-gray-700' },
+            { label: 'Draft', value: kpis.draft, color: 'bg-slate-50 text-slate-700' },
+            { label: 'Pending', value: kpis.pending, color: 'bg-amber-50 text-amber-700' },
+            { label: 'Approved', value: kpis.approved, color: 'bg-blue-50 text-blue-700' },
+            { label: 'Completed', value: kpis.completed, color: 'bg-emerald-50 text-emerald-700' },
+            { label: 'Rejected', value: kpis.rejected, color: 'bg-red-50 text-red-700' },
+          ].map(k => (
+            <div key={k.label} className={`rounded-lg p-3 ${k.color} border`}>
+              <p className="text-[11px] font-medium uppercase tracking-wide opacity-70">{k.label}</p>
+              <p className="text-xl font-bold mt-0.5">{k.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex gap-3 mb-6">

@@ -11,7 +11,6 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/auth/Login'
 import ResetPassword from './pages/auth/ResetPassword'
 import MicrosoftCallback from './pages/auth/MicrosoftCallback'
-import Dashboard from './pages/Dashboard'
 import EventList from './pages/events/EventList'
 import EventForm from './pages/events/EventForm'
 import EventDetail from './pages/events/EventDetail'
@@ -129,7 +128,7 @@ export default function App() {
               <Route path="/auth/microsoft/callback" element={<MicrosoftCallback />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-                <Route index element={<ProtectedRoute pageKey="dashboard"><Dashboard /></ProtectedRoute>} />
+                <Route index element={<Navigate to="/events" replace />} />
                 <Route path="events" element={<ProtectedRoute pageKey="events_list"><EventList /></ProtectedRoute>} />
                 <Route path="events/new" element={<ProtectedRoute pageKey="events_create"><EventForm /></ProtectedRoute>} />
                 <Route path="events/:id/edit" element={<ProtectedRoute pageKey="events_edit"><EventForm /></ProtectedRoute>} />

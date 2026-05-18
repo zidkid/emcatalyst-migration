@@ -269,6 +269,66 @@ ${docs.length > 0 ? docs.map(doc => {
         ) : <p className="text-sm text-gray-400">No doctors added.</p>}
       </div>
 
+      {/* Application Documents (after completion) */}
+      {brs.status === 'Completed' && (
+        <div className="card mb-4">
+          <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase tracking-wide">Documents</h3>
+          {/* Upload section - only for initiator */}
+          {(brs.created_by?.id === user?.id || user?.role === 'Administrator') && (
+            <div className="mb-4">
+              <label className="block">
+                <span className="text-xs text-gray-500">Upload documents (max 10MB each)</span>
+                <input
+                  type="file"
+                  className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-[var(--color-primary)] file:text-white hover:file:opacity-90 cursor-pointer"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    try {
+                      await brsApi.uploadAppDocument(id, file)
+                      toast.success('Document uploaded')
+                      qc.invalidateQueries(['brs', id])
+                    } catch (err) {
+                      toast.error(err.response?.data?.detail || 'Upload failed')
+                    }
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+            </div>
+          )}
+          {/* Document list */}
+          {brs.application_documents?.length > 0 ? (
+            <div className="space-y-2">
+              {brs.application_documents.map(doc => (
+                <div key={doc.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                  <div className="flex items-center gap-2">
+                    <Download size={14} className="text-gray-400" />
+                    <a href={`/${doc.file_path.replace(/\\/g, '/')}`} target="_blank" rel="noreferrer" className="text-sm text-[var(--color-primary)] hover:underline">{doc.document_name}</a>
+                    <span className="text-xs text-gray-400">by {doc.uploaded_by} • {fmtDate(doc.uploaded_at)}</span>
+                  </div>
+                  {(brs.created_by?.id === user?.id || user?.role === 'Administrator') && (
+                    <button
+                      className="text-xs text-red-500 hover:text-red-700"
+                      onClick={async () => {
+                        if (!confirm('Delete this document?')) return
+                        try {
+                          await brsApi.deleteAppDocument(id, doc.id)
+                          toast.success('Document deleted')
+                          qc.invalidateQueries(['brs', id])
+                        } catch (err) {
+                          toast.error(err.response?.data?.detail || 'Delete failed')
+                        }
+                      }}
+                    >Remove</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : <p className="text-sm text-gray-400">No documents uploaded yet.</p>}
+        </div>
+      )}
+
       {/* Audit Trail */}
       <div className="card">
         <h3 className="font-semibold text-sm text-gray-700 mb-3 uppercase tracking-wide">Audit Trail</h3>

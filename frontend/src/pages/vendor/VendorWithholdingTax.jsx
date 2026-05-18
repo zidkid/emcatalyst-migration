@@ -7,9 +7,13 @@ import PageHeader from '../../components/ui/PageHeader'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Pagination from '../../components/ui/Pagination'
 import usePagination from '../../hooks/usePagination'
+import useAccessStore from '../../store/accessStore'
 
 export default function VendorWithholdingTax() {
   const qc = useQueryClient()
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('vendor_withholding_tax_add')
+  const canEdit = accessiblePages.includes('vendor_withholding_tax_edit')
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState(null)
   const [form, setForm] = useState({ tax_code: '', name: '', section: '', rate: '', with_t: '' })
@@ -43,7 +47,7 @@ export default function VendorWithholdingTax() {
   return (
     <div className="p-8">
       <PageHeader title="Withholding Tax" subtitle="Manage withholding tax master entries"
-        actions={<button onClick={() => { resetForm(); setEditId(null); setShowForm(true) }} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
+        actions={canAdd && <button onClick={() => { resetForm(); setEditId(null); setShowForm(true) }} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
       />
 
       {showForm && (
@@ -90,8 +94,8 @@ export default function VendorWithholdingTax() {
                   <td className="px-4 py-2 text-gray-600">{item.with_t}</td>
                   <td className="px-4 py-2 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => { setForm({ tax_code: item.tax_code, name: item.name, section: item.section || '', rate: item.rate || '', with_t: item.with_t || '' }); setEditId(item.id); setShowForm(true) }} className="p-1 text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>
-                      <button onClick={() => { if (confirm('Delete?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                      {canEdit && <button onClick={() => { setForm({ tax_code: item.tax_code, name: item.name, section: item.section || '', rate: item.rate || '', with_t: item.with_t || '' }); setEditId(item.id); setShowForm(true) }} className="p-1 text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>}
+                      {canEdit && <button onClick={() => { if (confirm('Delete?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>}
                     </div>
                   </td>
                 </tr>

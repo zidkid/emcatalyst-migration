@@ -7,9 +7,13 @@ import PageHeader from '../../components/ui/PageHeader'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Pagination from '../../components/ui/Pagination'
 import usePagination from '../../hooks/usePagination'
+import useAccessStore from '../../store/accessStore'
 
 export default function VendorGLAccounts() {
   const qc = useQueryClient()
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('vendor_gl_accounts_add')
+  const canEdit = accessiblePages.includes('vendor_gl_accounts_edit')
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ gl_number: '' })
 
@@ -34,7 +38,7 @@ export default function VendorGLAccounts() {
   return (
     <div className="p-8">
       <PageHeader title="GL Accounts" subtitle="Manage GL account numbers"
-        actions={<button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
+        actions={canAdd && <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
       />
 
       {showAdd && (
@@ -62,7 +66,7 @@ export default function VendorGLAccounts() {
                 <tr key={item.id} className="border-t hover:bg-gray-50">
                   <td className="px-4 py-2 font-mono font-medium text-gray-800">{item.gl_number}</td>
                   <td className="px-4 py-2 text-center">
-                    <button onClick={() => { if (confirm('Delete?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                    {canEdit && <button onClick={() => { if (confirm('Delete?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>}
                   </td>
                 </tr>
               ))}

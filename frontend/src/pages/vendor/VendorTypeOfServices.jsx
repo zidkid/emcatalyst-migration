@@ -7,9 +7,13 @@ import PageHeader from '../../components/ui/PageHeader'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import Pagination from '../../components/ui/Pagination'
 import usePagination from '../../hooks/usePagination'
+import useAccessStore from '../../store/accessStore'
 
 export default function VendorTypeOfServices() {
   const qc = useQueryClient()
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('vendor_type_of_services_add')
+  const canEdit = accessiblePages.includes('vendor_type_of_services_edit')
   const [showAdd, setShowAdd] = useState(false)
   const [editId, setEditId] = useState(null)
   const [form, setForm] = useState({ name: '', gl_account_id: '' })
@@ -46,7 +50,7 @@ export default function VendorTypeOfServices() {
   return (
     <div className="p-8">
       <PageHeader title="Type of Services" subtitle="Manage service types linked to GL accounts"
-        actions={<button onClick={() => { setForm({ name: '', gl_account_id: '' }); setShowAdd(true) }} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
+        actions={canAdd && <button onClick={() => { setForm({ name: '', gl_account_id: '' }); setShowAdd(true) }} className="btn-primary flex items-center gap-2"><Plus size={16} />Add</button>}
       />
 
       {(showAdd || editId) && (
@@ -84,8 +88,8 @@ export default function VendorTypeOfServices() {
                   <td className="px-4 py-2 text-gray-600 font-mono">{glAccounts.find(g => g.id === item.gl_account_id)?.gl_number || '-'}</td>
                   <td className="px-4 py-2 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => { setEditId(item.id); setForm({ name: item.name, gl_account_id: item.gl_account_id }); setShowAdd(false) }} className="p-1 text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>
-                      <button onClick={() => { if (confirm('Remove?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                      {canEdit && <button onClick={() => { setEditId(item.id); setForm({ name: item.name, gl_account_id: item.gl_account_id }); setShowAdd(false) }} className="p-1 text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>}
+                      {canEdit && <button onClick={() => { if (confirm('Remove?')) remove.mutate(item.id) }} className="p-1 text-red-400 hover:text-red-600"><Trash2 size={14} /></button>}
                     </div>
                   </td>
                 </tr>

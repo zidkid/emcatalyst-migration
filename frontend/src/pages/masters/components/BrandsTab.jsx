@@ -4,8 +4,12 @@ import { Plus, Search, Check, X, Pencil } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { masterApi } from '../../../api/endpoints'
 import LoadingSpinner from '../../../components/ui/LoadingSpinner'
+import useAccessStore from '../../../store/accessStore'
 
 export default function BrandsTab() {
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('masters_brands_add')
+  const canEdit = accessiblePages.includes('masters_brands_edit')
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
@@ -82,9 +86,9 @@ export default function BrandsTab() {
             onChange={e => setSearch(e.target.value)} />
         </div>
         <p className="text-sm text-gray-500">{brands.length} brands</p>
-        <button className="btn-primary flex items-center gap-2 text-sm" onClick={openAdd}>
+        {canAdd && <button className="btn-primary flex items-center gap-2 text-sm" onClick={openAdd}>
           <Plus size={14} /> Add Brand
-        </button>
+        </button>}
       </div>
 
       {showForm && (
@@ -149,13 +153,13 @@ export default function BrandsTab() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-right flex gap-2 justify-end">
-                    <button className="text-xs text-blue-500 hover:text-blue-700" onClick={() => openEdit(b)}>
+                    {canEdit && <button className="text-xs text-blue-500 hover:text-blue-700" onClick={() => openEdit(b)}>
                       <Pencil size={14} />
-                    </button>
-                    <button className="text-xs text-gray-400 hover:text-gray-700"
+                    </button>}
+                    {canEdit && <button className="text-xs text-gray-400 hover:text-gray-700"
                       onClick={() => toggle.mutate(b)}>
                       {b.is_active ? 'Disable' : 'Enable'}
-                    </button>
+                    </button>}
                   </td>
                 </tr>
               ))}

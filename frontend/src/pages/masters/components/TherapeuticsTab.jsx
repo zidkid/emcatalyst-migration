@@ -5,10 +5,14 @@ import toast from 'react-hot-toast'
 import { masterApi } from '../../../api/endpoints'
 import LoadingSpinner from '../../../components/ui/LoadingSpinner'
 import useAuthStore from '../../../store/authStore'
+import useAccessStore from '../../../store/accessStore'
 
 export default function TherapeuticsTab() {
   const { user } = useAuthStore()
   const isAdmin = user?.role === 'Administrator' || user?.is_superuser
+  const { accessiblePages } = useAccessStore()
+  const canAdd = accessiblePages.includes('masters_therapeutics_add')
+  const canEdit = accessiblePages.includes('masters_therapeutics_edit')
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
   const [newName, setNewName] = useState('')
@@ -41,9 +45,9 @@ export default function TherapeuticsTab() {
     <div>
       <div className="flex justify-between items-center mb-4">
         <p className="text-sm text-gray-500">{items.length} items</p>
-        <button className="btn-primary flex items-center gap-2 text-sm" onClick={() => setShowAdd(true)}>
+        {canAdd && <button className="btn-primary flex items-center gap-2 text-sm" onClick={() => setShowAdd(true)}>
           <Plus size={14} /> Add Therapeutic Area
-        </button>
+        </button>}
       </div>
 
       {showAdd && (
@@ -83,9 +87,9 @@ export default function TherapeuticsTab() {
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     <div className="flex gap-3 justify-end">
-                      <button className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1" onClick={() => { setEditId(item.id); setEditName(item.name) }}><Edit2 size={12} /> Edit</button>
-                      <button className="text-xs text-gray-400 hover:text-gray-700" onClick={() => update.mutate({ id: item.id, data: { is_active: !item.is_active } })}>{item.is_active ? 'Disable' : 'Enable'}</button>
-                      {isAdmin && <button className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1" onClick={() => { if (confirm('Delete?')) remove.mutate(item.id) }}><Trash2 size={12} /> Delete</button>}
+                      {canEdit && <button className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1" onClick={() => { setEditId(item.id); setEditName(item.name) }}><Edit2 size={12} /> Edit</button>}
+                      {canEdit && <button className="text-xs text-gray-400 hover:text-gray-700" onClick={() => update.mutate({ id: item.id, data: { is_active: !item.is_active } })}>{item.is_active ? 'Disable' : 'Enable'}</button>}
+                      {canEdit && isAdmin && <button className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1" onClick={() => { if (confirm('Delete?')) remove.mutate(item.id) }}><Trash2 size={12} /> Delete</button>}
                     </div>
                   </td>
                 </tr>

@@ -516,6 +516,26 @@ def create_application(
     return {"id": app.id, "brs_code": app.brs_code}
 
 
+@router.get("/dashboard")
+def brs_dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    div_ids = _get_user_division_ids(db, current_user)
+    q = db.query(BrsApplication)
+    if div_ids:
+        q = q.filter(BrsApplication.division_id.in_(div_ids))
+
+    total = q.count()
+    draft = q.filter(BrsApplication.status == BrsStatus.DRAFT).count()
+    submitted = q.filter(BrsApplication.status == BrsStatus.SUBMITTED).count()
+    approved = q.filter(BrsApplication.status == BrsStatus.DH_APPROVED).count()
+    doctor_pending = q.filter(BrsApplication.status == BrsStatus.DOCTOR_PENDING).count()
+    completed = q.filter(BrsApplication.status == BrsStatus.COMPLETED).count()
+
+    return {
+        "total": total, "draft": draft, "submitted": submitted,
+        "approved": approved, "doctor_pending": doctor_pending, "completed": completed,
+    }
+
+
 @router.get("/{app_id}")
 def get_application(app_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     a = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
@@ -575,6 +595,15 @@ def get_application(app_id: int, db: Session = Depends(get_db), current_user: Us
         ],
         "created_at": a.created_at.isoformat() if a.created_at else None,
         "is_bulk_imported": any(t.action == "Bulk Created" for t in a.audit_trail),
+        "application_documents": [
+            {
+                "id": d.id, "document_name": d.document_name, "file_path": d.file_path,
+                "mime_type": d.mime_type,
+                "uploaded_by": f"{d.uploaded_by.first_name} {d.uploaded_by.last_name}" if d.uploaded_by else None,
+                "uploaded_at": d.uploaded_at.isoformat() if d.uploaded_at else None,
+            }
+            for d in (a.application_documents or [])
+        ],
     }
 
 
@@ -1130,6 +1159,102 @@ def doctor_delete_document(token: str, doc_id: int, db: Session = Depends(get_db
 #  Dashboard
 # ─────────────────────────────────────────────
 
+@router.get("/{app_id}/documents")
+def list_application_documents(app_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """List documents uploaded by the initiator for a completed BRS."""
+    from app.models.brs import BrsApplicationDocument
+    app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
+    if not app:
+        raise HTTPException(404, "BRS not found")
+    docs = db.query(BrsApplicationDocument).filter(BrsApplicationDocument.brs_application_id == app_id).order_by(BrsApplicationDocument.uploaded_at).all()
+    return [
+        {
+            "id": d.id,
+            "document_name": d.document_name,
+            "file_path": d.file_path,
+            "mime_type": d.mime_type,
+            "uploaded_by": f"{d.uploaded_by.first_name} {d.uploaded_by.last_name}" if d.uploaded_by else None,
+            "uploaded_at": d.uploaded_at.isoformat() if d.uploaded_at else None,
+        }
+        for d in docs
+    ]
+
+
+@router.post("/{app_id}/documents")
+async def upload_application_document(
+    app_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Initiator uploads a document to a completed BRS."""
+    from app.models.brs import BrsApplicationDocument
+    import os, uuid
+
+    app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
+    if not app:
+        raise HTTPException(404, "BRS not found")
+    if app.status != BrsStatus.COMPLETED:
+        raise HTTPException(400, "Documents can only be uploaded after BRS is completed")
+    if app.created_by_id != current_user.id and not current_user.is_superuser and current_user.role != "Administrator":
+        raise HTTPException(403, "Only the initiator can upload documents")
+
+    # Validate file size (max 10MB)
+    MAX_SIZE_BYTES = 10 * 1024 * 1024
+    contents = await file.read()
+    if len(contents) > MAX_SIZE_BYTES:
+        raise HTTPException(400, "File must be under 10MB")
+
+    # Save file
+    upload_dir = f"uploads/brs/application_docs/{app_id}"
+    os.makedirs(upload_dir, exist_ok=True)
+    ext = os.path.splitext(file.filename)[1] if file.filename else ""
+    filename = f"{uuid.uuid4().hex[:8]}{ext}"
+    file_path = os.path.join(upload_dir, filename)
+
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    doc_record = BrsApplicationDocument(
+        brs_application_id=app_id,
+        document_name=file.filename or filename,
+        file_path=file_path,
+        mime_type=file.content_type,
+        uploaded_by_id=current_user.id,
+    )
+    db.add(doc_record)
+    db.commit()
+    db.refresh(doc_record)
+    return {"id": doc_record.id, "document_name": doc_record.document_name, "file_path": doc_record.file_path}
+
+
+@router.delete("/{app_id}/documents/{doc_id}")
+def delete_application_document(app_id: int, doc_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Initiator deletes an uploaded document."""
+    from app.models.brs import BrsApplicationDocument
+    import os
+
+    app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
+    if not app:
+        raise HTTPException(404, "BRS not found")
+    if app.created_by_id != current_user.id and not current_user.is_superuser and current_user.role != "Administrator":
+        raise HTTPException(403, "Only the initiator can delete documents")
+
+    doc_record = db.query(BrsApplicationDocument).filter(
+        BrsApplicationDocument.id == doc_id,
+        BrsApplicationDocument.brs_application_id == app_id
+    ).first()
+    if not doc_record:
+        raise HTTPException(404, "Document not found")
+
+    # Delete file from disk
+    if doc_record.file_path and os.path.exists(doc_record.file_path):
+        os.remove(doc_record.file_path)
+
+    db.delete(doc_record)
+    db.commit()
+    return {"ok": True}
+
 @router.get("/doctors/{doctor_id}/agreement")
 def get_doctor_agreement(
     doctor_id: int,
@@ -1154,24 +1279,4 @@ def get_doctor_agreement(
         "honorarium_amount": float(doc.honorarium_amount or 0),
         "agreement_signed_at": doc.agreement_signed_at.isoformat() if doc.agreement_signed_at else None,
         "signature": doc.agreement_signature,
-    }
-
-
-@router.get("/dashboard")
-def brs_dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    div_ids = _get_user_division_ids(db, current_user)
-    q = db.query(BrsApplication)
-    if div_ids:
-        q = q.filter(BrsApplication.division_id.in_(div_ids))
-
-    total = q.count()
-    draft = q.filter(BrsApplication.status == BrsStatus.DRAFT).count()
-    submitted = q.filter(BrsApplication.status == BrsStatus.SUBMITTED).count()
-    approved = q.filter(BrsApplication.status == BrsStatus.DH_APPROVED).count()
-    doctor_pending = q.filter(BrsApplication.status == BrsStatus.DOCTOR_PENDING).count()
-    completed = q.filter(BrsApplication.status == BrsStatus.COMPLETED).count()
-
-    return {
-        "total": total, "draft": draft, "submitted": submitted,
-        "approved": approved, "doctor_pending": doctor_pending, "completed": completed,
     }

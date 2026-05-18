@@ -124,6 +124,32 @@ def list_events(
     ]
 
 
+@router.get("/dashboard")
+def events_dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
+    """User-specific event KPIs."""
+    q = db.query(Event)
+    # Non-admin users see only their division's events
+    if current_user.role != "Administrator" and not current_user.is_superuser:
+        if current_user.division_id:
+            q = q.filter(Event.division_id == current_user.division_id)
+
+    total = q.count()
+    draft = q.filter(Event.status == "Draft").count()
+    pending = q.filter(Event.status.in_(["Submitted", "L1 Approved", "L2 Approved"])).count()
+    approved = q.filter(Event.status == "Approved").count()
+    completed = q.filter(Event.status == "Completed").count()
+    rejected = q.filter(Event.status.in_(["Rejected", "L1 Rejected", "L2 Rejected"])).count()
+
+    return {
+        "total": total,
+        "draft": draft,
+        "pending": pending,
+        "approved": approved,
+        "completed": completed,
+        "rejected": rejected,
+    }
+
+
 @router.post("/", response_model=EventOut)
 def create_event(
     data: EventCreate,

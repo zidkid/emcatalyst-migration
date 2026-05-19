@@ -652,10 +652,12 @@ def brs_dashboard(db: Session = Depends(get_db), current_user: User = Depends(ge
     approved = q.filter(BrsApplication.status == BrsStatus.DH_APPROVED).count()
     doctor_pending = q.filter(BrsApplication.status == BrsStatus.DOCTOR_PENDING).count()
     completed = q.filter(BrsApplication.status == BrsStatus.COMPLETED).count()
+    verified = q.filter(BrsApplication.status == BrsStatus.VERIFIED).count()
 
     return {
         "total": total, "draft": draft, "submitted": submitted,
-        "approved": approved, "doctor_pending": doctor_pending, "completed": completed,
+        "approved": approved, "doctor_pending": doctor_pending,
+        "completed": completed, "verified": verified,
     }
 
 
@@ -763,9 +765,7 @@ def can_approve_application(app_id: int, db: Session = Depends(get_db), current_
 
     step = get_step_for_status(db, "brs_approval", BrsStatus.SUBMITTED)
     if not step:
-        # Fallback: check old hardcoded role
-        can = _has_role(current_user, "DivisionHead") or current_user.is_superuser
-        return {"can_approve": can, "reason": "" if can else "No workflow step configured and user is not Division Head"}
+        return {"can_approve": False, "reason": "No approval workflow step configured for this status"}
 
     can = can_user_approve_step(db, current_user, step, app.created_by_id)
     return {"can_approve": can, "step_label": step.step_label, "reason": "" if can else "You are not authorized for this approval step"}
@@ -929,15 +929,11 @@ def approve_application(app_id: int, remarks: str = "", background_tasks: Backgr
 
     # Dynamic workflow authorization
     step = get_step_for_status(db, "brs_approval", BrsStatus.SUBMITTED)
-    if step:
-        if not can_user_approve_step(db, current_user, step, app.created_by_id):
-            raise HTTPException(403, "You are not authorized to approve this BRS")
-        next_status = step.approved_status or BrsStatus.DOCTOR_PENDING
-    else:
-        # Fallback to hardcoded check
-        if not _has_role(current_user, "DivisionHead"):
-            raise HTTPException(403, "Only Division Head can approve BRS")
-        next_status = BrsStatus.DOCTOR_PENDING
+    if not step:
+        raise HTTPException(400, "No approval workflow step configured. Contact admin.")
+    if not can_user_approve_step(db, current_user, step, app.created_by_id):
+        raise HTTPException(403, "You are not authorized to approve this BRS")
+    next_status = step.approved_status or BrsStatus.DOCTOR_PENDING
 
     old = app.status
     app.status = next_status
@@ -1007,12 +1003,10 @@ def reject_application(app_id: int, reason: str = "", db: Session = Depends(get_
 
     # Dynamic workflow authorization
     step = get_step_for_status(db, "brs_approval", BrsStatus.SUBMITTED)
-    if step:
-        if not can_user_approve_step(db, current_user, step, app.created_by_id):
-            raise HTTPException(403, "You are not authorized to reject this BRS")
-    else:
-        if not _has_role(current_user, "DivisionHead"):
-            raise HTTPException(403, "Only Division Head can reject BRS")
+    if not step:
+        raise HTTPException(400, "No approval workflow step configured. Contact admin.")
+    if not can_user_approve_step(db, current_user, step, app.created_by_id):
+        raise HTTPException(403, "You are not authorized to reject this BRS")
 
     old = app.status
     app.status = BrsStatus.DH_REJECTED
@@ -1020,6 +1014,52 @@ def reject_application(app_id: int, reason: str = "", db: Session = Depends(get_
     _add_audit(db, app.id, "Rejected", old, BrsStatus.DH_REJECTED, current_user.id, reason)
     db.commit()
     return {"status": app.status}
+
+
+@router.post("/{app_id}/verify")
+def verify_application(app_id: int, remarks: str = "", db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Verify a completed BRS — uses dynamic workflow to check authorization"""
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
+    app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
+    if not app:
+        raise HTTPException(404, "BRS not found")
+    if app.status != BrsStatus.COMPLETED:
+        raise HTTPException(400, f"Only Completed BRS can be verified. Current status: {app.status}")
+
+    # Dynamic workflow authorization — check for a step with pending_status="Completed"
+    step = get_step_for_status(db, "brs_approval", "Completed")
+    if not step:
+        raise HTTPException(400, "No verification workflow step configured. Contact admin.")
+    if not can_user_approve_step(db, current_user, step, app.created_by_id):
+        raise HTTPException(403, "You are not authorized to verify this BRS")
+
+    old = app.status
+    app.status = BrsStatus.VERIFIED
+    _add_audit(db, app.id, "Verified", old, BrsStatus.VERIFIED, current_user.id, remarks)
+    db.commit()
+    return {"status": app.status, "message": "BRS verified successfully"}
+
+
+@router.get("/{app_id}/can-verify")
+def can_verify_application(app_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Check if current user can verify this BRS."""
+    from app.services.workflow_service import get_step_for_status, can_user_approve_step
+
+    app = db.query(BrsApplication).filter(BrsApplication.id == app_id).first()
+    if not app:
+        raise HTTPException(404, "BRS not found")
+
+    if app.status != BrsStatus.COMPLETED:
+        return {"can_verify": False, "reason": "BRS is not in Completed status"}
+
+    # Try to find a workflow step for "Completed" status
+    step = get_step_for_status(db, "brs_approval", "Completed")
+    if not step:
+        return {"can_verify": False, "reason": "No verification workflow step configured. Contact admin."}
+
+    can = can_user_approve_step(db, current_user, step, app.created_by_id)
+    return {"can_verify": can, "reason": "" if can else "You are not authorized for this verification step"}
 
 
 # ─────────────────────────────────────────────

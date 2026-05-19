@@ -12,6 +12,7 @@ class BrsStatus(str, enum.Enum):
     DH_REJECTED = "DH Rejected"
     DOCTOR_PENDING = "Doctor Pending"
     COMPLETED = "Completed"
+    VERIFIED = "Verified"
 
 
 class BrsQuestionType(str, enum.Enum):

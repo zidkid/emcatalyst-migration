@@ -71,6 +71,7 @@ export default function BrsList() {
             { label: 'Approved', value: kpis.approved, color: 'bg-blue-50 text-blue-700' },
             { label: 'Doctor Pending', value: kpis.doctor_pending, color: 'bg-purple-50 text-purple-700' },
             { label: 'Completed', value: kpis.completed, color: 'bg-emerald-50 text-emerald-700' },
+            { label: 'Verified', value: kpis.verified, color: 'bg-teal-50 text-teal-700' },
           ].map(k => (
             <div key={k.label} className={`rounded-lg p-3 ${k.color} border`}>
               <p className="text-[11px] font-medium uppercase tracking-wide opacity-70">{k.label}</p>
@@ -93,6 +94,7 @@ export default function BrsList() {
           <option value="DH Rejected">DH Rejected</option>
           <option value="Doctor Pending">Doctor Pending</option>
           <option value="Completed">Completed</option>
+          <option value="Verified">Verified</option>
         </select>
       </div>
 

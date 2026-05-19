@@ -33,6 +33,14 @@ export default function BrsDetail() {
     gcTime: 0,
   })
 
+  const { data: canVerifyData } = useQuery({
+    queryKey: ['brs-can-verify', id],
+    queryFn: () => api.get(`/brs/${id}/can-verify`).then(r => r.data).catch(() => ({ can_verify: false })),
+    enabled: !!brs && brs.status === 'Completed',
+    staleTime: 0,
+    gcTime: 0,
+  })
+
   const { data: canInitiateData } = useQuery({
     queryKey: ['brs-can-initiate'],
     queryFn: () => api.get('/workflows/can-initiate/brs_approval').then(r => r.data).catch(() => ({ can_initiate: false })),
@@ -41,6 +49,12 @@ export default function BrsDetail() {
   const approve = useMutation({
     mutationFn: (remarks) => brsApi.approve(id, remarks),
     onSuccess: () => { qc.invalidateQueries(['brs', id]); toast.success('BRS Approved. Doctor credentials generated.') },
+    onError: (e) => toast.error(e.response?.data?.detail || 'Error'),
+  })
+
+  const verify = useMutation({
+    mutationFn: (remarks) => brsApi.verify(id, remarks),
+    onSuccess: () => { qc.invalidateQueries(['brs', id]); toast.success('BRS Verified successfully') },
     onError: (e) => toast.error(e.response?.data?.detail || 'Error'),
   })
 
@@ -60,6 +74,7 @@ export default function BrsDetail() {
   if (!brs) return <div className="p-8 text-red-500">BRS not found</div>
 
   const canApprove = canApproveData?.can_approve === true
+  const canVerify = canVerifyData?.can_verify === true
   const canSubmit = canInitiateData?.can_initiate === true
 
   return (
@@ -90,6 +105,11 @@ export default function BrsDetail() {
               <XCircle size={15} /> Reject
             </button>
           </>}
+          {canVerify && (
+            <button className="btn-primary flex items-center gap-1" onClick={() => verify.mutate('')} disabled={verify.isPending}>
+              <CheckCircle size={15} /> {verify.isPending ? 'Verifying...' : 'Verify'}
+            </button>
+          )}
           {user?.role === 'Administrator' && (
             <button className="btn-danger flex items-center gap-1 text-xs" onClick={async () => {
               if (!confirm(`Delete BRS ${brs.brs_code}? This cannot be undone.`)) return

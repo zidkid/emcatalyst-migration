@@ -179,6 +179,7 @@ export const brsApi = {
   submit: (id) => api.post(`/brs/${id}/submit`),
   approve: (id, remarks) => api.post(`/brs/${id}/approve`, null, { params: { remarks } }),
   reject: (id, reason) => api.post(`/brs/${id}/reject`, null, { params: { reason } }),
+  verify: (id, remarks) => api.post(`/brs/${id}/verify`, null, { params: { remarks } }),
   checkBudget: (division_id, start_date) => api.get('/brs/check-budget', { params: { division_id, start_date } }),
   // Doctors within BRS
   addDoctor: (appId, data) => api.post(`/brs/${appId}/doctors`, data),
